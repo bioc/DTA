@@ -121,7 +121,7 @@ DTA.singleestimate = function(phenomat, # phenotype matrix, "nr" should be numbe
 			return(result)
 		}
 		
-		if (bicor){plabel[expnr] = optimize(lossfct,interval=c(0,0.05))$minimum} else{plabel[expnr] = 1}
+		plabel[expnr] = optimize(lossfct,interval=c(0,0.05))$minimum
 	}
 	for (expnr in seq(experiments)){
 		if (!simulation){if (check) cat("Experiment no.",expnr,", plabel: ",round(plabel[expnr],digits=4),"\n")}
@@ -149,7 +149,7 @@ DTA.singleestimate = function(phenomat, # phenotype matrix, "nr" should be numbe
 				return(result)
 			}
 			
-			if (bicor){labelratio[expnr] = optimize(lossfct,interval=c(0,5))$minimum} else{labelratio[expnr] = 1}
+			labelratio[expnr] = optimize(lossfct,interval=c(0,5))$minimum
 		}
 		for (expnr in seq(experiments)){
 			if (!simulation){if (check) cat("Experiment no.",expnr,", labelratio: ",round(labelratio[expnr],digits=4),"\n")}
@@ -402,6 +402,10 @@ DTA.singleestimate = function(phenomat, # phenotype matrix, "nr" should be numbe
 	### ESTIMATION OF lambda ###
 	
 	for (expnr in seq(experiments)){
+		if (!bicor){
+			plabel[expnr] = 1
+			labelratio[expnr] = 1
+		}
 		Lnr = which((phenomat[,"nr"] == experiments[expnr]) & (phenomat[,"fraction"] == "L"))
 		Lname = phenomat[Lnr,"name"]
 		calcdatamat[,Lname] = calcdatamat[,Lname]*(1/bias(plabel[expnr],tnumber))
@@ -834,7 +838,7 @@ DTA.singleestimate = function(phenomat, # phenotype matrix, "nr" should be numbe
 				image(t(t(compsmat)[3:1,]),axes=FALSE,col = colorRampPalette(c("darkred","lightgrey","darkgreen"))(500),breaks = seq(-1,1,length.out=501),main=expression(paste("Correlation analysis \n")),xlab=expression("Data inputs"),ylab=expression("Extracted rates"),cex.main=1.25*scex,cex.lab=1*scex,cex.axis=1*scex)
 				title(paste("( pearson correlation for gene-wise medians )"),col.main="darkgrey",cex.main=0.75*scex)
 				axis(1,at=c(0,0.5,1),labels=c(expression(T[g]),expression(L[g]),expression('#u')))
-				axis(2,at=c(0,0.5,1),labels=c(expression(hl[g]),expression(lambda[g]),expression(mu[g])),las=2)
+				axis(2,at=c(0,0.5,1),labels=c(expression(t[1/2][g]),expression(lambda[g]),expression(mu[g])),las=2)
 				abline(v=c(0.75,0.25),h=c(0.75,0.25),cex=0.5)
 				box()
 				text(c(0,0.5,1,0,0.5,1,0,0.5,1),c(0,0,0,0.5,0.5,0.5,1,1,1),round(as.vector(t(t(compsmat)[3:1,])),2))
@@ -943,13 +947,13 @@ DTA.singleestimate = function(phenomat, # phenotype matrix, "nr" should be numbe
 				srlims = c(0,mean(quantile(truesr,0.99,na.rm=TRUE),quantile(results[["sr"]],0.99,na.rm=TRUE)))
 				srindi = (!is.na(results[["sr"]]) & results[["sr"]] > 0 & results[["sr"]] < srlims[2])
 				
-				heatscatter(truehl,results[["hl"]],main=expression(paste("Half-life  ",hl[g],"\n")),xlab=expression(paste("True half-life  ",hl[g])),ylab=expression(paste("Estimated half-life  ",hl[g]^'*')),cor=FALSE,xlim=hllims,ylim=hllims,cex.main=1.4*scex,cex.lab=1.15*scex,cex.axis=1*scex)
+				heatscatter(truehl,results[["hl"]],main=expression(paste("Half-life  ",t[1/2][g],"\n")),xlab=expression(paste("True half-life  ",t[1/2][g])),ylab=expression(paste("Estimated half-life  ",t[1/2][g]^'*')),cor=FALSE,xlim=hllims,ylim=hllims,cex.main=1.4*scex,cex.lab=1.15*scex,cex.axis=1*scex)
 				title(paste(" \n \n \n ( heatscatter p-cor = ",pcor(truehl,results[["hl"]],use="na.or.complete"),")"),col.main="darkgrey",cex.main=0.75*scex)
 				linfactor = coefficients(tls((results[["hl"]][hlindi]) ~ (truehl[hlindi]) + 0))[1]
 				abline(a=0,b=linfactor,col="black",lwd=3)
 				abline(a=0,b=1,col="grey",lwd=3,lty=2)
 				cat("Factor estimated/true:",linfactor,"\n")
-				heatscatter(rank(truehl),rank(results[["hl"]]),main=expression(paste("Half-life  ",hl[g],"  rank")),xlab=expression(paste("True half-life  ",hl[g],"  rank")),ylab=expression(paste("Estimated half-life  ",hl[g]^'*',"  rank")),cor=FALSE,cex.main=1.4*scex,cex.lab=1.15*scex,cex.axis=1*scex)
+				heatscatter(rank(truehl),rank(results[["hl"]]),main=expression(paste("Half-life  ",t[1/2][g],"  rank")),xlab=expression(paste("True half-life  ",t[1/2][g],"  rank")),ylab=expression(paste("Estimated half-life  ",t[1/2][g]^'*',"  rank")),cor=FALSE,cex.main=1.4*scex,cex.lab=1.15*scex,cex.axis=1*scex)
 				title(paste(" \n \n \n ( heatscatter s-cor = ",scor(rank(truehl),rank(results[["hl"]]),use="na.or.complete"),")"),col.main="darkgrey",cex.main=0.75*scex)
 				abline(a=0,b=1,col="black",lwd=3)
 				abline(a=0,b=1,col="grey",lwd=3,lty=2)
@@ -957,7 +961,7 @@ DTA.singleestimate = function(phenomat, # phenotype matrix, "nr" should be numbe
 				cat("Mean relative deviation: ",signif(meanreldev,2),"\n")
 				den = density(log2(results[["hl"]][hlindi]/truehl[hlindi]))
 				den = cbind(den$x,den$y)
-				hist(log2(results[["hl"]][hlindi]/truehl[hlindi]),xlim=c(-10,10),breaks=40,main=expression(paste("Log-ratio  log2( ",hl[g]^'*'/hl[g]," )")),xlab=expression(paste("log2( ",hl[g]^'*'/hl[g]," )")),cex.main=1.4*scex,cex.lab=1.15*scex,cex.axis=1*scex)
+				hist(log2(results[["hl"]][hlindi]/truehl[hlindi]),xlim=c(-5,5),breaks=40,main=expression(paste("Log-ratio  log2( ",t[1/2][g]^'*'/t[1/2][g]," )")),xlab=expression(paste("log2( ",t[1/2][g]^'*'/t[1/2][g]," )")),cex.main=1.4*scex,cex.lab=1.15*scex,cex.axis=1*scex)
 				title(paste(" \n \n \n ( MRD: ",signif(meanreldev,2), ",mode: ",signif(den[which(den[,2] == max(den[,2]))],2)," )"),col.main="darkgrey",cex.main=0.75*scex)
 				abline(v=0,col="grey",lwd=3,lty=2)
 				abline(v=den[which(den[,2] == max(den[,2]))],col="black",lwd=3)
@@ -975,7 +979,7 @@ DTA.singleestimate = function(phenomat, # phenotype matrix, "nr" should be numbe
 				cat("Mean relative deviation: ",signif(meanreldev,2),"\n")
 				den = density(log2(results[["dr"]][drindi]/truedr[drindi]))
 				den = cbind(den$x,den$y)
-				hist(log2(results[["dr"]][drindi]/truedr[drindi]),xlim=c(-10,10),breaks=40,main=expression(paste("Log-ratio  log2( ",lambda[g]^'*'/lambda[g]," )")),xlab=expression(paste("log2( ",lambda[g]^'*'/lambda[g]," )")),cex.main=1.4*scex,cex.lab=1.15*scex,cex.axis=1*scex)
+				hist(log2(results[["dr"]][drindi]/truedr[drindi]),xlim=c(-5,5),breaks=40,main=expression(paste("Log-ratio  log2( ",lambda[g]^'*'/lambda[g]," )")),xlab=expression(paste("log2( ",lambda[g]^'*'/lambda[g]," )")),cex.main=1.4*scex,cex.lab=1.15*scex,cex.axis=1*scex)
 				title(paste(" \n \n \n ( MRD: ",signif(meanreldev,2), ",mode: ",signif(den[which(den[,2] == max(den[,2]))],2)," )"),col.main="darkgrey",cex.main=0.75*scex)
 				abline(v=0,col="grey",lwd=3,lty=2)
 				abline(v=den[which(den[,2] == max(den[,2]))],col="black",lwd=3)
@@ -993,7 +997,7 @@ DTA.singleestimate = function(phenomat, # phenotype matrix, "nr" should be numbe
 				cat("Mean relative deviation: ",signif(meanreldev,2),"\n")
 				den = density(log2(results[["sr"]][srindi]/truesr[srindi]))
 				den = cbind(den$x,den$y)
-				hist(log2(results[["sr"]][srindi]/truesr[srindi]),xlim=c(-10,10),breaks=40,main=expression(paste("Log-ratio  log2( ",mu[g]^'*'/mu[g]," )")),xlab=expression(paste("log2( ",mu[g]^'*'/mu[g]," )")),cex.main=1.4*scex,cex.lab=1.15*scex,cex.axis=1*scex)
+				hist(log2(results[["sr"]][srindi]/truesr[srindi]),xlim=c(-5,5),breaks=40,main=expression(paste("Log-ratio  log2( ",mu[g]^'*'/mu[g]," )")),xlab=expression(paste("log2( ",mu[g]^'*'/mu[g]," )")),cex.main=1.4*scex,cex.lab=1.15*scex,cex.axis=1*scex)
 				title(paste(" \n \n \n ( MRD: ",signif(meanreldev,2), ",mode: ",signif(den[which(den[,2] == max(den[,2]))],2)," )"),col.main="darkgrey",cex.main=0.75*scex)
 				abline(v=0,col="grey",lwd=3,lty=2)
 				abline(v=den[which(den[,2] == max(den[,2]))],col="black",lwd=3)
