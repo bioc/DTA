@@ -264,7 +264,7 @@ DTA.singleestimate = function(phenomat, # phenotype matrix, "nr" should be numbe
 						for (expnr in seq(experiments)){
 							Tnr = which((phenomat[,"nr"] == experiments[expnr]) & (phenomat[,"fraction"] == "T"))
 							ylim = c(-max(abs(t(planes[[expnr]])[,3])),max(abs(t(planes[[expnr]])[,3])))
-							heatscatter(log(t(planes[[expnr]])[,1]),t(planes[[expnr]])[,3],cor=FALSE,ylim=ylim,xlab=expression(paste("log( Orthogonal projection on ",L[g]," )")),ylab=expression("Normal of the plane"),main = expression(paste("Regression plane:  ratio of  ",L[g]/T[g],"\n")),cex.main=1.25*scex,cex.lab=1*scex,cex.axis=1*scex)
+							heatscatter(log(t(planes[[expnr]])[,1]),t(planes[[expnr]])[,3],cor=FALSE,ylim=ylim,xlab=expression(paste("log( Orthogonal projection on ",L[gr]," )")),ylab=expression("Normal of the plane"),main = expression(paste("Regression plane:  ratio of  ",L[gr]/T[gr],"\n")),cex.main=1.25*scex,cex.lab=1*scex,cex.axis=1*scex)
 							points(log(t(planes[[expnr]])[,1])[discards[[expnr]]],t(planes[[expnr]])[,3][discards[[expnr]]],col = "red")
 							title(paste(" \n \n \n (",phenomat[Tnr,"name"],"  c = ",signif(crbyarestimate[expnr],digits=2),")"),col.main="darkgrey",cex.main=0.75*scex)
 							abline(h = 0,col = "green",lwd=2)
@@ -280,8 +280,8 @@ DTA.singleestimate = function(phenomat, # phenotype matrix, "nr" should be numbe
 						for (expnr in seq(experiments)){
 							Tnr = which((phenomat[,"nr"] == experiments[expnr]) & (phenomat[,"fraction"] == "T"))
 							zlim = c(-max(abs(t(planes[[expnr]])[,3])),max(abs(t(planes[[expnr]])[,3])))
-							s3d <- scatterplot3d(t(planes[[expnr]])[,1],t(planes[[expnr]])[,2],t(planes[[expnr]])[,3],pch=20,xlab=expression(paste("Orthogonal projection on ",L[g])),ylab=expression(paste("Orthogonal projection on ",U[g])),zlab=expression("Normal of the plane"), scale.y=1, angle=40,
-									highlight.3d=TRUE,main = expression(paste("Regression plane 3D view:  ratio of  ",L[g]/T[g],"\n")),grid=TRUE,zlim=zlim,cex.main=1.25*scex,cex.lab=1*scex,cex.axis=1*scex)
+							s3d <- scatterplot3d(t(planes[[expnr]])[,1],t(planes[[expnr]])[,2],t(planes[[expnr]])[,3],pch=20,xlab=expression(paste("Orthogonal projection on ",L[gr])),ylab=expression(paste("Orthogonal projection on ",U[gr])),zlab=expression("Normal of the plane"), scale.y=1, angle=40,
+									highlight.3d=TRUE,main = expression(paste("Regression plane 3D view:  ratio of  ",L[gr]/T[gr],"\n")),grid=TRUE,zlim=zlim,cex.main=1.25*scex,cex.lab=1*scex,cex.axis=1*scex)
 							title(paste(" \n \n \n (",phenomat[Tnr,"name"],"  c = ",signif(crbyarestimate[expnr],digits=2),")"),col.main="darkgrey",cex.main=0.75*scex)
 							s3d$points3d(t(planes[[expnr]])[,1][discards[[expnr]]],t(planes[[expnr]])[,2][discards[[expnr]]],t(planes[[expnr]])[,3][discards[[expnr]]],pch=20,col = "red")
 							s3d$plane3d(c(0,0,0), lty = "solid", lty.box = "solid",col = "green",lwd=2)
@@ -547,20 +547,22 @@ DTA.singleestimate = function(phenomat, # phenotype matrix, "nr" should be numbe
 		if (check){
 			if (rankpairs){
 				if (!is.null(initialdummy)){
-					main = expression(paste("Rank heatpairs of  ",(T['g,i']-c['l,i']*L['g,i'])/T['g,i'-1],"\n"))
+					main = expression(paste("Rank heatpairs of  ",(T['gr,i']-(c['r,i']/a['r,i']*l['gr,i'])*L['gr,i'])/T['gr,i'-1],"\n"))
 				} else {
-					main = expression(paste("Rank heatpairs of  ",1-c[l]*L[g]/T[g],"\n"))
+					main = expression(paste("Rank heatpairs of  ",1-(c[r]/a[r]*l[gr])*L[gr]/T[gr],"\n"))
 				}
-				rcex = ncol(LTmat)
-				plotsfkt = function(){
-					par(mar=c(5,4,4,2) + 1)
-					heatmat = apply(LTmat,2,rank)
-					colnames(heatmat) = colnames(LTmat)
-					rownames(heatmat) = rownames(LTmat)
-					heatpairs(heatmat,main = main,cex.labels = min(1/(max(nchar(colnames(LTmat)))/10)*2.5*scex,2),cex.main=1.25*scex,cex.lab=1*scex,cex.axis=1*scex)
-					title(paste("( max median fold = ",round(max(abs(diff(apply(LTmat,2,median)))),2),")"),col.main="darkgrey",cex.main=0.75*scex)
+				if (ncol(LTmat) > 2){
+					rcex = ncol(LTmat)
+					plotsfkt = function(){
+						par(mar=c(5,4,4,2) + 1)
+						heatmat = apply(LTmat,2,rank)
+						colnames(heatmat) = colnames(LTmat)
+						rownames(heatmat) = rownames(LTmat)
+						heatpairs(heatmat,main = main,cex.labels = min(1/(max(nchar(colnames(LTmat)))/10)*2.5*scex,2),cex.main=1.25*scex,cex.lab=1*scex,cex.axis=1*scex)
+						title(paste("( max median fold = ",round(max(abs(diff(apply(LTmat,2,median)))),2),")"),col.main="darkgrey",cex.main=0.75*scex)
+					}
+					plotit(filename = paste(folder,"/rank_heatpairs_",condition,"_",timepoint,".jpg",sep=""),sw = rcex,sh = rcex,sres = 2,plotsfkt = plotsfkt,ww = rcex*3.5,wh = rcex*3.5,saveit = plots,addformat = addformat,notinR = notinR)
 				}
-				plotit(filename = paste(folder,"/rank_heatpairs_",condition,"_",timepoint,".jpg",sep=""),sw = rcex,sh = rcex,sres = 2,plotsfkt = plotsfkt,ww = rcex*3.5,wh = rcex*3.5,saveit = plots,addformat = addformat,notinR = notinR)
 			}
 			
 			if (assessment){
@@ -571,13 +573,13 @@ DTA.singleestimate = function(phenomat, # phenotype matrix, "nr" should be numbe
 					for (i in 1:ncol(LTmat)){
 						assess = function(x){- alpha - ((1/labelingtime)*log(x))}
 						if (!is.null(initialdummy)){
-							xlab = expression(paste((T['g,i']-c['l,i']*L['g,i'])/T['g,i'-1]))
-							ylab=expression(paste("Decay rate  ",lambda['g,i']))
-							main = expression(paste("Limit assessment of  ",(T['g,i']-c['l,i']*L['g,i'])/T['g,i'-1],"\n"))
+							xlab = expression(paste((T['gr,i']-(c['r,i']/a['r,i']*l['gr,i'])*L['gr,i'])/T['gr,i'-1]))
+							ylab=expression(paste("Decay rate  ",lambda['gr,i']))
+							main = expression(paste("Limit assessment of  ",(T['gr,i']-(c['r,i']/a['r,i']*l['gr,i'])*L['gr,i'])/T['gr,i'-1],"\n"))
 						} else {
-							xlab = expression(paste(1-c[l]*L[g]/T[g]))
-							ylab=expression(paste("Decay rate  ",lambda[g]))
-							main = expression(paste("Limit assessment of  ",1-c[l]*L[g]/T[g],"\n"))
+							xlab = expression(paste(1-(c[r]/a[r]*l[gr])*L[gr]/T[gr]))
+							ylab=expression(paste("Decay rate  ",lambda[gr]))
+							main = expression(paste("Limit assessment of  ",1-(c[r]/a[r]*l[gr])*L[gr]/T[gr],"\n"))
 						}
 						plot(0,type="n",xlim=c(-2*exp(-alpha*labelingtime),3*exp(-alpha*labelingtime)),ylim=c(-0.5,max(hist(LTmat[,ncol(LTmat)],breaks=seq(floor(min(LTmat)),ceiling(max(LTmat)),0.25),plot=FALSE)$density)/2*3),xlab=xlab,ylab=ylab,main=main,cex.main=1.25*scex,cex.lab=1*scex,cex.axis=1*scex)
 						title(paste(" \n \n \n (",colnames(LTmat)[i],")"),col.main="darkgrey",cex.main=0.75*scex)
@@ -617,20 +619,22 @@ DTA.singleestimate = function(phenomat, # phenotype matrix, "nr" should be numbe
 		if (check){
 			if (rankpairs){
 				if (!is.null(initialdummy)){
-					main = expression(paste("Rank heatpairs of  ",c['u,i']*U['g,i']/T['g,i'-1],"\n"))
+					main = expression(paste("Rank heatpairs of  ",(c['r,i']/b['r,i']*u['gr,i'])*U['gr,i']/T['gr,i'-1],"\n"))
 				} else {
-					main = expression(paste("Rank heatpairs of  ",c[u]*U[g]/T[g],"\n"))
+					main = expression(paste("Rank heatpairs of  ",(c[r]/b[r]*u[gr])*U[gr]/T[gr],"\n"))
 				}
-				rcex = ncol(UTmat)
-				plotsfkt = function(){
-					par(mar=c(5,4,4,2) + 1)
-					heatmat = apply(UTmat,2,rank)
-					colnames(heatmat) = colnames(UTmat)
-					rownames(heatmat) = rownames(UTmat)
-					heatpairs(heatmat,main = main,cex.labels = min(1/(max(nchar(colnames(UTmat)))/10)*2.5*scex,2),cex.main=1.25*scex,cex.lab=1*scex,cex.axis=1*scex)
-					title(paste("( max median fold = ",round(max(abs(diff(apply(UTmat,2,median)))),2),")"),col.main="darkgrey",cex.main=0.75*scex)
+				if (ncol(UTmat) > 2){
+					rcex = ncol(UTmat)
+					plotsfkt = function(){
+						par(mar=c(5,4,4,2) + 1)
+						heatmat = apply(UTmat,2,rank)
+						colnames(heatmat) = colnames(UTmat)
+						rownames(heatmat) = rownames(UTmat)
+						heatpairs(heatmat,main = main,cex.labels = min(1/(max(nchar(colnames(UTmat)))/10)*2.5*scex,2),cex.main=1.25*scex,cex.lab=1*scex,cex.axis=1*scex)
+						title(paste("( max median fold = ",round(max(abs(diff(apply(UTmat,2,median)))),2),")"),col.main="darkgrey",cex.main=0.75*scex)
+					}
+					plotit(filename = paste(folder,"/rank_heatpairs_",condition,"_",timepoint,".jpg",sep=""),sw = rcex,sh = rcex,sres = 2,plotsfkt = plotsfkt,ww = rcex*3.5,wh = rcex*3.5,saveit = plots,addformat = addformat,notinR = notinR)
 				}
-				plotit(filename = paste(folder,"/rank_heatpairs_",condition,"_",timepoint,".jpg",sep=""),sw = rcex,sh = rcex,sres = 2,plotsfkt = plotsfkt,ww = rcex*3.5,wh = rcex*3.5,saveit = plots,addformat = addformat,notinR = notinR)
 			}
 			
 			if (assessment){
@@ -641,13 +645,13 @@ DTA.singleestimate = function(phenomat, # phenotype matrix, "nr" should be numbe
 					for (i in 1:ncol(UTmat)){
 						assess = function(x){- alpha - ((1/labelingtime)*log(x))}
 						if (!is.null(initialdummy)){
-							xlab = expression(paste(c['u,i']*U['g,i']/T['g,i'-1]))
-							ylab=expression(paste("Decay rate  ",lambda['g,i']))
-							main = expression(paste("Limit assessment of  ",c['u,i']*U['g,i']/T['g,i'-1],"\n"))
+							xlab = expression(paste((c['r,i']/b['r,i']*u['gr,i'])*U['gr,i']/T['gr,i'-1]))
+							ylab=expression(paste("Decay rate  ",lambda['gr,i']))
+							main = expression(paste("Limit assessment of  ",(c['r,i']/b['r,i']*u['gr,i'])*U['gr,i']/T['gr,i'-1],"\n"))
 						} else {
-							xlab = expression(paste(c[u]*U[g]/T[g]))
-							ylab=expression(paste("Decay rate  ",lambda[g]))
-							main = expression(paste("Limit assessment of  ",c[u]*U[g]/T[g],"\n"))
+							xlab = expression(paste((c[r]/b[r]*u[gr])*U[gr]/T[gr]))
+							ylab=expression(paste("Decay rate  ",lambda[gr]))
+							main = expression(paste("Limit assessment of  ",(c[r]/b[r]*u[gr])*U[gr]/T[gr],"\n"))
 						}
 						plot(0,type="n",xlim=c(-2*exp(-alpha*labelingtime),3*exp(-alpha*labelingtime)),ylim=c(-0.5,max(hist(UTmat[,ncol(UTmat)],breaks=seq(floor(min(UTmat)),ceiling(max(UTmat)),0.25),plot=FALSE)$density)/2*3),xlab=xlab,ylab=ylab,main=main,cex.main=1.25*scex,cex.lab=1*scex,cex.axis=1*scex)
 						title(paste(" \n \n \n (",colnames(UTmat)[i],")"),col.main="darkgrey",cex.main=0.75*scex)
@@ -690,20 +694,22 @@ DTA.singleestimate = function(phenomat, # phenotype matrix, "nr" should be numbe
 		if (check){
 			if (rankpairs){
 				if (!is.null(initialdummy)){
-					main = expression(paste("Rank heatpairs of  ",((T['g,i']-c['l,i']*L['g,i'])/T['g,i'-1]+c['u,i']*U['g,i']/T['g,i'-1])/2,"\n"))
+					main = expression(paste("Rank heatpairs of  ",((T['gr,i']-(c['r,i']/a['r,i']*l['gr,i'])*L['gr,i'])/T['gr,i'-1]+(c['r,i']/b['r,i']*u['gr,i'])*U['gr,i']/T['gr,i'-1])/2,"\n"))
 				} else {
-					main = expression(paste("Rank heatpairs of  ",(1-c[l]*L[g]/T[g]+c[u]*U[g]/T[g])/2,"\n"))
+					main = expression(paste("Rank heatpairs of  ",(1-(c[r]/a[r]*l[gr])*L[gr]/T[gr]+(c[r]/b[r]*u[gr])*U[gr]/T[gr])/2,"\n"))
 				}
-				rcex = ncol(Bmat)
-				plotsfkt = function(){
-					par(mar=c(5,4,4,2) + 1)
-					heatmat = apply(Bmat,2,rank)
-					colnames(heatmat) = colnames(Bmat)
-					rownames(heatmat) = rownames(Bmat)
-					heatpairs(heatmat,main = main,cex.labels = min(1/(max(nchar(colnames(Bmat)))/10)*2.5*scex,2),cex.main=1.25*scex,cex.lab=1*scex,cex.axis=1*scex)
-					title(paste("( max median fold = ",round(max(abs(diff(apply(Bmat,2,median)))),2),")"),col.main="darkgrey",cex.main=0.75*scex)
+				if (ncol(Bmat) > 2){
+					rcex = ncol(Bmat)
+					plotsfkt = function(){
+						par(mar=c(5,4,4,2) + 1)
+						heatmat = apply(Bmat,2,rank)
+						colnames(heatmat) = colnames(Bmat)
+						rownames(heatmat) = rownames(Bmat)
+						heatpairs(heatmat,main = main,cex.labels = min(1/(max(nchar(colnames(Bmat)))/10)*2.5*scex,2),cex.main=1.25*scex,cex.lab=1*scex,cex.axis=1*scex)
+						title(paste("( max median fold = ",round(max(abs(diff(apply(Bmat,2,median)))),2),")"),col.main="darkgrey",cex.main=0.75*scex)
+					}
+					plotit(filename = paste(folder,"/rank_heatpairs_",condition,"_",timepoint,".jpg",sep=""),sw = rcex,sh = rcex,sres = 2,plotsfkt = plotsfkt,ww = rcex*3.5,wh = rcex*3.5,saveit = plots,addformat = addformat,notinR = notinR)
 				}
-				plotit(filename = paste(folder,"/rank_heatpairs_",condition,"_",timepoint,".jpg",sep=""),sw = rcex,sh = rcex,sres = 2,plotsfkt = plotsfkt,ww = rcex*3.5,wh = rcex*3.5,saveit = plots,addformat = addformat,notinR = notinR)
 			}
 			
 			if (assessment){
@@ -714,13 +720,13 @@ DTA.singleestimate = function(phenomat, # phenotype matrix, "nr" should be numbe
 					for (i in 1:ncol(Bmat)){
 						assess = function(x){- alpha - ((1/labelingtime)*log(x))}
 						if (!is.null(initialdummy)){
-							xlab = expression(paste(((T['g,i']-c['l,i']*L['g,i'])/T['g,i'-1]+c['u,i']*U['g,i']/T['g,i'-1])/2))
-							ylab=expression(paste("Decay rate  ",lambda['g,i']))
-							main = expression(paste("Limit assessment of  ",((T['g,i']-c['l,i']*L['g,i'])/T['g,i'-1]+c['u,i']*U['g,i']/T['g,i'-1])/2,"\n"))
+							xlab = expression(paste(((T['gr,i']-(c['r,i']/a['r,i']*l['gr,i'])*L['gr,i'])/T['gr,i'-1]+(c['r,i']/b['r,i']*u['gr,i'])*U['gr,i']/T['gr,i'-1])/2))
+							ylab=expression(paste("Decay rate  ",lambda['gr,i']))
+							main = expression(paste("Limit assessment of  ",((T['gr,i']-(c['r,i']/a['r,i']*l['gr,i'])*L['gr,i'])/T['gr,i'-1]+(c['r,i']/b['r,i']*u['gr,i'])*U['gr,i']/T['gr,i'-1])/2,"\n"))
 						} else {
-							xlab = expression(paste((1-c[l]*L[g]/T[g]+c[u]*U[g]/T[g])/2))
-							ylab=expression(paste("Decay rate  ",lambda[g]))
-							main = expression(paste("Limit assessment of  ",(1-c[l]*L[g]/T[g]+c[u]*U[g]/T[g])/2,"\n"))
+							xlab = expression(paste((1-(c[r]/a[r]*l[gr])*L[gr]/T[gr]+(c[r]/b[r]*u[gr])*U[gr]/T[gr])/2))
+							ylab=expression(paste("Decay rate  ",lambda[gr]))
+							main = expression(paste("Limit assessment of  ",(1-(c[r]/a[r]*l[gr])*L[gr]/T[gr]+(c[r]/b[r]*u[gr])*U[gr]/T[gr])/2,"\n"))
 						}
 						plot(0,type="n",xlim=c(-2*exp(-alpha*labelingtime),3*exp(-alpha*labelingtime)),ylim=c(-0.5,max(hist(Bmat[,ncol(Bmat)],breaks=seq(floor(min(Bmat)),ceiling(max(Bmat)),0.25),plot=FALSE)$density)/2*3),xlab=xlab,ylab=ylab,main=main,cex.main=1.25*scex,cex.lab=1*scex,cex.axis=1*scex)
 						title(paste(" \n \n \n (",colnames(Bmat)[i],")"),col.main="darkgrey",cex.main=0.75*scex)
@@ -837,8 +843,8 @@ DTA.singleestimate = function(phenomat, # phenotype matrix, "nr" should be numbe
 				par(mar=c(5,4,4,0) + 1)
 				image(t(t(compsmat)[3:1,]),axes=FALSE,col = colorRampPalette(c("darkred","lightgrey","darkgreen"))(500),breaks = seq(-1,1,length.out=501),main=expression(paste("Correlation analysis \n")),xlab=expression("Data inputs"),ylab=expression("Extracted rates"),cex.main=1.25*scex,cex.lab=1*scex,cex.axis=1*scex)
 				title(paste("( pearson correlation for gene-wise medians )"),col.main="darkgrey",cex.main=0.75*scex)
-				axis(1,at=c(0,0.5,1),labels=c(expression(T[g]),expression(L[g]),expression('#u')))
-				axis(2,at=c(0,0.5,1),labels=c(expression(t[1/2][g]),expression(lambda[g]),expression(mu[g])),las=2)
+				axis(1,at=c(0,0.5,1),labels=c(expression(T[gr]),expression(L[gr]),expression('#u'[g])))
+				axis(2,at=c(0,0.5,1),labels=c(expression(t[1/2][gr]),expression(lambda[gr]),expression(mu[gr])),las=2)
 				abline(v=c(0.75,0.25),h=c(0.75,0.25),cex=0.5)
 				box()
 				text(c(0,0.5,1,0,0.5,1,0,0.5,1),c(0,0,0,0.5,0.5,0.5,1,1,1),round(as.vector(t(t(compsmat)[3:1,])),2))
@@ -947,13 +953,13 @@ DTA.singleestimate = function(phenomat, # phenotype matrix, "nr" should be numbe
 				srlims = c(0,mean(quantile(truesr,0.99,na.rm=TRUE),quantile(results[["sr"]],0.99,na.rm=TRUE)))
 				srindi = (!is.na(results[["sr"]]) & results[["sr"]] > 0 & results[["sr"]] < srlims[2])
 				
-				heatscatter(truehl,results[["hl"]],main=expression(paste("Half-life  ",t[1/2][g],"\n")),xlab=expression(paste("True half-life  ",t[1/2][g])),ylab=expression(paste("Estimated half-life  ",t[1/2][g]^'*')),cor=FALSE,xlim=hllims,ylim=hllims,cex.main=1.4*scex,cex.lab=1.15*scex,cex.axis=1*scex)
+				heatscatter(truehl,results[["hl"]],main=expression(paste("Half-life  ",t[1/2][gr],"\n")),xlab=expression(paste("True half-life  ",t[1/2][gr])),ylab=expression(paste("Estimated half-life  ",t[1/2][gr]^'*')),cor=FALSE,xlim=hllims,ylim=hllims,cex.main=1.4*scex,cex.lab=1.15*scex,cex.axis=1*scex)
 				title(paste(" \n \n \n ( heatscatter p-cor = ",pcor(truehl,results[["hl"]],use="na.or.complete"),")"),col.main="darkgrey",cex.main=0.75*scex)
 				linfactor = coefficients(tls((results[["hl"]][hlindi]) ~ (truehl[hlindi]) + 0))[1]
 				abline(a=0,b=linfactor,col="black",lwd=3)
 				abline(a=0,b=1,col="grey",lwd=3,lty=2)
 				cat("Factor estimated/true:",linfactor,"\n")
-				heatscatter(rank(truehl),rank(results[["hl"]]),main=expression(paste("Half-life  ",t[1/2][g],"  rank")),xlab=expression(paste("True half-life  ",t[1/2][g],"  rank")),ylab=expression(paste("Estimated half-life  ",t[1/2][g]^'*',"  rank")),cor=FALSE,cex.main=1.4*scex,cex.lab=1.15*scex,cex.axis=1*scex)
+				heatscatter(rank(truehl),rank(results[["hl"]]),main=expression(paste("Half-life  ",t[1/2][gr],"  rank")),xlab=expression(paste("True half-life  ",t[1/2][gr],"  rank")),ylab=expression(paste("Estimated half-life  ",t[1/2][gr]^'*',"  rank")),cor=FALSE,cex.main=1.4*scex,cex.lab=1.15*scex,cex.axis=1*scex)
 				title(paste(" \n \n \n ( heatscatter s-cor = ",scor(rank(truehl),rank(results[["hl"]]),use="na.or.complete"),")"),col.main="darkgrey",cex.main=0.75*scex)
 				abline(a=0,b=1,col="black",lwd=3)
 				abline(a=0,b=1,col="grey",lwd=3,lty=2)
@@ -961,17 +967,17 @@ DTA.singleestimate = function(phenomat, # phenotype matrix, "nr" should be numbe
 				cat("Mean relative deviation: ",signif(meanreldev,2),"\n")
 				den = density(log2(results[["hl"]][hlindi]/truehl[hlindi]))
 				den = cbind(den$x,den$y)
-				hist(log2(results[["hl"]][hlindi]/truehl[hlindi]),xlim=c(-5,5),breaks=40,main=expression(paste("Log-ratio  log2( ",t[1/2][g]^'*'/t[1/2][g]," )")),xlab=expression(paste("log2( ",t[1/2][g]^'*'/t[1/2][g]," )")),cex.main=1.4*scex,cex.lab=1.15*scex,cex.axis=1*scex)
+				hist(log2(results[["hl"]][hlindi]/truehl[hlindi]),xlim=c(-5,5),breaks=40,main=expression(paste("Log-ratio  log2( ",t[1/2][gr]^'*'/t[1/2][gr]," )")),xlab=expression(paste("log2( ",t[1/2][gr]^'*'/t[1/2][gr]," )")),cex.main=1.4*scex,cex.lab=1.15*scex,cex.axis=1*scex)
 				title(paste(" \n \n \n ( MRD: ",signif(meanreldev,2), ",mode: ",signif(den[which(den[,2] == max(den[,2]))],2)," )"),col.main="darkgrey",cex.main=0.75*scex)
 				abline(v=0,col="grey",lwd=3,lty=2)
 				abline(v=den[which(den[,2] == max(den[,2]))],col="black",lwd=3)
 				
-				heatscatter(truedr,results[["dr"]],log="xy",main=expression(paste("Deacy rate  ",lambda[g],"\n")),xlab=expression(paste("True decay rate  ",lambda[g])),ylab=expression(paste("Estimated decay rate  ",lambda[g]^'*')),cor=FALSE,xlim=drlims,ylim=drlims,cex.main=1.4*scex,cex.lab=1.15*scex,cex.axis=1*scex)
+				heatscatter(truedr,results[["dr"]],log="xy",main=expression(paste("Deacy rate  ",lambda[gr],"\n")),xlab=expression(paste("True decay rate  ",lambda[gr])),ylab=expression(paste("Estimated decay rate  ",lambda[gr]^'*')),cor=FALSE,xlim=drlims,ylim=drlims,cex.main=1.4*scex,cex.lab=1.15*scex,cex.axis=1*scex)
 				title(paste(" \n \n \n ( heatscatter p-cor = ",pcor(truedr,results[["dr"]],use="na.or.complete"),")"),col.main="darkgrey",cex.main=0.75*scex)
 				lindev = median(log10(results[["dr"]][drindi])-log10(truedr[drindi]))
 				abline(lindev,b=1,col="black",lwd=3)
 				abline(a=0,b=1,col="grey",lwd=3,lty=2)
-				heatscatter(rank(truedr),rank(results[["dr"]]),main=expression(paste("Decay rate  ",lambda[g],"  rank")),xlab=expression(paste("True decay rate  ",lambda[g],"  rank")),ylab=expression(paste("Estimated decay  ",lambda[g]^'*',"  rank")),cor=FALSE,cex.main=1.4*scex,cex.lab=1.15*scex,cex.axis=1*scex)
+				heatscatter(rank(truedr),rank(results[["dr"]]),main=expression(paste("Decay rate  ",lambda[gr],"  rank")),xlab=expression(paste("True decay rate  ",lambda[gr],"  rank")),ylab=expression(paste("Estimated decay  ",lambda[gr]^'*',"  rank")),cor=FALSE,cex.main=1.4*scex,cex.lab=1.15*scex,cex.axis=1*scex)
 				title(paste(" \n \n \n ( heatscatter s-cor = ",scor(rank(truedr),rank(results[["dr"]]),use="na.or.complete"),")"),col.main="darkgrey",cex.main=0.75*scex)
 				abline(a=0,b=1,col="black",lwd=3)
 				abline(a=0,b=1,col="grey",lwd=3,lty=2)
@@ -979,17 +985,17 @@ DTA.singleestimate = function(phenomat, # phenotype matrix, "nr" should be numbe
 				cat("Mean relative deviation: ",signif(meanreldev,2),"\n")
 				den = density(log2(results[["dr"]][drindi]/truedr[drindi]))
 				den = cbind(den$x,den$y)
-				hist(log2(results[["dr"]][drindi]/truedr[drindi]),xlim=c(-5,5),breaks=40,main=expression(paste("Log-ratio  log2( ",lambda[g]^'*'/lambda[g]," )")),xlab=expression(paste("log2( ",lambda[g]^'*'/lambda[g]," )")),cex.main=1.4*scex,cex.lab=1.15*scex,cex.axis=1*scex)
+				hist(log2(results[["dr"]][drindi]/truedr[drindi]),xlim=c(-5,5),breaks=40,main=expression(paste("Log-ratio  log2( ",lambda[gr]^'*'/lambda[gr]," )")),xlab=expression(paste("log2( ",lambda[gr]^'*'/lambda[gr]," )")),cex.main=1.4*scex,cex.lab=1.15*scex,cex.axis=1*scex)
 				title(paste(" \n \n \n ( MRD: ",signif(meanreldev,2), ",mode: ",signif(den[which(den[,2] == max(den[,2]))],2)," )"),col.main="darkgrey",cex.main=0.75*scex)
 				abline(v=0,col="grey",lwd=3,lty=2)
 				abline(v=den[which(den[,2] == max(den[,2]))],col="black",lwd=3)
 				
-				heatscatter(truesr,results[["sr"]],main=expression(paste("Synthesis rate  ",mu[g],"\n")),xlab=expression(paste("True synthesis rate  ",mu[g])),ylab=expression(paste("Estimated synthesis rate  ",mu[g]^'*')),cor=FALSE,xlim=srlims,ylim=srlims,cex.main=1.4*scex,cex.lab=1.15*scex,cex.axis=1*scex)
+				heatscatter(truesr,results[["sr"]],main=expression(paste("Synthesis rate  ",mu[gr],"\n")),xlab=expression(paste("True synthesis rate  ",mu[gr])),ylab=expression(paste("Estimated synthesis rate  ",mu[gr]^'*')),cor=FALSE,xlim=srlims,ylim=srlims,cex.main=1.4*scex,cex.lab=1.15*scex,cex.axis=1*scex)
 				title(paste(" \n \n \n ( heatscatter p-cor = ",pcor(truesr,results[["sr"]],use="na.or.complete"),")"),col.main="darkgrey",cex.main=0.75*scex)
 				linfactor = coefficients(tls((results[["sr"]][srindi]) ~ (truesr[srindi]) + 0))[1]
 				abline(a=0,b=linfactor,col="black",lwd=3)
 				abline(a=0,b=1,col="grey",lwd=3,lty=2)
-				heatscatter(rank(truesr),rank(results[["sr"]]),main=expression(paste("Synthesis rate  ",mu[g],"  rank")),xlab=expression(paste("True synthesis rate  ",mu[g],"  rank")),ylab=expression(paste("Estimated synthesis  ",mu[g]^'*',"  rank")),cor=FALSE,cex.main=1.4*scex,cex.lab=1.15*scex,cex.axis=1*scex)
+				heatscatter(rank(truesr),rank(results[["sr"]]),main=expression(paste("Synthesis rate  ",mu[gr],"  rank")),xlab=expression(paste("True synthesis rate  ",mu[gr],"  rank")),ylab=expression(paste("Estimated synthesis  ",mu[gr]^'*',"  rank")),cor=FALSE,cex.main=1.4*scex,cex.lab=1.15*scex,cex.axis=1*scex)
 				title(paste(" \n \n \n ( heatscatter s-cor = ",scor(rank(truesr),rank(results[["sr"]]),use="na.or.complete"),")"),col.main="darkgrey",cex.main=0.75*scex)
 				abline(a=0,b=1,col="black",lwd=3)
 				abline(a=0,b=1,col="grey",lwd=3,lty=2)
@@ -997,7 +1003,7 @@ DTA.singleestimate = function(phenomat, # phenotype matrix, "nr" should be numbe
 				cat("Mean relative deviation: ",signif(meanreldev,2),"\n")
 				den = density(log2(results[["sr"]][srindi]/truesr[srindi]))
 				den = cbind(den$x,den$y)
-				hist(log2(results[["sr"]][srindi]/truesr[srindi]),xlim=c(-5,5),breaks=40,main=expression(paste("Log-ratio  log2( ",mu[g]^'*'/mu[g]," )")),xlab=expression(paste("log2( ",mu[g]^'*'/mu[g]," )")),cex.main=1.4*scex,cex.lab=1.15*scex,cex.axis=1*scex)
+				hist(log2(results[["sr"]][srindi]/truesr[srindi]),xlim=c(-5,5),breaks=40,main=expression(paste("Log-ratio  log2( ",mu[gr]^'*'/mu[gr]," )")),xlab=expression(paste("log2( ",mu[gr]^'*'/mu[gr]," )")),cex.main=1.4*scex,cex.lab=1.15*scex,cex.axis=1*scex)
 				title(paste(" \n \n \n ( MRD: ",signif(meanreldev,2), ",mode: ",signif(den[which(den[,2] == max(den[,2]))],2)," )"),col.main="darkgrey",cex.main=0.75*scex)
 				abline(v=0,col="grey",lwd=3,lty=2)
 				abline(v=den[which(den[,2] == max(den[,2]))],col="black",lwd=3)

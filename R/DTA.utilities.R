@@ -46,9 +46,9 @@ LT.plotbias = function(labeled,
 		tnumber,
 		plabel = NULL,
 		asymptote = NULL,
-		main = expression(paste("Labeling Bias ",l[g]," \n")),
+		main = expression(paste("Labeling Bias ",l[gr]," \n")),
 		xlab = expression(paste("Number of Uridine residues ",'#u'[g])),
-		ylab = expression(paste("log( ",L[g]/T[g]," )")),
+		ylab = expression(paste("log( ",L[gr]/T[gr]," )")),
 		repl = NULL,
 		trueplabel = NULL,
 		trueasymptote = NULL,
@@ -61,9 +61,9 @@ LT.plotbias = function(labeled,
 	tseq = min(tnumber,na.rm=TRUE):max(tnumber,na.rm=TRUE)
 	if (plabel == 1){
 		if (correctedlabeling){
-			main = expression(paste("(corrected) Labeling Bias ",l[g]," \n"))
+			main = expression(paste("(corrected) Labeling Bias ",l[gr]," \n"))
 		} else {
-			main = expression(paste("(not assessed) Labeling Bias ",l[g]," \n"))
+			main = expression(paste("(not assessed) Labeling Bias ",l[gr]," \n"))
 		}
 	}
 	heatscatter(tnumber,log(labeled/total),xlab=xlab,ylab=ylab,main=main,xlim=c(0,2000),cor=FALSE,ylim=ylim,cex.main=1.25*scex,cex.lab=1*scex,cex.axis=1*scex,...)
@@ -81,9 +81,9 @@ UT.plotbias = function(unlabeled,
 		tnumber,
 		plabel = NULL,
 		asymptote = NULL,
-		main = expression(paste("Labeling Bias ",u[g]," \n")),
+		main = expression(paste("Labeling Bias ",u[gr]," \n")),
 		xlab = expression(paste("Number of Uridine residues ",'#u'[g])),
-		ylab = expression(paste("log( ",U[g]/T[g]," )")),
+		ylab = expression(paste("log( ",U[gr]/T[gr]," )")),
 		repl = NULL,
 		trueplabel = NULL,
 		trueasymptote = NULL,
@@ -97,9 +97,9 @@ UT.plotbias = function(unlabeled,
 	tseq = min(tnumber,na.rm=TRUE):max(tnumber,na.rm=TRUE)
 	if (plabel == 1){
 		if (correctedlabeling){
-			main = expression(paste("(corrected) Labeling Bias ",u[g]," \n"))
+			main = expression(paste("(corrected) Labeling Bias ",u[gr]," \n"))
 		} else {
-			main = expression(paste("(not assessed) Labeling Bias ",u[g]," \n"))
+			main = expression(paste("(not assessed) Labeling Bias ",u[gr]," \n"))
 		}
 	}
 	heatscatter(tnumber,log(unlabeled/total),xlab=xlab,ylab=ylab,main=main,xlim=c(0,2000),cor=FALSE,ylim=ylim,cex.main=1.25*scex,cex.lab=1*scex,cex.axis=1*scex,...)

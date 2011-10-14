@@ -213,7 +213,7 @@ DTA.dynamic.estimate = function(
 					par(mar=c(5,4,4,2) + 1)
 					for (j in 1:nrseries){
 						i = inter(drfc[plotable,j+1],srfc[plotable,j+1])
-						heatscatter(i$x,i$y,xlim=folds.lims,ylim=folds.lims,xlab=expression(paste("log2( decay rate fold ",lambda['g,i']/lambda['g,1']," )")),ylab=expression(paste("log2( synthesis rate fold ",mu['g,i']/mu['g,1']," )")),main=paste(extracttimes[j+1],"min\n"),cor=FALSE,cex.main=1.25*scex,cex.lab=1*scex,cex.axis=1*scex)
+						heatscatter(i$x,i$y,xlim=folds.lims,ylim=folds.lims,xlab=expression(paste("log2( decay rate fold ",lambda['gr,i']/lambda['gr,1']," )")),ylab=expression(paste("log2( synthesis rate fold ",mu['gr,i']/mu['gr,1']," )")),main=paste(extracttimes[j+1],"min\n"),cor=FALSE,cex.main=1.25*scex,cex.lab=1*scex,cex.axis=1*scex)
 						title(paste("\n( i =",j+1,")"),col.main="darkgrey",cex.main=0.75*scex)
 						gridfkt(lim = folds.lims)}
 				}
@@ -256,7 +256,7 @@ DTA.dynamic.estimate = function(
 					par(mar=c(5,4,4,2) + 1)
 					for (j in 1:nrseries){
 						i = inter(drfc[plotable,j+1],srfc[plotable,j+1])
-						plot(0,0,xlim=folds.lims,ylim=folds.lims,col="white",xlab=expression(paste("log2( decay rate fold ",lambda['g,i']/lambda['g,1']," )")),ylab=expression(paste("log2( synthesis rate fold ",mu['g,i']/mu['g,1']," )")),main=paste(extracttimes[j+1],"min\n"),cex.main=1.25*scex,cex.lab=1*scex,cex.axis=1*scex)
+						plot(0,0,xlim=folds.lims,ylim=folds.lims,col="white",xlab=expression(paste("log2( decay rate fold ",lambda['gr,i']/lambda['gr,1']," )")),ylab=expression(paste("log2( synthesis rate fold ",mu['gr,i']/mu['gr,1']," )")),main=paste(extracttimes[j+1],"min\n"),cex.main=1.25*scex,cex.lab=1*scex,cex.axis=1*scex)
 						title(paste("\n( i =",j+1,")"),col.main="darkgrey",cex.main=0.75*scex)
 						gridfkt(lim = folds.lims)
 						points(i$x[intersect(plotable,genecluster[["even"]])],i$y[intersect(plotable,genecluster[["even"]])],col=evencol,pch=20)
@@ -279,7 +279,7 @@ DTA.dynamic.estimate = function(
 						x = i$x[intersect(plotable,genecluster[["up"]])]
 						y = i$y[intersect(plotable,genecluster[["up"]])]
 						points(ellipse(scor(x,y,use="na.or.complete"),scale=c(sd(x,na.rm=TRUE)*scalesd,sd(y,na.rm=TRUE)*scalesd),centre=c(mean(x,na.rm=TRUE),mean(y,na.rm=TRUE)),level=level),type = 'l',col=upcol,lwd=3)
-						legend("topright",rev(c(paste("down (",length(intersect(plotable,genecluster[["down"]])),")",sep = ""),paste("downeven (",length(intersect(plotable,genecluster[["downeven"]])),")",sep = ""),paste("even (",length(intersect(plotable,genecluster[["even"]])),")",sep = ""),paste("upeven (",length(intersect(plotable,genecluster[["upeven"]])),")",sep = ""),paste("up (",length(intersect(plotable,genecluster[["up"]])),")",sep = ""))),pt.bg=c(downcol,downevencol,evencol,upevencol,upcol),col=c("black","black","black","black","black"),bg="white",pch=21)
+						if (j == 1){legend("topleft",rev(c(paste("down (",length(intersect(plotable,genecluster[["down"]])),")",sep = ""),paste("downeven (",length(intersect(plotable,genecluster[["downeven"]])),")",sep = ""),paste("even (",length(intersect(plotable,genecluster[["even"]])),")",sep = ""),paste("upeven (",length(intersect(plotable,genecluster[["upeven"]])),")",sep = ""),paste("up (",length(intersect(plotable,genecluster[["up"]])),")",sep = ""))),pt.bg=rev(c(downcol,downevencol,evencol,upevencol,upcol)),col=c("black","black","black","black","black"),bg="white",pch=21,cex=1.75)}
 					}
 				}
 				plotit(filename = paste(folder,"/drfc_vs_srfc_cluster_",condition,".jpg",sep=""),sw = 2*windowxy(nrseries)[2],sh = 2*windowxy(nrseries)[1],sres = 2,plotsfkt = plotsfkt,ww = 7*windowxy(nrseries)[2],wh = 7*windowxy(nrseries)[1],saveit = plots,addformat = addformat,notinR = notinR)
