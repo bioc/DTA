@@ -4,7 +4,7 @@ Title: Dynamic Transcriptome Analysis
 Version: 0.99.1
 Date: 2011-08-12
 Author: Bjoern Schwalb, Benedikt Zacher, Sebastian Duemcke, Achim Tresch
-Maintainer: <schwalb@lmb.uni-muenchen.de>
+Maintainer: Bjoern Schwalb <schwalb@lmb.uni-muenchen.de>
 Depends: LSD
 Imports: scatterplot3d
 Description: Dynamic Transcriptome Analysis (DTA) can monitor the cellular response to perturbations with higher sensitivity and temporal resolution than standard transcriptomics. The package implements the underlying kinetic modeling approach capable of the precise determination of synthesis- and decay rates from individual microarray or RNAseq measurements.
