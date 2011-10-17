@@ -4,20 +4,21 @@
 
 
 DTA.dynamic.singlegenerate = function(
-		mu.values,							# vector giving the synthesis rate(s) (mu)
-		mu.breaks = NULL,					# vector giving the timepoints the synthesis rate changes (mu)
-		lambda.values,						# vector giving the decay rate(s) (lambda)
-		lambda.breaks = NULL,				# vector giving the timepoints the decay rate changes (lambda)
-		n = 1,   							# the number of cells N(0)
-		ccl = NULL, 						# the cell cycle length of the cells
-		duration = 60,						# duration of the whole time course (min)
-		lab.duration = 6,					# labeling duration for single experiments (min)
-		check = TRUE, 						# if check=TRUE, control messages and plots will be generated
-		plots = FALSE, 						# if plots = TRUE, control plots will be plotted
-		save.plots = FALSE, 				# if save.plots = TRUE, control plots will be saved
-		folder = NULL, 						# folder, where to save the plots
-		condition = "", 					# to be added to the plotnames
-		addformat = NULL	 				# additional fileformat for plots to be saved
+		mu.values,								# vector giving the synthesis rate(s) (mu)
+		mu.breaks = NULL,						# vector giving the timepoints the synthesis rate changes (mu)
+		lambda.values,							# vector giving the decay rate(s) (lambda)
+		lambda.breaks = NULL,					# vector giving the timepoints the decay rate changes (lambda)
+		n = 1,   								# the number of cells N(0)
+		ccl = NULL, 							# the cell cycle length of the cells
+		duration = 60,							# duration of the whole time course (min)
+		lab.duration = 6,						# labeling duration for single experiments (min)
+		check = TRUE, 							# if check=TRUE, control messages and plots will be generated
+		plots = FALSE, 							# if plots = TRUE, control plots will be plotted
+		cols = c("darkred","darkblue","black"),	# colors for plot
+		save.plots = FALSE, 					# if save.plots = TRUE, control plots will be saved
+		folder = NULL, 							# folder, where to save the plots
+		condition = "", 						# to be added to the plotnames
+		addformat = NULL	 					# additional fileformat for plots to be saved
 )
 {
 	
@@ -34,7 +35,7 @@ DTA.dynamic.singlegenerate = function(
 	mu.vals = apply(as.matrix(sq),1,mu)
 	truesynthesisrate = mu.vals[sparsesq[-1]+1]
 	truesynthesisrateaveraged = c()
-	for (i in 1:(duration/lab.duration)){truesynthesisrateaveraged[i] = mean(mu.vals[((i*lab.duration-lab.duration):(i*lab.duration))],trim = 1/lab.duration)}
+	for (i in 1:(duration/lab.duration)){truesynthesisrateaveraged[i] = mean(mu.vals[((i*lab.duration-lab.duration):(i*lab.duration))+1])}
 	
 	### THE "TRUE" DECAY RATES (lambda) ###
 	
@@ -42,7 +43,7 @@ DTA.dynamic.singlegenerate = function(
 	lambda.vals = apply(as.matrix(sq),1,lambda)
 	truedecayrate = lambda.vals[sparsesq[-1]+1]
 	truedecayrateaveraged = c()
-	for (i in 1:(duration/lab.duration)){truedecayrateaveraged[i] = mean(lambda.vals[((i*lab.duration-lab.duration):(i*lab.duration))],trim = 1/lab.duration)}
+	for (i in 1:(duration/lab.duration)){truedecayrateaveraged[i] = mean(lambda.vals[((i*lab.duration-lab.duration):(i*lab.duration))+1])}
 	piecewise.integrated.lambda = function(t){vec = apply(as.matrix(c(lambda.breaks,t)),1,function(x){min(x,t)});vec = vec - c(0,vec)[-(length(vec)+1)];return(sum(vec*lambda.values))}
 	piecewise.integrated.lambda.vals = apply(as.matrix(sq),1,piecewise.integrated.lambda)
 	
@@ -92,29 +93,27 @@ DTA.dynamic.singlegenerate = function(
 			sc2 = 2.5/scale
 			par(mfrow=c(4,1))
 			par(mar=c(5,4,4,2) + 2.5)
-			plot(sq,mu.vals,xlim=c(0,duration),ylim=c(0,max(mu.vals*(4/3))),xlab="Time [min]",ylab=expression(paste("Synthesis rate  ",mu[g])),main=expression(paste("Time course of synthesis rate  ",mu[g])),cex.main=1.25*scex,cex.lab=1*scex,cex.axis=1*scex,cex=sc1*scex)
-			points(sparsesq[-1],truesynthesisrateaveraged,cex=scex*sc2,col="red")
-			points(sparsesq[-1],truesynthesisrate,cex=scex,col="red",pch=20)
+			plot(sq,mu.vals,col=cols[1],pch=20,xlim=c(0,duration),ylim=c(0,max(mu.vals*(4/3))),xlab="Time [min]",ylab=expression(paste("Synthesis rate  ",mu[g])),main=expression(paste("Time course of synthesis rate  ",mu[g])),cex.main=1.25*scex,cex.lab=1*scex,cex.axis=1*scex,cex=sc1*scex)
+			points(sparsesq[-1]-lab.duration/2,truesynthesisrateaveraged,cex=scex*sc2,col=cols[1],lwd=2)
 			abline(v=sparsesq,lty=3,col="grey")
-			plot(sq,lambda.vals,xlim=c(0,duration),ylim=c(0,max(lambda.vals*(4/3))),xlab="Time [min]",ylab=expression(paste("Decay rate  ",lambda[g])),main=expression(paste("Time course of decay rate  ",lambda[g])),cex.main=1.25*scex,cex.lab=1*scex,cex.axis=1*scex,cex=sc1*scex)
-			points(sparsesq[-1],truedecayrateaveraged,cex=scex*sc2,col="blue")
-			points(sparsesq[-1],truedecayrate,cex=scex,col="blue",pch=20)
+			plot(sq,lambda.vals,col=cols[2],pch=20,xlim=c(0,duration),ylim=c(0,max(lambda.vals*(4/3))),xlab="Time [min]",ylab=expression(paste("Decay rate  ",lambda[g])),main=expression(paste("Time course of decay rate  ",lambda[g])),cex.main=1.25*scex,cex.lab=1*scex,cex.axis=1*scex,cex=sc1*scex)
+			points(sparsesq[-1]-lab.duration/2,truedecayrateaveraged,cex=scex*sc2,col=cols[2],lwd=2)
 			abline(v=sparsesq,lty=3,col="grey")
-			plot(sq,total.vals,xlim = c(0,duration),ylim = c(0,max(total.vals)*(4/3)),col = "black",xlab="Time [min]",ylab=paste("Amount of RNA per",n,"cell(s)"),main=expression(paste("Time course of T, L and U (experiment duration)")),cex.main=1.25*scex,cex.lab=1*scex,cex.axis=1*scex,cex=sc1*scex)
-			points(sq,unlabeled.vals,col = "blue",cex=sc1*scex)
-			points(sq,labeled.vals,col = "red",cex=sc1*scex)
+			plot(sq,total.vals,pch=19,xlim = c(0,duration),ylim = c(0,max(total.vals)*(4/3)),col = cols[3],xlab="Time [min]",ylab=paste("Amount of RNA per",n,"cell(s)"),main=expression(paste("Time course of T, L and U (experiment duration)")),cex.main=1.25*scex,cex.lab=1*scex,cex.axis=1*scex,cex=sc1*scex)
+			points(sq,unlabeled.vals,col = cols[2],cex=sc1*scex,pch=20)
+			points(sq,labeled.vals,col = cols[1],cex=sc1*scex,pch=20)
 			abline(v=sparsesq,lty=3,col="grey")
-			legend("topright",c("total RNA","labeled RNA","unlabeled RNA"),col=c("black","red","blue"),pch=1,cex=2,bg="white")
-			plot(sq,total.vals,xlim = c(0,duration),ylim = c(0,max(total.vals)*(4/3)),col = "black",xlab="Time [min]",ylab=paste("Amount of RNA per",n,"cell(s)"),main=expression(paste("Time course of T, L and U (labeling durations)")),cex.main=1.25*scex,cex.lab=1*scex,cex.axis=1*scex,cex=sc1*scex)
+			legend("topright",c("total RNA","labeled RNA","unlabeled RNA"),col=c(cols[3],cols[1],cols[2]),pch=19,cex=2,bg="white")
+			plot(sq,total.vals,pch=19,xlim = c(0,duration),ylim = c(0,max(total.vals)*(4/3)),col = cols[3],xlab="Time [min]",ylab=paste("Amount of RNA per",n,"cell(s)"),main=expression(paste("Time course of T, L and U (labeling durations)")),cex.main=1.25*scex,cex.lab=1*scex,cex.axis=1*scex,cex=sc1*scex)
 			for (i in 1:(duration/lab.duration)){
-				points((i*lab.duration-lab.duration):(i*lab.duration),unlabeled.vals.list[[i]],col = "blue",cex=sc1*scex)
-				points((i*lab.duration-lab.duration):(i*lab.duration),labeled.vals.list[[i]],col = "red",cex=sc1*scex)
+				points((i*lab.duration-lab.duration):(i*lab.duration),unlabeled.vals.list[[i]],col = cols[2],cex=sc1*scex,pch=20)
+				points((i*lab.duration-lab.duration):(i*lab.duration),labeled.vals.list[[i]],col = cols[1],cex=sc1*scex,pch=20)
 			}
-			points(sparsesq[-1],truetotal[-1],cex=scex*sc2,col="black")
-			points(sparsesq[-1],trueunlabeled,cex=scex*sc2,col="blue")
-			points(sparsesq[-1],truelabeled,cex=scex*sc2,col="red")
+			points(sparsesq[-1],truetotal[-1],cex=scex*sc2,col=cols[3],lwd=2)
+			points(sparsesq[-1],trueunlabeled,cex=scex*sc2,col=cols[2],lwd=2)
+			points(sparsesq[-1],truelabeled,cex=scex*sc2,col=cols[1],lwd=2)
 			abline(v=sparsesq,lty=3,col="grey")
-			legend("topright",c("total RNA","labeled RNA","unlabeled RNA"),col=c("black","red","blue"),pch=1,cex=2,bg="white")
+			legend("topright",c("total RNA","labeled RNA","unlabeled RNA"),col=c(cols[3],cols[1],cols[2]),pch=19,cex=2,bg="white")
 		}
 		plotit(filename = paste(folder,"/time_course_",condition,".jpg",sep=""),sw = 2*duration/25,sh = 6,sres = 2,plotsfkt = plotsfkt,ww = 7*duration/25,wh = 21,saveit = save.plots,addformat = addformat)		
 	}
