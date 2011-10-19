@@ -242,7 +242,6 @@ DTA.dynamic.generate = function(
 	
 	### FILL MATRICES ###
 	
-	start = proc.time()
 	for (i in 1:nrgenes){
 		res = DTA.dynamic.singlegenerate(mu.values = mu.values.mat[i,],mu.breaks = mu.breaks.mat[i,],lambda.values = lambda.values.mat[i,],lambda.breaks = lambda.breaks.mat[i,],
 				n = n,ccl = ccl,duration = duration,lab.duration = lab.duration)
@@ -253,10 +252,6 @@ DTA.dynamic.generate = function(
 		truedecayratemat[i,] = res$'truedecayrate'
 		truesynthesisrateaveragedmat[i,] = res$'truesynthesisrateaveraged'
 		truedecayrateaveragedmat[i,] = res$'truedecayrateaveraged'
-	}
-	if (check){
-		print(paste("CPU time (in seconds) for profiles of",nrgenes,"genes:"))
-		print(round((proc.time() - start)/60,2))
 	}
 	
 	### PRELIMINARIES ###
