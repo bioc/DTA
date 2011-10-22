@@ -272,7 +272,7 @@ DTA.singleestimate = function(phenomat, # phenotype matrix, "nr" should be numbe
 							abline(h = min(t(planes[[expnr]])[,3]),col = "red",lwd=1)
 						}
 					}
-					plotit(filename = paste(folder,"/regression_hyperline_",condition,"_",timepoint,".jpg",sep=""),sw = 2*windowxy(nrexperiments)[2],sh = 2*windowxy(nrexperiments)[1],sres = 2,plotsfkt = plotsfkt,ww = 7*windowxy(nrexperiments)[2],wh = 7*windowxy(nrexperiments)[1],saveit = plots,addformat = addformat,notinR = notinR)
+					DTA.plot.it(filename = paste(folder,"/regression_hyperline_",condition,"_",timepoint,sep=""),sw = 1*windowxy(nrexperiments)[2],sh = 1*windowxy(nrexperiments)[1],sres = 1,plotsfkt = plotsfkt,ww = 7*windowxy(nrexperiments)[2],wh = 7*windowxy(nrexperiments)[1],saveit = plots,addformat = addformat,notinR = notinR)
 					
 					plotsfkt = function(){
 						par(mfrow=windowxy(nrexperiments))
@@ -289,7 +289,7 @@ DTA.singleestimate = function(phenomat, # phenotype matrix, "nr" should be numbe
 							s3d$plane3d(c(min(t(planes[[expnr]])[,3]),0,0), lty = "solid", lty.box = "solid",col = "red",lwd=1)
 						}
 					}
-					plotit(filename = paste(folder,"/regression_hyperplane_",condition,"_",timepoint,".jpg",sep=""),sw = 2*windowxy(nrexperiments)[2],sh = 2*windowxy(nrexperiments)[1],sres = 2,plotsfkt = plotsfkt,ww = 7*windowxy(nrexperiments)[2],wh = 7*windowxy(nrexperiments)[1],saveit = plots,addformat = addformat,notinR = notinR)		
+					DTA.plot.it(filename = paste(folder,"/regression_hyperplane_",condition,"_",timepoint,sep=""),sw = 1*windowxy(nrexperiments)[2],sh = 1*windowxy(nrexperiments)[1],sres = 1,plotsfkt = plotsfkt,ww = 7*windowxy(nrexperiments)[2],wh = 7*windowxy(nrexperiments)[1],saveit = plots,addformat = addformat,notinR = notinR)		
 				}
 			}
 			
@@ -357,7 +357,7 @@ DTA.singleestimate = function(phenomat, # phenotype matrix, "nr" should be numbe
 					LT.plotbias(labeled=calcdatamatreliable[,Lname],total=calcdatamatreliable[,Tname],tnumber=tnumberreliable,plabel=plabel[expnr],asymptote=asymptote,trueplabel=trueplabel[experiments[expnr]],trueasymptote=trueLasymptote[experiments[expnr]],repl = phenomat[Tnr,"name"],scex = scex)
 				}
 			}
-			plotit(filename = paste(folder,"/estimation_bias_L_",condition,"_",timepoint,".jpg",sep=""),sw = 2*windowxy(nrexperiments)[2],sh = 2*windowxy(nrexperiments)[1],sres = 2,plotsfkt = plotsfkt,ww = 7*windowxy(nrexperiments)[2],wh = 7*windowxy(nrexperiments)[1],saveit = plots,addformat = addformat,notinR = notinR)    
+			DTA.plot.it(filename = paste(folder,"/estimation_bias_L_",condition,"_",timepoint,sep=""),sw = 1*windowxy(nrexperiments)[2],sh = 1*windowxy(nrexperiments)[1],sres = 1,plotsfkt = plotsfkt,ww = 7*windowxy(nrexperiments)[2],wh = 7*windowxy(nrexperiments)[1],saveit = plots,addformat = addformat,notinR = notinR)    
 			if (unlabeledfraction){
 				if (is.null(ratiodummy) & ratiomethod == "bias"){
 					plotsfkt = function(){
@@ -375,7 +375,7 @@ DTA.singleestimate = function(phenomat, # phenotype matrix, "nr" should be numbe
 							UT.plotbias(unlabeled=calcdatamatreliable[,Uname],total=calcdatamatreliable[,Tname],tnumber=tnumberreliable,plabel=plabel[expnr],asymptote=asymptote,trueplabel=trueplabel[experiments[expnr]],trueasymptote=trueUasymptote[experiments[expnr]],repl = phenomat[Tnr,"name"],ratio = brbyarestimate[expnr],scex = scex)
 						}
 					}
-					plotit(filename = paste(folder,"/estimation_bias_U_",condition,"_",timepoint,".jpg",sep=""),sw = 2*windowxy(nrexperiments)[2],sh = 2*windowxy(nrexperiments)[1],sres = 2,plotsfkt = plotsfkt,ww = 7*windowxy(nrexperiments)[2],wh = 7*windowxy(nrexperiments)[1],saveit = plots,addformat = addformat,notinR = notinR)
+					DTA.plot.it(filename = paste(folder,"/estimation_bias_U_",condition,"_",timepoint,sep=""),sw = 1*windowxy(nrexperiments)[2],sh = 1*windowxy(nrexperiments)[1],sres = 1,plotsfkt = plotsfkt,ww = 7*windowxy(nrexperiments)[2],wh = 7*windowxy(nrexperiments)[1],saveit = plots,addformat = addformat,notinR = notinR)
 				} else {
 					plotsfkt = function(){
 						par(mfrow=windowxy(nrexperiments))
@@ -392,7 +392,7 @@ DTA.singleestimate = function(phenomat, # phenotype matrix, "nr" should be numbe
 							UT.plotbias(unlabeled=calcdatamatreliable[,Uname],total=calcdatamatreliable[,Tname],tnumber=tnumberreliable,plabel=plabel[expnr],asymptote=asymptote,trueplabel=trueplabel[experiments[expnr]],trueasymptote=trueUasymptote[experiments[expnr]],repl = phenomat[Tnr,"name"],scex = scex,ratio = labelratio[expnr])
 						}
 					}
-					plotit(filename = paste(folder,"/estimation_bias_U_",condition,"_",timepoint,".jpg",sep=""),sw = 2*windowxy(nrexperiments)[2],sh = 2*windowxy(nrexperiments)[1],sres = 2,plotsfkt = plotsfkt,ww = 7*windowxy(nrexperiments)[2],wh = 7*windowxy(nrexperiments)[1],saveit = plots,addformat = addformat,notinR = notinR)
+					DTA.plot.it(filename = paste(folder,"/estimation_bias_U_",condition,"_",timepoint,sep=""),sw = 1*windowxy(nrexperiments)[2],sh = 1*windowxy(nrexperiments)[1],sres = 1,plotsfkt = plotsfkt,ww = 7*windowxy(nrexperiments)[2],wh = 7*windowxy(nrexperiments)[1],saveit = plots,addformat = addformat,notinR = notinR)
 					
 				}
 			}
@@ -443,7 +443,7 @@ DTA.singleestimate = function(phenomat, # phenotype matrix, "nr" should be numbe
 					LT.plotbias(labeled=calcdatamatreliable[,Lname],total=calcdatamatreliable[,Tname],tnumber=tnumberreliable,plabel=1,asymptote=asymptote,trueplabel=1,trueasymptote=trueLasymptote[experiments[expnr]],repl = phenomat[Tnr,"name"],scex = scex,correctedlabeling = correctedlabeling)
 				}
 			}
-			plotit(filename = paste(folder,"/estimation_bias_L_",condition,"_",timepoint,"_corrected.jpg",sep=""),sw = 2*windowxy(nrexperiments)[2],sh = 2*windowxy(nrexperiments)[1],sres = 2,plotsfkt = plotsfkt,ww = 7*windowxy(nrexperiments)[2],wh = 7*windowxy(nrexperiments)[1],saveit = plots,addformat = addformat,notinR = notinR)    
+			DTA.plot.it(filename = paste(folder,"/estimation_bias_L_",condition,"_",timepoint,"_corrected",sep=""),sw = 1*windowxy(nrexperiments)[2],sh = 1*windowxy(nrexperiments)[1],sres = 1,plotsfkt = plotsfkt,ww = 7*windowxy(nrexperiments)[2],wh = 7*windowxy(nrexperiments)[1],saveit = plots,addformat = addformat,notinR = notinR)    
 			if (unlabeledfraction){
 				if (is.null(ratiodummy) & ratiomethod == "bias"){
 					plotsfkt = function(){
@@ -461,7 +461,7 @@ DTA.singleestimate = function(phenomat, # phenotype matrix, "nr" should be numbe
 							UT.plotbias(unlabeled=calcdatamatreliable[,Uname],total=calcdatamatreliable[,Tname],tnumber=tnumberreliable,plabel=1,asymptote=asymptote,trueplabel=1,trueasymptote=trueUasymptote[experiments[expnr]],repl = phenomat[Tnr,"name"],ratio = brbyarestimate[expnr],scex = scex,correctedlabeling = correctedlabeling)
 						}
 					}
-					plotit(filename = paste(folder,"/estimation_bias_U_",condition,"_",timepoint,"_corrected.jpg",sep=""),sw = 2*windowxy(nrexperiments)[2],sh = 2*windowxy(nrexperiments)[1],sres = 2,plotsfkt = plotsfkt,ww = 7*windowxy(nrexperiments)[2],wh = 7*windowxy(nrexperiments)[1],saveit = plots,addformat = addformat,notinR = notinR)
+					DTA.plot.it(filename = paste(folder,"/estimation_bias_U_",condition,"_",timepoint,"_corrected",sep=""),sw = 1*windowxy(nrexperiments)[2],sh = 1*windowxy(nrexperiments)[1],sres = 1,plotsfkt = plotsfkt,ww = 7*windowxy(nrexperiments)[2],wh = 7*windowxy(nrexperiments)[1],saveit = plots,addformat = addformat,notinR = notinR)
 				} else {
 					plotsfkt = function(){
 						par(mfrow=windowxy(nrexperiments))
@@ -478,7 +478,7 @@ DTA.singleestimate = function(phenomat, # phenotype matrix, "nr" should be numbe
 							UT.plotbias(unlabeled=calcdatamatreliable[,Uname],total=calcdatamatreliable[,Tname],tnumber=tnumberreliable,plabel=1,asymptote=asymptote,trueplabel=1,trueasymptote=trueUasymptote[experiments[expnr]],repl = phenomat[Tnr,"name"],scex = scex,correctedlabeling = correctedlabeling)
 						}
 					}
-					plotit(filename = paste(folder,"/estimation_bias_U_",condition,"_",timepoint,"_corrected.jpg",sep=""),sw = 2*windowxy(nrexperiments)[2],sh = 2*windowxy(nrexperiments)[1],sres = 2,plotsfkt = plotsfkt,ww = 7*windowxy(nrexperiments)[2],wh = 7*windowxy(nrexperiments)[1],saveit = plots,addformat = addformat,notinR = notinR)
+					DTA.plot.it(filename = paste(folder,"/estimation_bias_U_",condition,"_",timepoint,"_corrected",sep=""),sw = 1*windowxy(nrexperiments)[2],sh = 1*windowxy(nrexperiments)[1],sres = 1,plotsfkt = plotsfkt,ww = 7*windowxy(nrexperiments)[2],wh = 7*windowxy(nrexperiments)[1],saveit = plots,addformat = addformat,notinR = notinR)
 					
 				}
 			}
@@ -552,7 +552,7 @@ DTA.singleestimate = function(phenomat, # phenotype matrix, "nr" should be numbe
 					main = expression(paste("Rank heatpairs of  ",1-(c[r]/a[r]*l[gr])*L[gr]/T[gr],"\n"))
 				}
 				if (ncol(LTmat) > 2){
-					rcex = ncol(LTmat)
+					rcex = ncol(LTmat)/2
 					plotsfkt = function(){
 						par(mar=c(5,4,4,2) + 1)
 						heatmat = apply(LTmat,2,rank)
@@ -561,7 +561,7 @@ DTA.singleestimate = function(phenomat, # phenotype matrix, "nr" should be numbe
 						heatpairs(heatmat,main = main,cex.labels = min(1/(max(nchar(colnames(LTmat)))/10)*2.5*scex,2),cex.main=1.25*scex,cex.lab=1*scex,cex.axis=1*scex)
 						title(paste("( max median fold = ",round(max(abs(diff(apply(LTmat,2,median)))),2),")"),col.main="darkgrey",cex.main=0.75*scex)
 					}
-					plotit(filename = paste(folder,"/rank_heatpairs_",condition,"_",timepoint,".jpg",sep=""),sw = rcex,sh = rcex,sres = 2,plotsfkt = plotsfkt,ww = rcex*3.5,wh = rcex*3.5,saveit = plots,addformat = addformat,notinR = notinR)
+					DTA.plot.it(filename = paste(folder,"/rank_heatpairs_",condition,"_",timepoint,sep=""),sw = rcex,sh = rcex,sres = 1,plotsfkt = plotsfkt,ww = rcex*3.5,wh = rcex*3.5,saveit = plots,addformat = addformat,notinR = notinR)
 				}
 			}
 			
@@ -593,7 +593,7 @@ DTA.singleestimate = function(phenomat, # phenotype matrix, "nr" should be numbe
 						text(3*exp(-alpha*labelingtime)/2,-0.25,sum(LTmat[,i] >= exp(-alpha*labelingtime)),cex=1.5)
 					}
 				}
-				plotit(filename = paste(folder,"/range_assessment_",condition,"_",timepoint,".jpg",sep=""),sw = 2*windowxy(ncol(LTmat))[2],sh = 2*windowxy(ncol(LTmat))[1],sres = 2,plotsfkt = plotsfkt,ww = 7*windowxy(ncol(LTmat))[2],wh = 7*windowxy(ncol(LTmat))[1],saveit = plots,addformat = addformat,notinR = notinR)
+				DTA.plot.it(filename = paste(folder,"/range_assessment_",condition,"_",timepoint,sep=""),sw = 1*windowxy(ncol(LTmat))[2],sh = 1*windowxy(ncol(LTmat))[1],sres = 1,plotsfkt = plotsfkt,ww = 7*windowxy(ncol(LTmat))[2],wh = 7*windowxy(ncol(LTmat))[1],saveit = plots,addformat = addformat,notinR = notinR)
 			}
 		}
 		
@@ -624,7 +624,7 @@ DTA.singleestimate = function(phenomat, # phenotype matrix, "nr" should be numbe
 					main = expression(paste("Rank heatpairs of  ",(c[r]/b[r]*u[gr])*U[gr]/T[gr],"\n"))
 				}
 				if (ncol(UTmat) > 2){
-					rcex = ncol(UTmat)
+					rcex = ncol(UTmat)/2
 					plotsfkt = function(){
 						par(mar=c(5,4,4,2) + 1)
 						heatmat = apply(UTmat,2,rank)
@@ -633,7 +633,7 @@ DTA.singleestimate = function(phenomat, # phenotype matrix, "nr" should be numbe
 						heatpairs(heatmat,main = main,cex.labels = min(1/(max(nchar(colnames(UTmat)))/10)*2.5*scex,2),cex.main=1.25*scex,cex.lab=1*scex,cex.axis=1*scex)
 						title(paste("( max median fold = ",round(max(abs(diff(apply(UTmat,2,median)))),2),")"),col.main="darkgrey",cex.main=0.75*scex)
 					}
-					plotit(filename = paste(folder,"/rank_heatpairs_",condition,"_",timepoint,".jpg",sep=""),sw = rcex,sh = rcex,sres = 2,plotsfkt = plotsfkt,ww = rcex*3.5,wh = rcex*3.5,saveit = plots,addformat = addformat,notinR = notinR)
+					DTA.plot.it(filename = paste(folder,"/rank_heatpairs_",condition,"_",timepoint,sep=""),sw = rcex,sh = rcex,sres = 1,plotsfkt = plotsfkt,ww = rcex*3.5,wh = rcex*3.5,saveit = plots,addformat = addformat,notinR = notinR)
 				}
 			}
 			
@@ -665,7 +665,7 @@ DTA.singleestimate = function(phenomat, # phenotype matrix, "nr" should be numbe
 						text(3*exp(-alpha*labelingtime)/2,-0.25,sum(UTmat[,i] >= exp(-alpha*labelingtime)),cex=1.5)
 					}
 				}
-				plotit(filename = paste(folder,"/range_assessment_",condition,"_",timepoint,".jpg",sep=""),sw = 2*windowxy(ncol(UTmat))[2],sh = 2*windowxy(ncol(UTmat))[1],sres = 2,plotsfkt = plotsfkt,ww = 7*windowxy(ncol(UTmat))[2],wh = 7*windowxy(ncol(UTmat))[1],saveit = plots,addformat = addformat,notinR = notinR)
+				DTA.plot.it(filename = paste(folder,"/range_assessment_",condition,"_",timepoint,sep=""),sw = 1*windowxy(ncol(UTmat))[2],sh = 1*windowxy(ncol(UTmat))[1],sres = 1,plotsfkt = plotsfkt,ww = 7*windowxy(ncol(UTmat))[2],wh = 7*windowxy(ncol(UTmat))[1],saveit = plots,addformat = addformat,notinR = notinR)
 			}
 		}
 		
@@ -699,7 +699,7 @@ DTA.singleestimate = function(phenomat, # phenotype matrix, "nr" should be numbe
 					main = expression(paste("Rank heatpairs of  ",(1-(c[r]/a[r]*l[gr])*L[gr]/T[gr]+(c[r]/b[r]*u[gr])*U[gr]/T[gr])/2,"\n"))
 				}
 				if (ncol(Bmat) > 2){
-					rcex = ncol(Bmat)
+					rcex = ncol(Bmat)/2
 					plotsfkt = function(){
 						par(mar=c(5,4,4,2) + 1)
 						heatmat = apply(Bmat,2,rank)
@@ -708,7 +708,7 @@ DTA.singleestimate = function(phenomat, # phenotype matrix, "nr" should be numbe
 						heatpairs(heatmat,main = main,cex.labels = min(1/(max(nchar(colnames(Bmat)))/10)*2.5*scex,2),cex.main=1.25*scex,cex.lab=1*scex,cex.axis=1*scex)
 						title(paste("( max median fold = ",round(max(abs(diff(apply(Bmat,2,median)))),2),")"),col.main="darkgrey",cex.main=0.75*scex)
 					}
-					plotit(filename = paste(folder,"/rank_heatpairs_",condition,"_",timepoint,".jpg",sep=""),sw = rcex,sh = rcex,sres = 2,plotsfkt = plotsfkt,ww = rcex*3.5,wh = rcex*3.5,saveit = plots,addformat = addformat,notinR = notinR)
+					DTA.plot.it(filename = paste(folder,"/rank_heatpairs_",condition,"_",timepoint,sep=""),sw = rcex,sh = rcex,sres = 1,plotsfkt = plotsfkt,ww = rcex*3.5,wh = rcex*3.5,saveit = plots,addformat = addformat,notinR = notinR)
 				}
 			}
 			
@@ -740,7 +740,7 @@ DTA.singleestimate = function(phenomat, # phenotype matrix, "nr" should be numbe
 						text(3*exp(-alpha*labelingtime)/2,-0.25,sum(Bmat[,i] >= exp(-alpha*labelingtime)),cex=1.5)
 					}
 				}
-				plotit(filename = paste(folder,"/range_assessment_",condition,"_",timepoint,".jpg",sep=""),sw = 2*windowxy(ncol(Bmat))[2],sh = 2*windowxy(ncol(Bmat))[1],sres = 2,plotsfkt = plotsfkt,ww = 7*windowxy(ncol(Bmat))[2],wh = 7*windowxy(ncol(Bmat))[1],saveit = plots,addformat = addformat,notinR = notinR)
+				DTA.plot.it(filename = paste(folder,"/range_assessment_",condition,"_",timepoint,sep=""),sw = 1*windowxy(ncol(Bmat))[2],sh = 1*windowxy(ncol(Bmat))[1],sres = 1,plotsfkt = plotsfkt,ww = 7*windowxy(ncol(Bmat))[2],wh = 7*windowxy(ncol(Bmat))[1],saveit = plots,addformat = addformat,notinR = notinR)
 			}
 		}
 		
@@ -853,7 +853,7 @@ DTA.singleestimate = function(phenomat, # phenotype matrix, "nr" should be numbe
 				axis(4,at=c(-1,-0.5,0,0.5,1),labels=c(-1,-0.5,0,0.5,1),las=2)
 				box()
 			}
-			plotit(filename = paste(folder,"/correlation_analysis_",condition,"_",timepoint,".jpg",sep=""),sw = 2,sh = 2,sres = 2,plotsfkt = plotsfkt,ww = 7,wh = 7,saveit = plots,addformat = addformat,notinR = notinR)
+			DTA.plot.it(filename = paste(folder,"/correlation_analysis_",condition,"_",timepoint,sep=""),sw = 1,sh = 1,sres = 1,plotsfkt = plotsfkt,ww = 7,wh = 7,saveit = plots,addformat = addformat,notinR = notinR)
 		}
 		
 		### GENERATE CV PROGRESSION ###
@@ -1008,7 +1008,7 @@ DTA.singleestimate = function(phenomat, # phenotype matrix, "nr" should be numbe
 				abline(v=0,col="grey",lwd=3,lty=2)
 				abline(v=den[which(den[,2] == max(den[,2]))],col="black",lwd=3)
 			}
-			plotit(filename = paste(folder,"/simulation_",condition,"_",timepoint,".jpg",sep=""),sw = 4,sh = 4,sres = 2,plotsfkt = plotsfkt,ww = 14,wh = 14,saveit = plots,addformat = addformat,notinR = notinR)
+			DTA.plot.it(filename = paste(folder,"/simulation_",condition,"_",timepoint,sep=""),sw = 2,sh = 2,sres = 1,plotsfkt = plotsfkt,ww = 14,wh = 14,saveit = plots,addformat = addformat,notinR = notinR)
 		}
 	}
 	

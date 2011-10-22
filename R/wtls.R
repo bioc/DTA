@@ -1,4 +1,7 @@
-# Author: Sebastian Dümcke <duemcke@genzentrum.lmu.de>
+
+
+# Author: Sebastian Duemcke <duemcke@genzentrum.lmu.de>
+
 
 tls = function(formula,D=NULL,T=NULL,precision=.Machine$double.eps){
     
@@ -43,11 +46,14 @@ tls = function(formula,D=NULL,T=NULL,precision=.Machine$double.eps){
     return(ret)
 } 
 
+
 ##implement weigthed total least square regression according to Golub and Van Loan (1980) in SIAM J.Numer.Anal Vol 17 No.6
 # A = design matrix/ data matrix
 # b = observation
 # D = diagonal weigth matrix for b
 # T = diagonal weigth matrix for A (dim(T) = dim(A) + 1)
+
+
 wtls.householder = function(A,b,D,T,epsilon=.Machine$double.eps){
     
     stopifnot(nrow(cbind(A,b)) > ncol(cbind(A,b)))
@@ -98,6 +104,7 @@ wtls.householder = function(A,b,D,T,epsilon=.Machine$double.eps){
     
 }
 
+
 .residuals = function(x,y,coef){
     
     if(is.na(coef["(Intercept)"])){
@@ -117,19 +124,20 @@ wtls.householder = function(A,b,D,T,epsilon=.Machine$double.eps){
     return(r)
 }
 
+
 .r.squared = function(x,y,coef){
     tss = sum((y - mean(y))^2)
-#    yhat = apply(x%*%t(coef),1,sum)
-#    ess = sum((yhat - mean(y))^2)
     rss = sum(x^2)
-    
-#    return(ess/tss)
     return(1 - (rss/tss))
 }
+
+
 # A = design matrix/ data matrix
 # b = observation
 # D = diagonal weigth matrix for b
 # T = diabonal wigth matrix for A (dim(T) = dim(A) + 1)
+
+
 wtls.solve = function(A,b,D,T){
     
     #check arguments
@@ -144,15 +152,13 @@ wtls.solve = function(A,b,D,T){
     
     #2 solve LS: min ||D(AX-b)||_2^2
     ls = lm(b ~ I(D %*% A) + 0 ,x=TRUE)
-#    rho = ls$x
-#    rho = min(ls$residuals)
     xls = ls$coefficients
     dim(xls) = c(length(xls),1)
-    rho = norm(D %*% (A %*% xls - b),type="F")^2 #is this right? is it really ||x||_2?
+    rho = norm(D %*% (A %*% xls - b),type="F")^2
     
     #find sigma
     lambda = T[nrow(T),ncol(T)]
-    C = t(s$u) %*% (D %*% b) #spaltenvector ?!
+    C = t(s$u) %*% (D %*% b)
     
     psi = function(sigma){
         sigma^2 * ((1/lambda^2) + sum(C^2/(sigma_hat^2-sigma^2))) - rho
@@ -176,30 +182,6 @@ wtls.solve = function(A,b,D,T){
     
 }
 
-#tls = function(A,b){
-#    
-#    #check arguments
-#    if(!is.matrix(A)){A = as.matrix(A)}
-#    if(!is.matrix(b)){b = as.matrix(b)}
-#    
-#    s = svd(cbind(A,b), nu = nrow(cbind(A,b)),nv=ncol(cbind(A,b)))
-#    
-#    #take transose of s$v ???
-#    V12 = t(s$v)[1:ncol(A),1:ncol(A)]
-#    V22 = t(s$v)[(ncol(s$v) - ncol(b) + 1):ncol(s$v),(ncol(s$v) - ncol(b) + 1):ncol(s$v)]
-#    
-#    stopifnot(dim(V22) != c(ncol(b),ncol(b)))
-#    
-#    inv_V22 = solve(V22) #if error (V22 singular) problem has no solution
-#
-#    if(all(dim(inv_V22) == c(1,1))){
-#        xtls = -V12 * inv_V22
-#    }else{
-#        xtls = -V12 %*% inv_V22
-#    }
-#    
-#    return(xtls)
-#}
 
 tls.iter = function(A,y,delta=1e-10){
     
@@ -213,10 +195,6 @@ tls.iter = function(A,y,delta=1e-10){
     
     k.start = 0
     eta.start = solve(N) %*% c
-    
-#    #1st iteration
-#    k.i = t(y - A %*% eta.start) %*% (y - A %*% eta.start) / (1 + t(eta.start) %*% eta.start)
-#    eta.i = solve(N - k.i %*% diag(ncol(A))) %*% c
     
     eta.prev = c(0,eta.start)
     eta.i = eta.start
@@ -233,3 +211,6 @@ tls.iter = function(A,y,delta=1e-10){
     
     return(list(coefficients=eta.i,var=var))
 }
+
+
+

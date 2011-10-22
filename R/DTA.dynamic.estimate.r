@@ -217,7 +217,7 @@ DTA.dynamic.estimate = function(
 						title(paste("\n( i =",j+1,")"),col.main="darkgrey",cex.main=0.75*scex)
 						gridfkt(lim = folds.lims)}
 				}
-				plotit(filename = paste(folder,"/drfc_vs_srfc_",condition,".jpg",sep=""),sw = 2*windowxy(nrseries)[2],sh = 2*windowxy(nrseries)[1],sres = 2,plotsfkt = plotsfkt,ww = 7*windowxy(nrseries)[2],wh = 7*windowxy(nrseries)[1],saveit = plots,addformat = addformat,notinR = notinR)
+				DTA.plot.it(filename = paste(folder,"/drfc_vs_srfc_",condition,sep=""),sw = 1*windowxy(nrseries)[2],sh = 1*windowxy(nrseries)[1],sres = 1,plotsfkt = plotsfkt,ww = 7*windowxy(nrseries)[2],wh = 7*windowxy(nrseries)[1],saveit = plots,addformat = addformat,notinR = notinR)
 			} else {
 				if (clusters == "sr"){
 					srranks = apply(srmat[plotable,],2,rank)
@@ -282,7 +282,7 @@ DTA.dynamic.estimate = function(
 						if (j == 1){legend("topleft",rev(c(paste("down (",length(intersect(plotable,genecluster[["down"]])),")",sep = ""),paste("downeven (",length(intersect(plotable,genecluster[["downeven"]])),")",sep = ""),paste("even (",length(intersect(plotable,genecluster[["even"]])),")",sep = ""),paste("upeven (",length(intersect(plotable,genecluster[["upeven"]])),")",sep = ""),paste("up (",length(intersect(plotable,genecluster[["up"]])),")",sep = ""))),pt.bg=rev(c(downcol,downevencol,evencol,upevencol,upcol)),col=c("black","black","black","black","black"),bg="white",pch=21,cex=1.75)}
 					}
 				}
-				plotit(filename = paste(folder,"/drfc_vs_srfc_cluster_",condition,".jpg",sep=""),sw = 2*windowxy(nrseries)[2],sh = 2*windowxy(nrseries)[1],sres = 2,plotsfkt = plotsfkt,ww = 7*windowxy(nrseries)[2],wh = 7*windowxy(nrseries)[1],saveit = plots,addformat = addformat,notinR = notinR)
+				DTA.plot.it(filename = paste(folder,"/drfc_vs_srfc_cluster_",condition,sep=""),sw = 1*windowxy(nrseries)[2],sh = 1*windowxy(nrseries)[1],sres = 1,plotsfkt = plotsfkt,ww = 7*windowxy(nrseries)[2],wh = 7*windowxy(nrseries)[1],saveit = plots,addformat = addformat,notinR = notinR)
 			}
 		}
 	}
