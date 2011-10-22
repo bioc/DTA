@@ -96,7 +96,9 @@ load(file.path(dataPath, "phenomat.RData"))
 load(file.path(dataPath, "tnumber.RData"))
 load(file.path(dataPath, "reliable.RData"))
 
-res = DTA.estimate(phenomat,datamat,tnumber,ratiomethod = "bias",ccl = 150,mRNAs = 60000,reliable = reliable)
+res = DTA.estimate(phenomat,datamat,tnumber,ccl = 150,mRNAs = 60000,reliable = reliable,assessment = FALSE)
+
+dev.off()
 }
 \keyword{methods}
 

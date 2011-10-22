@@ -102,7 +102,9 @@ load(file.path(dataPath, "tDTAphenomat.RData"))
 load(file.path(dataPath, "tDTAtnumber.RData"))
 load(file.path(dataPath, "tDTAreliable.RData"))
 
-res = DTA.dynamic.estimate(tDTAphenomat,tDTAdatamat,tDTAtnumber,ccl = 150,mRNAs = 60000,reliable = tDTAreliable,LtoTratio = rep(0.1,7),regression = FALSE,labeling = FALSE,rankpairs = FALSE,assessment = FALSE,correlation = FALSE)
+res = DTA.dynamic.estimate(tDTAphenomat,tDTAdatamat,tDTAtnumber,ccl = 150,mRNAs = 60000,reliable = tDTAreliable,LtoTratio = rep(0.1,7),rankpairs = FALSE,assessment = FALSE)
+
+dev.off()
 }
 \keyword{methods}
 

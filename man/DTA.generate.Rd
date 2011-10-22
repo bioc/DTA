@@ -50,6 +50,8 @@ C. Miller, B. Schwalb, K. Maier, D. Schulz, S. Duemcke, B. Zacher, A. Mayer, J. 
 \examples{
 sim.object = DTA.generate(timepoints=rep(c(6,12),2))
 
-res.sim = DTA.estimate(ratiomethod = "bias",labeling = FALSE,rankpairs = FALSE,assessment = FALSE,correlation = FALSE,simulation = TRUE,sim.object = sim.object)
+res.sim = DTA.estimate(ratiomethod = "bias",simulation = TRUE,sim.object = sim.object,labeling = FALSE,rankpairs = FALSE,assessment = FALSE,correlation = FALSE)
+
+dev.off()
 }
 \keyword{datagen}

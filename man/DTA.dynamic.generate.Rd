@@ -85,6 +85,8 @@ lambda.breaks.mat = cbind(rep(12,nrgenes),rep(18,nrgenes),rep(27,nrgenes))
 
 sim.object = DTA.dynamic.generate(duration = 36,lab.duration = 6,nrgenes = nrgenes,mu.values.mat = mu.values.mat,mu.breaks.mat = mu.breaks.mat,lambda.values.mat = lambda.values.mat,lambda.breaks.mat = lambda.breaks.mat)
 
-res = DTA.dynamic.estimate(labeling = FALSE,rankpairs = FALSE,assessment = FALSE,correlation = FALSE,simulation = TRUE,sim.object = sim.object)
+res = DTA.dynamic.estimate(simulation = TRUE,sim.object = sim.object,labeling = FALSE,rankpairs = FALSE,assessment = FALSE,correlation = FALSE)
+
+dev.off()
 }
 \keyword{datagen}
