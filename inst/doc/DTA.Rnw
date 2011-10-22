@@ -85,13 +85,12 @@ xlab="gene-wise median of total samples")
 hist(Total[Total >= 5],breaks = seq(0,ceiling(max(Total)),1/4),
 col = "#08306B",add = TRUE)
 }
-plotit(filename = "histogram_cut_off.jpg",sw = 2,sh = 2,sres = 2,plotsfkt = plotsfkt,
-ww = 7,wh = 7,saveit = TRUE,notinR = TRUE)
+DTA.plot.it(filename = "histogram_cut_off",plotsfkt = plotsfkt,saveit = TRUE,notinR = TRUE)
 @
 
 \begin{figure}[htp]
   \centering
-\includegraphics[width=10cm]{histogram_cut_off.jpg}
+\includegraphics[width=10cm]{histogram_cut_off.jpeg}
 \caption{Genes that are below a log-intensity of 5 in total RNA measurements are discarded.}
 \label{figure:histogram_cut_off}
 \end{figure}
@@ -115,7 +114,7 @@ Figure \ref{figure:regressionhyperline} shows the plane defined by the equation 
 
 \begin{figure}[htp]
   \centering
-\includegraphics[width=15cm]{regression_hyperline_real_data_6.jpg}
+\includegraphics[width=15cm]{regression_hyperline_real_data_6.jpeg}
 \caption{Two rounds of total least squares regression (\Rfunction{tls}). The resulting plane is shown exactly from the side and is colored green. The x-axis of those plots is chosen as the orthogonal projection on L in logarithmic scale. The y-axis is the normal of the plane. The second round of \Rfunction{tls} is performed without the 5\% largest residues of the first round, depicted in red. Red lines indicate maximal residues.}
 \label{figure:regressionhyperline}
 \end{figure}
@@ -124,7 +123,7 @@ Figure \ref{figure:labelingbias} shows the labeling bias, i.e. there is a depend
 
 \begin{figure}[htp]
   \centering
-\includegraphics[width=15cm]{estimation_bias_L_real_data_6.jpg}
+\includegraphics[width=15cm]{estimation_bias_L_real_data_6.jpeg}
 \caption{The number of Uridines is plotted versus the log-ratio of L and T for both replicates at labeling time 00-06. The points of the scatterplot are colored according to the (estimated) point density in that region \cite{schwalb:2011}. The labeling bias parameter $p_{estimated} = 0.0048$ and $p_{estimated} = 0.0055$ imply that approximately every 208th resp. 182th Uridine residue is replaced by 4sU.
 }
 \label{figure:labelingbias}
@@ -134,7 +133,7 @@ Figure \ref{figure:rangeassessment} shows the range assessment of all 1-cL/T val
 
 \begin{figure}[htp]
   \centering
-\includegraphics[width=15cm]{range_assessment_real_data_6.jpg}
+\includegraphics[width=15cm]{range_assessment_real_data_6.jpeg}
 \caption{Dependency of 1-cL/T to the resulting decay rate. Reasonable decay rates can only be obtained for 1-cL/T values between the two dashed lines. All others will yield NAs.}
 \label{figure:rangeassessment}
 \end{figure}
@@ -143,7 +142,7 @@ Figure \ref{figure:labelingbiascorrected} shows the data of figure \ref{figure:l
 
 \begin{figure}[htp]
   \centering
-\includegraphics[width=15cm]{estimation_bias_L_real_data_6_corrected.jpg}
+\includegraphics[width=15cm]{estimation_bias_L_real_data_6_corrected.jpeg}
 \caption{The number of Uridines is plotted versus the log-ratio of L and T for both replicates at labeling time 00-06 after labeling bias correction.
 }
 \label{figure:labelingbiascorrected}
@@ -153,7 +152,7 @@ If the labeling bias has been appropriately removed, there should be no correlat
 
 \begin{figure}[htp]
   \centering
-\includegraphics[width=10cm]{correlation_analysis_real_data_6.jpg}
+\includegraphics[width=10cm]{correlation_analysis_real_data_6.jpeg}
 \caption{The pairwise correlations between the labeled (LE) expression values, total (TE) expression values, the number of uridines per transcript (\#U) and the estimated synthesis rate (SR), decay rate (DR) and half life (HL) is shown after estimation with labeling bias correction.}
 \label{figure:corbiascor}
 \end{figure}
@@ -162,7 +161,7 @@ By default, \Rfunction{DTA.estimate} also generates pairwise scatterplots of 1-c
 
 \begin{figure}[htp]
   \centering
-\includegraphics[width=15cm]{rank_heatpairs_real_data_6.jpg}
+\includegraphics[width=15cm]{rank_heatpairs_real_data_6.jpeg}
 \caption{Pairwise heatscatterplots of the ranks of the resp. 1-cL/T value distributions are shown in the upper panel. The lower panel shows the respective spearman correlations.}
 \label{figure:corscatter}
 \end{figure}
@@ -197,13 +196,12 @@ groups=list("Stress"=orfs_stress,"RiBi-genes"=orfs_ribig,"Rp-genes"=orfs_rpg,"TF
 colors=c("darkred","darkgreen","darkblue","grey20"),
 xlim=c(0,150),ylim=c(0,600),xlab="half-lives",ylab="synthesis rates",
 cex.main=1.25,cex.lab=1,cex.axis=1)}
-plotit(filename = "ellipse_scatter.jpg",sw = 2,sh = 2,sres = 2,plotsfkt = plotsfkt,
-ww = 7,wh = 7,saveit = TRUE,notinR = TRUE)
+DTA.plot.it(filename = "ellipse_scatter",plotsfkt = plotsfkt,saveit = TRUE,notinR = TRUE)
 @
 
 \begin{figure}[htp]
   \centering
-\includegraphics[width=10cm]{ellipse_scatter.jpg}
+\includegraphics[width=10cm]{ellipse_scatter.jpeg}
 \caption{Scatterplot of mRNA half-lives and synthesis rates for exponentially growing yeast cells. Colored points belong to the indicated gene sets (green,
 ribosomal biogenesis genes; violet, ribosomal protein genes; red, stress genes; dark gray, transcription factors TFs). Assuming Gaussian distributions, ellipses show the
 75\% regions of highest density for the respective sets. Overall half-lives and synthesis rates are uncorrelated, however some gene groups behave differently.
@@ -216,14 +214,14 @@ ribosomal biogenesis genes; violet, ribosomal protein genes; red, stress genes; 
 To omit the labeling bias correction, the parameter \Robject{bicor} has to be set to \Robject{FALSE}. The results are displayed in Figure \ref{figure:corbiasnotcor}.
 
 <<Estimation procedure (no bias correction), echo=TRUE, eval=TRUE, results=hide>>=
-res.nobias = DTA.estimate(phenomat,datamat,tnumber,ccl = 150, mRNAs = 60000,reliable = reliable,regression = FALSE,labeling = FALSE,rankpairs = FALSE,assessment = FALSE,plots = TRUE,notinR = TRUE,folder = ".",bicor = FALSE,condition="no_bias_correction")
+res.nobias = DTA.estimate(phenomat,datamat,tnumber,ccl = 150, mRNAs = 60000,reliable = reliable,plots = TRUE,notinR = TRUE,folder = ".",bicor = FALSE,condition="no_bias_correction")
 @
 
 The obtained estimation results are not independent of the number of uridines. Half-lives show negative correlation to the number of uridines, whereas decay rates correlate positively to the amount of uridines in the mRNA sequence. Therefore we strongly advise the user always to check and eventually correct for labeling bias if the L/T ratio shows any dependency on the number of uridines in the transcript.
 
 \begin{figure}[htp]
   \centering
-\includegraphics[width=10cm]{correlation_analysis_no_bias_correction_6.jpg}
+\includegraphics[width=10cm]{correlation_analysis_no_bias_correction_6.jpeg}
 \caption{The pairwise correlations between the labeled (LE) expression values, total (TE) expression values, the number of uridines per transcript (\#U) and the estimated synthesis rate (SR), decay rate (DR) and half life (HL) is shown after estimation without labeling bias correction.}
 \label{figure:corbiasnotcor}
 \end{figure}
@@ -248,14 +246,13 @@ names(sim.object)
 
 <<Estimation procedure for simulated data, echo=TRUE, eval=TRUE, results=hide>>=
 res.sim = DTA.estimate(ratiomethod = "bias",plots = TRUE,notinR = TRUE,
-folder = ".",simulation = TRUE,sim.object = sim.object,labeling = FALSE,
-rankpairs = FALSE,assessment = FALSE,correlation = FALSE,
+folder = ".",simulation = TRUE,sim.object = sim.object,
 condition = "simulation")
 @
 
 \begin{figure}[htp]
   \centering
-\includegraphics[width=15cm]{simulation_simulation_6.jpg}
+\includegraphics[width=15cm]{simulation_simulation_6.jpeg}
 \caption{Comparison between "true" (= simulated) and estimated parameters in an absolute manner and on the basis of their ranks: synthesis rates, decay rates and half-lives. The rightmost plots shows the log-ratio of the estimated vs. the true parameters in a histogram. The mode is the maximum of the corresponding density indicated by the blue line. As a measure for a systematic deviation from zero (depicted in green) we calculated the MRD (mean relative deviation). The MRD is defined by mean(|estimated parameter - true parameter|/true parameter).}
 \label{figure:simulation}
 \end{figure}
@@ -271,7 +268,7 @@ condition = "simulation_no_bias_correction")
 
 \begin{figure}[htp]
   \centering
-\includegraphics[width=15cm]{simulation_simulation_no_bias_correction_6.jpg}
+\includegraphics[width=15cm]{simulation_simulation_no_bias_correction_6.jpeg}
 \caption{Comparison between "true" (= simulated) and estimated parameters where \Rfunction{DTA.estimate} was performed without labeling bias correction.}
 \label{figure:simulationnotcorrected}
 \end{figure}
@@ -298,15 +295,14 @@ For the actual analysis use the following command. There are some additional par
 <<Estimation procedure, echo=TRUE, eval=TRUE, results=hide>>=
 timecourse.res = DTA.dynamic.estimate(tDTAphenomat,tDTAdatamat,tDTAtnumber,ccl = 150,
 mRNAs = 60000,reliable = tDTAreliable,LtoTratio = rep(0.1,7),plots = TRUE,notinR = TRUE,
-folder = ".",labeling = FALSE,rankpairs = FALSE,assessment = FALSE,correlation = FALSE,
-condition = "timecourse")
+folder = ".",condition = "timecourse")
 @
 
 Figure \ref{figure:drfcvssrfc} shows the dynamics of synthesis and decay rates in the osmotic stress time series. Each point corresponds to one gene, which is colored according to its affiliation with one of 5 clusters chosen according to the rankgain given for the timepoint defined by \Robject{ranktime} (last timepoint by default) compared to the first timepoint.
 
 \begin{figure}[htp]
   \centering
-\includegraphics[width=15cm]{drfc_vs_srfc_cluster_timecourse.jpg}
+\includegraphics[width=15cm]{drfc_vs_srfc_cluster_timecourse.jpeg}
 \caption{Each plot corresponds to one timepoint. Log decay rate fold versus log synthesis rate fold for the timepoint defined by \Robject{ranktime} (last timepoint by default) compared to the first timepoint. Each point corresponds to one gene, which is colored according to its affiliation with one of 5 clusters defined in a normalization-independent manner. Ellipses show the 75\% regions of highest density within each cluster, assuming Gaussian distributions. The shape of the ellipses indicates the correlation structure within a cluster.}
 \label{figure:drfcvssrfc}
 \end{figure}
@@ -368,7 +364,7 @@ regression = FALSE,labeling = FALSE,rankpairs = FALSE,assessment = FALSE,correla
 
 \begin{figure}[htp]
   \centering
-\includegraphics[width=15cm]{simulation_simulation_timecourse_4.jpg}
+\includegraphics[width=15cm]{simulation_simulation_timecourse_4.jpeg}
 \caption{Comparison between "true" (= simulated) and estimated parameters in an absolute manner and on the basis of their ranks: synthesis rates, decay rates and half-lives of the time window "12-18". The rightmost plots shows the log-ratio of the estimated vs. the true parameters in a histogram. The mode is the maximum of the corresponding density indicated by the blue line. As a measure for a systematic deviation from zero (depicted in green) we calculated the MRD (mean relative deviation). The MRD is defined by mean(|estimated parameter - true parameter|/true parameter).}
 \label{figure:dynamicsimulation}
 \end{figure}
