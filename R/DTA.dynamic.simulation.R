@@ -115,7 +115,7 @@ DTA.dynamic.singlegenerate = function(
 			abline(v=sparsesq,lty=3,col="grey")
 			legend("topright",c("total RNA","labeled RNA","unlabeled RNA"),col=c(cols[3],cols[1],cols[2]),pch=19,cex=2,bg="white")
 		}
-		plotit(filename = paste(folder,"/time_course_",condition,".jpg",sep=""),sw = 2*duration/25,sh = 6,sres = 2,plotsfkt = plotsfkt,ww = 7*duration/25,wh = 21,saveit = save.plots,addformat = addformat)		
+		DTA.plot.it(filename = paste(folder,"/time_course_",condition,sep=""),sw = 1*duration/25,sh = 3,sres = 1,plotsfkt = plotsfkt,ww = 7*duration/25,wh = 21,saveit = save.plots,addformat = addformat)		
 	}
 	
 	### RETURN RESULTS IN A LIST ###
