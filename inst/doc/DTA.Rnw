@@ -78,8 +78,10 @@ As there are cases in which there is no labeling bias, we strongly advise the us
 Totals = datamat[,which(phenomat[,"fraction"]=="T")]
 Total = apply(log(Totals),1,median)
 plotsfkt = function(){
+par(mar = c(5,4,4,2)+0.1+1)
+par(mai = c(1.1,1.1,1.3,0.7))
 hist(Total,breaks = seq(0,ceiling(max(Total)),1/4),
-cex.main=1.25,cex.lab=1,cex.axis=1,
+cex.main=1.5,cex.lab=1.25,cex.axis=1.125,
 main="Histogram of log(Total)",
 xlab="gene-wise median of total samples")
 hist(Total[Total >= 5],breaks = seq(0,ceiling(max(Total)),1/4),
@@ -189,13 +191,15 @@ load(file.path(dataPath, "orfs_stress.RData"))
 
 <<plot half-lives/sythesis rates, echo=TRUE, eval=TRUE, results=hide>>=
 plotsfkt = function(){
+par(mar = c(5,4,4,2)+0.1+1)
+par(mai = c(1.1,1.1,1.3,0.7))
 x=res[["6"]][["hl"]][c(reliable,orfs_rpg)]
 y=res[["6"]][["Rsr"]][c(reliable,orfs_rpg)]
 ellipsescatter(x,y,
 groups=list("Stress"=orfs_stress,"RiBi-genes"=orfs_ribig,"Rp-genes"=orfs_rpg,"TF"=orfs_tf),
 colors=c("darkred","darkgreen","darkblue","grey20"),
 xlim=c(0,150),ylim=c(0,600),xlab="half-lives",ylab="synthesis rates",
-cex.main=1.25,cex.lab=1,cex.axis=1)}
+cex.main=1.5,cex.lab=1.25,cex.axis=1.125,main="Ellipsescatter")}
 DTA.plot.it(filename = "ellipse_scatter",plotsfkt = plotsfkt,saveit = TRUE,notinR = TRUE)
 @
 

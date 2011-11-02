@@ -3,7 +3,7 @@
 \title{Estimation of synthesis and decay rates}
 \description{DTA.estimate uses an experiment, given by a phenotype matrix, data matrix and the number of uridines for each gene to estimate synthesis and decay rate of the genes.}
 \usage{
-DTA.estimate(phenomat = NULL, datamat = NULL, tnumber = NULL, ccl = NULL, mRNAs = NULL, reliable = NULL, mediancenter = TRUE, usefractions = "LandT", LtoTratio = NULL, ratiomethod = "tls", largest = 5, weighted = TRUE, relevant = NULL, check = TRUE, regression = TRUE, labeling = TRUE, correctedlabeling = FALSE, rankpairs = TRUE, assessment = TRUE, correlation = TRUE, error = FALSE, bicor = TRUE, condition = "", upper = 700, lower = 500, plots = FALSE, notinR = FALSE, folder = NULL, addformat = NULL, totaloverwt = 1, simulation = FALSE, sim.object = NULL)
+DTA.estimate(phenomat = NULL, datamat = NULL, tnumber = NULL, ccl = NULL, mRNAs = NULL, reliable = NULL, mediancenter = TRUE, usefractions = "LandT", LtoTratio = NULL, ratiomethod = "tls", largest = 5, weighted = TRUE, relevant = NULL, check = TRUE, regression = TRUE, labeling = TRUE, correctedlabeling = FALSE, rankpairs = TRUE, assessment = TRUE, correlation = TRUE, error = FALSE, bicor = TRUE, condition = "", upper = 700, lower = 500, plots = FALSE, resolution = 1, notinR = FALSE, folder = NULL, addformat = NULL, totaloverwt = 1, simulation = FALSE, sim.object = NULL)
 }
 \arguments{
   \item{phenomat}{A phenotype matrix, containing the design of the experiment as produced by \code{DTA.phenomat}. Columns are name, fraction (U=unlabebeld, L=labeled, T=total), time and nr (=replicate number). Rows represent individual experiments.}
@@ -32,6 +32,7 @@ DTA.estimate(phenomat = NULL, datamat = NULL, tnumber = NULL, ccl = NULL, mRNAs 
   \item{upper}{Upper bound for labeling bias estimation. For details, see the vignette.}
   \item{lower}{Lower bound for labeling bias estimation. For details, see the vignette.}
   \item{plots}{If plots=TRUE, control plots will be saved.}
+  \item{resolution}{Resolution scaling factor for plotting.}
   \item{notinR}{Should plots be not plotted in R.}
   \item{folder}{Path to the folder, where to save the plots.}
   \item{addformat}{Additional fileformat for plots to be saved. See \code{plotit} function (\code{LSD} package).}

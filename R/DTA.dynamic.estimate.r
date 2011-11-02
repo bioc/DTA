@@ -30,6 +30,7 @@ DTA.dynamic.estimate = function(
 		upper = 700, 					# upper bound for labeling bias estimation
 		lower = 500, 					# lower bound for labeling bias estimation
 		plots = FALSE, 					# if plots=TRUE, control plots will be saved
+		resolution = 1,					# resolution scaling factor for plotting
 		folder = NULL, 					# folder, where to save the plots
 		addformat = NULL, 				# additional fileformat for plots to be saved
 		totaloverwt = 1, 				# total mRNA over WT
@@ -182,7 +183,7 @@ DTA.dynamic.estimate = function(
 				largest = largest,weighted = weighted,ratio = ratios[[labtime]],relevant = relevants[[labtime]],check = check,labeling = labeling,dynamic = TRUE,
 				initials = initials,correctedlabeling = correctedlabeling,rankpairs = rankpairs,correlation = correlation,error = error,notinR = notinR,bicor = bicor,
 				condition = condition,timepoint = labtime,regression = regression,upper = upper,lower = lower,plots = plots,folder = folder,addformat = addformat,
-				simulation = simulation,truemus = truemuslist[[labtime]],truemusaveraged = truemusaveragedlist[[labtime]],totaloverwt = totaloverwt,
+				simulation = simulation,truemus = truemuslist[[labtime]],truemusaveraged = truemusaveragedlist[[labtime]],totaloverwt = totaloverwt,resolution = resolution,
 				truelambdas = truelambdaslist[[labtime]],truelambdasaveraged = truelambdasaveragedlist[[labtime]],truehalflives = truehalfliveslist[[labtime]],
 				truehalflivesaveraged = truehalflivesaveragedlist[[labtime]],trueplabel=trueplabels[[labtime]],trueLasymptote=trueLasymptotes[[labtime]],
 				trueUasymptote=trueUasymptotes[[labtime]],truecrbyar=truecrbyars[[labtime]],truecrbybr=truecrbybrs[[labtime]],truebrbyar=truebrbyars[[labtime]])
@@ -203,21 +204,23 @@ DTA.dynamic.estimate = function(
 			plotable = intersect(reliable,rownames(drmat)[!apply(is.na(drmat),1,any)])
 			drfc = log2(drmat[plotable,]/drmat[plotable,1])
 			srfc = log2(srmat[plotable,]/srmat[plotable,1])
-			if (any(windowxy(nrlabtimes) > 2)){scex = 1/0.66} else if (all(windowxy(nrlabtimes) == 2)){scex = 1/0.83} else {scex = 1}
 			nrseries = nrlabtimes-1
 			
 			if (clusters == "none"){
 				plotsfkt = function(){
-					if (any(windowxy(nrseries) > 2)){scex = 1/0.66} else if (all(windowxy(nrseries) == 2)){scex = 1/0.83} else {scex = 1}
 					par(mfrow=c(windowxy(nrseries)[1],windowxy(nrseries)[2]))
-					par(mar=c(5,4,4,2) + 1)
+					parfkt("default",nrseries)
 					for (j in 1:nrseries){
 						i = inter(drfc[plotable,j+1],srfc[plotable,j+1])
-						heatscatter(i$x,i$y,xlim=folds.lims,ylim=folds.lims,xlab=expression(paste("log2( decay rate fold ",lambda['gr,i']/lambda['gr,1']," )")),ylab=expression(paste("log2( synthesis rate fold ",mu['gr,i']/mu['gr,1']," )")),main=paste(extracttimes[j+1],"min\n"),cor=FALSE,cex.main=1.25*scex,cex.lab=1*scex,cex.axis=1*scex)
-						title(paste("\n( i =",j+1,")"),col.main="darkgrey",cex.main=0.75*scex)
+						heatscatter(i$x,i$y,xlim=folds.lims,ylim=folds.lims,xlab="",ylab="",main="",cor=FALSE)
+						xlab = expression(paste("log2( decay rate fold ",lambda['gr,i']/lambda['gr,1']," )"))
+						ylab = expression(paste("log2( synthesis rate fold ",mu['gr,i']/mu['gr,1']," )"))
+						main = paste(extracttimes[j+1],"min")
+						sub = paste("( i =",j+1,")")
+						mtextfkt("default",nrseries,main,xlab,ylab,sub)
 						gridfkt(lim = folds.lims)}
 				}
-				DTA.plot.it(filename = paste(folder,"/drfc_vs_srfc_",condition,sep=""),sw = 1*windowxy(nrseries)[2],sh = 1*windowxy(nrseries)[1],sres = 1,plotsfkt = plotsfkt,ww = 7*windowxy(nrseries)[2],wh = 7*windowxy(nrseries)[1],saveit = plots,addformat = addformat,notinR = notinR)
+				DTA.plot.it(filename = paste(folder,"/drfc_vs_srfc_",condition,sep=""),sw = resolution*windowxy(nrseries)[2],sh = resolution*windowxy(nrseries)[1],sres = resolution,plotsfkt = plotsfkt,ww = 7*windowxy(nrseries)[2],wh = 7*windowxy(nrseries)[1],saveit = plots,addformat = addformat,notinR = notinR)
 			} else {
 				if (clusters == "sr"){
 					srranks = apply(srmat[plotable,],2,rank)
@@ -249,15 +252,18 @@ DTA.dynamic.estimate = function(
 				downcol = "darkblue"
 				
 				plotsfkt = function(){
-					if (any(windowxy(nrseries) > 2)){scex = 1/0.66} else if (all(windowxy(nrseries) == 2)){scex = 1/0.83} else {scex = 1}
 					scalesd = 1
 					level = 0.75
 					par(mfrow=c(windowxy(nrseries)[1],windowxy(nrseries)[2]))
-					par(mar=c(5,4,4,2) + 1)
+					parfkt("default",nrseries)
 					for (j in 1:nrseries){
 						i = inter(drfc[plotable,j+1],srfc[plotable,j+1])
-						plot(0,0,xlim=folds.lims,ylim=folds.lims,col="white",xlab=expression(paste("log2( decay rate fold ",lambda['gr,i']/lambda['gr,1']," )")),ylab=expression(paste("log2( synthesis rate fold ",mu['gr,i']/mu['gr,1']," )")),main=paste(extracttimes[j+1],"min\n"),cex.main=1.25*scex,cex.lab=1*scex,cex.axis=1*scex)
-						title(paste("\n( i =",j+1,")"),col.main="darkgrey",cex.main=0.75*scex)
+						plot(0,0,xlim=folds.lims,ylim=folds.lims,col="white",xlab="",ylab="",main="")
+						xlab = expression(paste("log2( decay rate fold ",lambda['gr,i']/lambda['gr,1']," )"))
+						ylab = expression(paste("log2( synthesis rate fold ",mu['gr,i']/mu['gr,1']," )"))
+						main = paste(extracttimes[j+1],"min")
+						sub = paste("( i =",j+1,")")
+						mtextfkt("default",nrseries,main,xlab,ylab,sub)
 						gridfkt(lim = folds.lims)
 						points(i$x[intersect(plotable,genecluster[["even"]])],i$y[intersect(plotable,genecluster[["even"]])],col=evencol,pch=20)
 						points(i$x[intersect(plotable,genecluster[["downeven"]])],i$y[intersect(plotable,genecluster[["downeven"]])],col=downevencol,pch=20)
@@ -279,10 +285,10 @@ DTA.dynamic.estimate = function(
 						x = i$x[intersect(plotable,genecluster[["up"]])]
 						y = i$y[intersect(plotable,genecluster[["up"]])]
 						points(ellipse(scor(x,y,use="na.or.complete"),scale=c(sd(x,na.rm=TRUE)*scalesd,sd(y,na.rm=TRUE)*scalesd),centre=c(mean(x,na.rm=TRUE),mean(y,na.rm=TRUE)),level=level),type = 'l',col=upcol,lwd=3)
-						if (j == 1){legend("topleft",rev(c(paste("down (",length(intersect(plotable,genecluster[["down"]])),")",sep = ""),paste("downeven (",length(intersect(plotable,genecluster[["downeven"]])),")",sep = ""),paste("even (",length(intersect(plotable,genecluster[["even"]])),")",sep = ""),paste("upeven (",length(intersect(plotable,genecluster[["upeven"]])),")",sep = ""),paste("up (",length(intersect(plotable,genecluster[["up"]])),")",sep = ""))),pt.bg=rev(c(downcol,downevencol,evencol,upevencol,upcol)),col=c("black","black","black","black","black"),bg="white",pch=21,cex=1.75)}
+						if (j == 1){legend("topleft",rev(c(paste("down (",length(intersect(plotable,genecluster[["down"]])),")",sep = ""),paste("downeven (",length(intersect(plotable,genecluster[["downeven"]])),")",sep = ""),paste("even (",length(intersect(plotable,genecluster[["even"]])),")",sep = ""),paste("upeven (",length(intersect(plotable,genecluster[["upeven"]])),")",sep = ""),paste("up (",length(intersect(plotable,genecluster[["up"]])),")",sep = ""))),pt.bg=rev(c(downcol,downevencol,evencol,upevencol,upcol)),col=c("black","black","black","black","black"),bg="white",pch=21,cex=1.25,inset=0.02)}
 					}
 				}
-				DTA.plot.it(filename = paste(folder,"/drfc_vs_srfc_cluster_",condition,sep=""),sw = 1*windowxy(nrseries)[2],sh = 1*windowxy(nrseries)[1],sres = 1,plotsfkt = plotsfkt,ww = 7*windowxy(nrseries)[2],wh = 7*windowxy(nrseries)[1],saveit = plots,addformat = addformat,notinR = notinR)
+				DTA.plot.it(filename = paste(folder,"/drfc_vs_srfc_cluster_",condition,sep=""),sw = resolution*windowxy(nrseries)[2],sh = resolution*windowxy(nrseries)[1],sres = resolution,plotsfkt = plotsfkt,ww = 7*windowxy(nrseries)[2],wh = 7*windowxy(nrseries)[1],saveit = plots,addformat = addformat,notinR = notinR)
 			}
 		}
 	}

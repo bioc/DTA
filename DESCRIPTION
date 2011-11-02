@@ -1,7 +1,7 @@
 Package: DTA
 Type: Package
 Title: Dynamic Transcriptome Analysis 
-Version: 1.1.0
+Version: 1.1.1
 Date: 2011-08-12
 Author: Bjoern Schwalb, Benedikt Zacher, Sebastian Duemcke, Achim Tresch
 Maintainer: Bjoern Schwalb <schwalb@lmb.uni-muenchen.de>
@@ -10,5 +10,5 @@ Imports: scatterplot3d
 Description: Dynamic Transcriptome Analysis (DTA) can monitor the cellular response to perturbations with higher sensitivity and temporal resolution than standard transcriptomics. The package implements the underlying kinetic modeling approach capable of the precise determination of synthesis- and decay rates from individual microarray or RNAseq measurements.
 License: Artistic-2.0
 biocViews: Microarray, DifferentialExpression, GeneExpression, Transcription
-Collate: wtls.R DTA.utilities.R DTA.phenomat.R DTA.simulation.r DTA.estimate.r DTA.dynamic.estimate.r DTA.dynamic.simulation.R
+Collate: wtls.R DTA.utilities.R DTA.plots.R DTA.phenomat.R DTA.generate.r DTA.estimate.r DTA.dynamic.estimate.r DTA.dynamic.generate.R
 LazyLoad: yes
