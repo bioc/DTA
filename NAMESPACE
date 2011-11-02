@@ -1,5 +1,0 @@
-
-export(tls, DTA.phenomat, DTA.generate, DTA.estimate, DTA.dynamic.generate, DTA.dynamic.estimate, DTA.plot.it)
-
-import(LSD)
-import(scatterplot3d)
