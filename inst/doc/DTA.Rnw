@@ -27,7 +27,7 @@
 Total RNA levels in a cell are the consequence of two opposing mechanisms, namely RNA synthesis and RNA degradation. DTA allows monitoring these contributions in a non-perturbing manner. It is provided with a kinetic modeling approach capable of the precise determination of synthesis- and decay rates, which is implemented in this package (see supplementary methods in \cite{miller:2011}).
 DTA can be applied to reveal rate changes for all kinds of perturbations, e.g. in knock-out or point mutation strains, as responses to stress stimuli or in small molecule interfering assays like treatments through miRNA or siRNA inhibitors.\\
 The experimental setup for DTA requires culturing cells in the presence of a labeling substrate (e.g. 4 thiouridine (4sU) or 4 thiouracil (4tU)) for a certain amount of time. Until the extraction of the RNA samples, the analogous (labeling) substrate will be incorporated into newly transcribed RNA. This setup yields three types of RNA fractions: total cellular RNA, newly transcribed labeled RNA and pre-existing unlabeled RNA. All three fractions can subsequently be quantified through gene expression profiling on microarrays or next generation sequencing (RNAseq).\\
-The \Rpackage{DTA} package implements methods to process a given DTA experiment (total (T), labeled (L) and unlabeled (U) RNA measurements) and derive RNA synthesis and decay rate estimates. This manual is a hands-on tutorial and describes all functions and R commands that are required. The method is applied to real and synthetic data. Important quality control plots to prove the reliability of the data and the estimation are discussed throughout this manual. For details on the theoretical background and a thorough description of the experimental design, we refer the reader to \cite{miller:2011} (supplementary methods).
+The \Rpackage{DTA} package implements methods to process a given DTA experiment (total (T), labeled (L) and unlabeled (U) RNA measurements) and derive RNA synthesis and decay rate estimates. The package \Rpackage{DTA} is broadly applicable to virtually every organism. This manual is a hands-on tutorial and describes all functions and R commands that are required. The method is applied to real and synthetic data. Important quality control plots to prove the reliability of the data and the estimation are discussed throughout this manual. For details on the theoretical background and a thorough description of the experimental design, we refer the reader to \cite{miller:2011} (supplementary methods).
 
 \section{Estimation of synthesis and decay rates in steady state (\Rfunction{DTA.estimate})}
 This section illustrates the function \Rfunction{DTA.estimate}, which calculates steady state mRNA synthesis and decay rates from measurements of individual labeling durations using a first order exponential decay model, which is described in \cite{miller:2011}. Before starting, the package library must be loaded by typing:
@@ -37,33 +37,30 @@ library(DTA)
 @
 
 \subsection{\Rfunction{DTA.estimate} for real data in yeast}
-The package attachement contains two biological replicates of T, U and L for a labling time of 6 and 12 minutes of the yeast DTA data set published in \cite{miller:2011}. Hereafter, the individual R objects, needed for the analysis are seperately loaded and described. The \Robject{*.RData} objects are stored in the following path:
+The package attachement contains two biological replicates of T, U and L for a labling time of 6 and 12 minutes of the yeast DTA data set published in \cite{miller:2011}. Hereafter, the individual R objects, needed for the analysis are seperately loaded and described. The \Robject{*.RData} objects are loaded as follows:
 
-<<Path to RData files, echo=TRUE>>=
-dataPath = system.file("data", package="DTA")
+<<Loading Miller2011, echo=TRUE>>=
+data(Miller2011)
 @
 
 The gene expression profiles are stored in \Robject{datamat}. This \Rclass{matrix} contains the RNA intensity values for each gene across each RNA fraction and their replicate measurements. The column names of the matrix give the cel-file name and the row names the ORF identifier. DTA was performed for a labeling duration of 6 ("00-06") and  12 ("00-12") minutes in wild-type yeast cells.
 
 <<Loading datamat, echo=TRUE>>=
-load(file.path(dataPath, "datamat.RData"))
-colnames(datamat)[1:6]
-rownames(datamat)[1:6]
-datamat[1:6,1:3]
+colnames(Sc.datamat)[1:6]
+rownames(Sc.datamat)[1:6]
+Sc.datamat[1:6,1:3]
 @
 
-The \Robject{phenomat} contains information about the experimental design. It is comprised of the file name, the type of RNA fraction mesasured (T, U or L), the labeling time and the replicate number. Rows in this \Rclass{matrix} represent the individual experiments.
+The \Robject{phenomat} contains information about the experimental design. It is comprised of the file name, the type of RNA fraction measured (T, U or L), the labeling time and the replicate number. Rows in this \Rclass{matrix} represent the individual experiments.
 
 <<Loading phenomat, echo=TRUE>>=
-load(file.path(dataPath, "phenomat.RData"))
-head(phenomat)
+head(Sc.phenomat)
 @
 
 During the labeling procedure of the experiment about 1 out of approx. 200 uridines is replaced by 4sU and biotinylated. Thus not all newly synthesized RNAs are actually labeled. The proportion of newly transcribed RNAs that are 4sU labeled and captured in the L fraction thus increases with the uridine content of a gene \cite{miller:2011}. For the correction of this labeling bias, \Rfunction{DTA.estimate} needs the number of uridines within each transcript. The \Rclass{vector} \Robject{tnumber} contains the number of uridines for 5976 annotated genes. SGD \cite{sgd} was used to extract the amount of thymines in the cDNA of each transcript.
 
 <<Loading tnumber, echo=TRUE>>=
-load(file.path(dataPath, "tnumber.RData"))
-head(tnumber)
+head(Sc.tnumber)
 @
 
 As there are cases in which there is no labeling bias, we strongly advise the user always to check and eventually correct for labeling bias if the L/T ratio shows any dependency on the number of uridines in the transcript. If there should be no labeling bias, the bias correction can be omitted via the option \Robject{bicor}. Before applying \Rfunction{DTA.estimate}, we excluded genes that are not reliable and could cause problems during the parameter estimation (see \cite{miller:2011} for details). For the given yeast data set, the following genes from the SGD database are discarded:
@@ -75,7 +72,7 @@ As there are cases in which there is no labeling bias, we strongly advise the us
 \end{itemize}
 
 <<Total expression histogram, echo=TRUE, eval=TRUE, results=hide>>=
-Totals = datamat[,which(phenomat[,"fraction"]=="T")]
+Totals = Sc.datamat[,which(Sc.phenomat[,"fraction"]=="T")]
 Total = apply(log(Totals),1,median)
 plotsfkt = function(){
 par(mar = c(5,4,4,2)+0.1+1)
@@ -100,15 +97,15 @@ DTA.plot.it(filename = "histogram_cut_off",plotsfkt = plotsfkt,saveit = TRUE,not
 The 4490 genes, that passed the above criteria are included in the vector \Robject{reliable}.
 
 <<Loading reliable, echo=TRUE>>=
-load(file.path(dataPath, "reliable.RData"))
-head(reliable)
+head(Sc.reliable)
 @
 
-Now we are ready to start the actual analysis. Besides the above data objects, some additional parameters have to be passed to \Rfunction{DTA.estimate}. \Robject{ccl} defines the cell cycle length of the cells and \Robject{mRNAs} (optional) is the estimated number of mRNAs in a typical yeast cell \cite{zenklusen:2008}. These parameters can be used to scale the synthesis rate to the number of transcript per cell per cell cycle. Furthermore, the following parameters \Robject{plots}, \Robject{notinR}, and \Robject{folder} can be used to save quality control and results plots in the current or specified working directory.
+Now we are ready to start the actual analysis. Besides the above data objects, some additional parameters have to be passed to \Rfunction{DTA.estimate}. \Robject{ccl} defines the cell cycle length of the cells and \Robject{mRNAs} (optional) is the estimated number of mRNAs in a typical yeast cell \cite{zenklusen:2008}. These parameters can be used to scale the synthesis rate to the number of transcript per cell per cell cycle. Furthermore, the following parameters \Robject{save.plots}, \Robject{notinR}, and \Robject{folder} can be used to save quality control and results plots in the current or specified working directory.
 
 <<Estimation procedure, echo=TRUE, eval=TRUE, results=hide>>=
-res = DTA.estimate(phenomat,datamat,tnumber,ccl = 150, mRNAs = 60000,reliable = reliable, 
-correctedlabeling = TRUE,condition = "real_data",plots = TRUE,notinR = TRUE,folder = ".")
+res = DTA.estimate(Sc.phenomat,Sc.datamat,Sc.tnumber,
+ccl = 150,mRNAs = 60000,reliable = Sc.reliable, 
+condition = "real_data",save.plots = TRUE,notinR = TRUE,folder = ".")
 @
 
 \Rfunction{DTA.estimate} automatically generates a series of quality control plots.
@@ -183,20 +180,20 @@ names(res[["6"]])
 A short analysis of the inferred synthesis and decay rates will be given in the following. Figure \ref{figure:scatter} shows a scatterplot of mRNA half-lives and synthesis rates. We included functional annotations of the genes to highlight specific groups (transcription factors (TF) \cite{fraenkel:2006}, ribosomal biogenesis genes (RiBi-genes) \cite{jorgensen:2004}, ribosomal protein genes (Rp-genes) \cite{nakao:2004}, stress response genes (Stress) \cite{ihmels:2002}) in the scatterplot. We observe that mRNAs with high synthesis rates encode ribosomal protein genes and genes involved in ribosome biogenesis, whereas mRNAs with low synthesis rates are mostly stemmed from genes that are silenced during normal growth, including most TFs.
 
 <<plot half-lives/sythesis rates, echo=TRUE, eval=TRUE, results=hide>>=
-load(file.path(dataPath, "orfs_ribig.RData"))
-load(file.path(dataPath, "orfs_rpg.RData"))
-load(file.path(dataPath, "orfs_tf.RData"))
-load(file.path(dataPath, "orfs_stress.RData"))
+data(Sc.ribig.ensg)
+data(Sc.rpg.ensg)
+data(Sc.tf.ensg)
+data(Sc.stress.ensg)
 @
 
 <<plot half-lives/sythesis rates, echo=TRUE, eval=TRUE, results=hide>>=
 plotsfkt = function(){
 par(mar = c(5,4,4,2)+0.1+1)
 par(mai = c(1.1,1.1,1.3,0.7))
-x=res[["6"]][["hl"]][c(reliable,orfs_rpg)]
-y=res[["6"]][["Rsr"]][c(reliable,orfs_rpg)]
+x=res[["6"]][["hl"]][c(Sc.reliable,Sc.rpg.ensg)]
+y=res[["6"]][["Rsr"]][c(Sc.reliable,Sc.rpg.ensg)]
 ellipsescatter(x,y,
-groups=list("Stress"=orfs_stress,"RiBi-genes"=orfs_ribig,"Rp-genes"=orfs_rpg,"TF"=orfs_tf),
+groups=list("Stress"=Sc.stress.ensg,"RiBi-genes"=Sc.ribig.ensg,"Rp-genes"=Sc.rpg.ensg,"TF"=Sc.tf.ensg),
 colors=c("darkred","darkgreen","darkblue","grey20"),
 xlim=c(0,150),ylim=c(0,600),xlab="half-lives",ylab="synthesis rates",
 cex.main=1.5,cex.lab=1.25,cex.axis=1.125,main="Ellipsescatter")}
@@ -218,7 +215,9 @@ ribosomal biogenesis genes; violet, ribosomal protein genes; red, stress genes; 
 To omit the labeling bias correction, the parameter \Robject{bicor} has to be set to \Robject{FALSE}. The results are displayed in Figure \ref{figure:corbiasnotcor}.
 
 <<Estimation procedure (no bias correction), echo=TRUE, eval=TRUE, results=hide>>=
-res.nobias = DTA.estimate(phenomat,datamat,tnumber,ccl = 150, mRNAs = 60000,reliable = reliable,plots = TRUE,notinR = TRUE,folder = ".",bicor = FALSE,condition="no_bias_correction")
+res.nobias = DTA.estimate(Sc.phenomat,Sc.datamat,Sc.tnumber,
+ccl = 150, mRNAs = 60000,reliable = Sc.reliable,save.plots = TRUE,
+notinR = TRUE,folder = ".",bicor = FALSE,condition="no_bias_correction")
 @
 
 The obtained estimation results are not independent of the number of uridines. Half-lives show negative correlation to the number of uridines, whereas decay rates correlate positively to the amount of uridines in the mRNA sequence. Therefore we strongly advise the user always to check and eventually correct for labeling bias if the L/T ratio shows any dependency on the number of uridines in the transcript.
@@ -249,8 +248,8 @@ names(sim.object)
 \Rfunction{DTA.estimate} can then be used to infer the synthesis and decay rate estimates. Figure \ref{figure:simulation} shows a comparison between the "true" decay rates/half-lives/synthesis rates and the decay rates/half-lives/synthesis rates estimated by \Rfunction{DTA.estimate} in an absolute manner, on the basis of their ranks and a histogram of their log-quotients. 
 
 <<Estimation procedure for simulated data, echo=TRUE, eval=TRUE, results=hide>>=
-res.sim = DTA.estimate(ratiomethod = "bias",plots = TRUE,notinR = TRUE,
-folder = ".",simulation = TRUE,sim.object = sim.object,
+res.sim = DTA.estimate(ratiomethod = "bias",save.plots = TRUE,
+notinR = TRUE,folder = ".",simulation = TRUE,sim.object = sim.object,
 condition = "simulation")
 @
 
@@ -264,10 +263,9 @@ condition = "simulation")
 Once again we can omit the labeling bias correction. The disastrous results are shown in Figure \ref{figure:simulationnotcorrected}.
 
 <<Estimation procedure for simulated data, echo=TRUE, eval=TRUE, results=hide>>=
-res.sim = DTA.estimate(ratiomethod = "bias",plots = TRUE,notinR = TRUE,
-folder = ".",simulation = TRUE,sim.object = sim.object,labeling = FALSE,
-rankpairs = FALSE,assessment = FALSE,correlation = FALSE,bicor = FALSE,
-condition = "simulation_no_bias_correction")
+res.sim = DTA.estimate(ratiomethod = "bias",save.plots = TRUE,
+notinR = TRUE,folder = ".",simulation = TRUE,sim.object = sim.object,
+bicor = FALSE,condition = "simulation_no_bias_correction")
 @
 
 \begin{figure}[htp]
@@ -287,19 +285,16 @@ In order to use DTA for a time-resolved analysis of a set stimuli, our steady st
 
 4sU was added at 0, 6, 12, 18, 24, and 30 min after the addition of sodium chloride to yeast cells to a concentration of 0.8 M. Cells were harvested after the labeling time of 6 min. Total and labeled mRNA was purified and analyzed to yield expression profiles for each time window ("0-6"; "6-12"; "12-18"; "18-24"; "24-30"; "30-36"). As for \Rfunction{DTA.estimate}, we need to provide the usual R objects for \Rfunction{DTA.dynamic.estimate}. Except for the \Robject{phenomat}, their underlying structure resembles that of the steady state case. In the dynamic case \Robject{phenomat} is provided with an additional column giving the sequence of the timecourse experiment.
 
-<<Loading tDTAdata, echo=TRUE>>=
-load(file.path(dataPath, "tDTAdatamat.RData"))
-load(file.path(dataPath, "tDTAphenomat.RData"))
-load(file.path(dataPath, "tDTAtnumber.RData"))
-load(file.path(dataPath, "tDTAreliable.RData"))
+<<Loading Miller2011dynamic, echo=TRUE>>=
+data(Miller2011dynamic)
 @
 
 For the actual analysis use the following command. There are some additional parameters opposed to the steady state case. For a more detailed explanation of the function output, see the \Rfunction{DTA.dynamic.estimate} help page.
 
 <<Estimation procedure, echo=TRUE, eval=TRUE, results=hide>>=
-timecourse.res = DTA.dynamic.estimate(tDTAphenomat,tDTAdatamat,tDTAtnumber,ccl = 150,
-mRNAs = 60000,reliable = tDTAreliable,LtoTratio = rep(0.1,7),plots = TRUE,notinR = TRUE,
-folder = ".",condition = "timecourse")
+timecourse.res = DTA.dynamic.estimate(Sc.phenomat.dynamic,Sc.datamat.dynamic,Sc.tnumber,
+ccl = 150,mRNAs = 60000,reliable = Sc.reliable.dynamic,LtoTratio = rep(0.1,7),
+save.plots = TRUE,notinR = TRUE,folder = ".",condition = "timecourse")
 @
 
 Figure \ref{figure:drfcvssrfc} shows the dynamics of synthesis and decay rates in the osmotic stress time series. Each point corresponds to one gene, which is colored according to its affiliation with one of 5 clusters chosen according to the rankgain given for the timepoint defined by \Robject{ranktime} (last timepoint by default) compared to the first timepoint.
@@ -361,9 +356,9 @@ names(timecourse.sim.object)
 \Rfunction{DTA.dynamic.estimate} can then be used to infer the synthesis and decay rate estimates. Figure \ref{figure:dynamicsimulation} shows a comparison between the "true" decay rates/half-lives/synthesis rates and the decay rates/half-lives/synthesis rates of the time window "12-18" estimated by \Rfunction{DTA.dynamic.estimate} in an absolute manner, on the basis of their ranks and a histogram of their log-quotients.
 
 <<Estimation procedure for simulated timecourse data, echo=TRUE, eval=TRUE, results=hide>>=
-timecourse.res.sim = DTA.dynamic.estimate(plots = TRUE,notinR = TRUE,simulation = TRUE,
-sim.object = timecourse.sim.object,ratiomethod = "tls",folder = ".",condition = "simulation_timecourse",
-regression = FALSE,labeling = FALSE,rankpairs = FALSE,assessment = FALSE,correlation = FALSE,folds = FALSE)
+timecourse.res.sim = DTA.dynamic.estimate(save.plots = TRUE,notinR = TRUE,
+simulation = TRUE,sim.object = timecourse.sim.object,ratiomethod = "tls",
+folder = ".",condition = "simulation_timecourse",check = FALSE)
 @
 
 \begin{figure}[htp]
@@ -372,6 +367,41 @@ regression = FALSE,labeling = FALSE,rankpairs = FALSE,assessment = FALSE,correla
 \caption{Comparison between "true" (= simulated) and estimated parameters in an absolute manner and on the basis of their ranks: synthesis rates, decay rates and half-lives of the time window "12-18". The rightmost plots shows the log-ratio of the estimated vs. the true parameters in a histogram. The mode is the maximum of the corresponding density indicated by the blue line. As a measure for a systematic deviation from zero (depicted in green) we calculated the MRD (mean relative deviation). The MRD is defined by mean(|estimated parameter - true parameter|/true parameter).}
 \label{figure:dynamicsimulation}
 \end{figure}
+
+\section{Example estimations for Mouse and Human data}
+
+The package \Rpackage{DTA} is broadly applicable to virtually every organism. In particular, it provides vectors giving the amount of thymines in the cDNA (uridine residues in RNA) of each transcript for each Ensembl transcript ID of a selection of often used model organisms: Saccharomyces Cerevisiae (\Robject{Sc.tnumber}), Schizosaccharomyces Pombe (\Robject{Sp.tnumber}), Drosophila Melanogaster (\Robject{Dm.tnumber}), Mus Musculus (\Robject{Mm.tnumber}), and Homo Sapiens (\Robject{Hs.tnumber}). These vectors are needed for the assessment and correction of the labeling bias. Further we demonstrate the functionality of the package \Rpackage{DTA} in two example datasets from \cite{doelken:2008}.
+
+<<Loading Doelken2008, echo=TRUE, eval=FALSE>>=
+data(Doelken2008)
+@
+
+The first dataset is a DTA experiment with NIH-3T3 cells (Mus Musculus \cite{doelken:2008}). The \Rclass{vector} giving the number of uridine residues for each transcript of Mus musculus is given with Ensembl transcript IDs. As the data in \Robject{Mm.datamat} is given for each Ensembl gene ID, we need to map the \Robject{Mm.tnumber} \Rclass{vector} to the same IDs with the function \Rfunction{DTA.map.it} provided in the package and the mapping \Rclass{vector} \Robject{Mm.enst2ensg}:
+
+<<Mm map tnumber, echo=TRUE, eval=FALSE>>=
+Mm.tnumber = DTA.map.it(Mm.tnumber,Mm.enst2ensg)
+@
+
+Now that we have given the \Robject{Mm.tnumber} \Rclass{vector} with the same identifiers as the \Robject{Mm.datamat}, we can apply the \Rfunction{DTA.estimate} function:
+
+<<Mm DTA estimation procedure, echo=TRUE, eval=FALSE>>=
+res = DTA.estimate(Mm.phenomat,Mm.datamat,Mm.tnumber,
+ccl = 24*60,reliable = Mm.reliable,ratiomethod = "tls")
+@
+
+The second dataset is a DTA experiment with B-cells (BL41, Homo Sapiens \cite{doelken:2008}). Analogously to the processing steps above, we proceed as follows: 
+
+<<Hs map tnumber, echo=TRUE, eval=FALSE>>=
+Hs.tnumber = DTA.map.it(Hs.tnumber,Hs.enst2ensg)
+@
+
+Now that we have given the \Robject{Hs.tnumber} \Rclass{vector} with the same identifiers as the \Robject{Hs.datamat}, we can apply the \Rfunction{DTA.estimate} function:
+
+<<Hs DTA estimation procedure, echo=TRUE, eval=FALSE>>=
+res = DTA.estimate(Hs.phenomat,Hs.datamat,Hs.tnumber,
+ccl = 50*60,reliable = Hs.reliable,ratiomethod = "tls",
+bicor = FALSE)
+@
 
 \section{Concluding Remarks}
 The package \Rpackage{DTA} implements methods for Dynamic Transcriptome Analysis (DTA). RNA synthesis and decay rate estimates can be inferred from pre-processed microarray or RNAseq experiments. The procedures generate a series of valuable quality control plots to assess the reliability of the data and the quality of the resulting DR/SR estimates. Functions for data simulation enable the user to test the methods on synthetic data sets. \\

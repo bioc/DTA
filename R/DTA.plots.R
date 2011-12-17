@@ -48,6 +48,7 @@ DTA.plot.it = function(filename, 		# name of the plot to be saved with the forma
 		fileformat = "jpeg", 			# save the plot as jpeg, png, bmp, tiff, ps or pdf
 		saveit = FALSE, 				# should plot be saved
 		notinR = FALSE, 				# should plot be not plotted in R
+		RStudio = FALSE,				# for RStudio users
 		addformat = NULL 				# should plot be saved additionally in another format
 )
 {
@@ -77,7 +78,7 @@ DTA.plot.it = function(filename, 		# name of the plot to be saved with the forma
 		}
 	}
 	if (!notinR){
-		dev.new(width = ww,height = wh,pointsize = dev.pointsize)
+		if (!RStudio){dev.new(width = ww,height = wh,pointsize = dev.pointsize)}
 		plotsfkt()
 	}
 }

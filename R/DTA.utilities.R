@@ -122,7 +122,9 @@ LT.error.progression = function(
 	TE = rnorm(samplesize,mean=Tmean,sd=Tsd)
 	LE = rnorm(samplesize,mean=Lmean,sd=Lsd)
 	if (!is.null(Imean) & !is.null(Isd)){TI = rnorm(samplesize,mean=Imean,sd=Isd)}
+	options(warn = -1)
 	if (!is.null(Imean) & !is.null(Isd)){dr = - alpha - ((1/timepoint)*log((exp(TE) - exp(LE))/exp(TI)))} else {dr = - alpha - ((1/timepoint)*log(1 - exp(LE)/exp(TE)))}
+	options(warn = 0)
 	dr[which(dr <= 0)] = NA
 	hl = log(2)/dr
 	sr = LE*(alpha + dr)/(exp(alpha*timepoint)-exp(-dr*timepoint))	
@@ -145,7 +147,9 @@ UT.error.progression = function(
 	LE = rnorm(samplesize,mean=Lmean,sd=Lsd)
 	UE = rnorm(samplesize,mean=Umean,sd=Usd)
 	if (!is.null(Imean) & !is.null(Isd)){TI = rnorm(samplesize,mean=Imean,sd=Isd)}
+	options(warn = -1)
 	if (!is.null(Imean) & !is.null(Isd)){dr = - alpha - ((1/timepoint)*log(exp(UE)/exp(TI)))} else {dr = - alpha - ((1/timepoint)*log(exp(UE)/exp(TE)))}
+	options(warn = 0)
 	dr[which(dr <= 0)] = NA
 	hl = log(2)/dr
 	sr = LE*(alpha + dr)/(exp(alpha*timepoint)-exp(-dr*timepoint))	
@@ -168,7 +172,9 @@ BOTH.error.progression = function(
 	LE = rnorm(samplesize,mean=Lmean,sd=Lsd)
 	UE = rnorm(samplesize,mean=Umean,sd=Usd)
 	if (!is.null(Imean) & !is.null(Isd)){TI = rnorm(samplesize,mean=Imean,sd=Isd)}
+	options(warn = -1)
 	if (!is.null(Imean) & !is.null(Isd)){dr = - alpha - ((1/timepoint)*log(((exp(TE) - exp(LE))/exp(TI) + exp(UE)/exp(TI))/2))} else {dr = - alpha - ((1/timepoint)*log((1 - exp(LE)/exp(TE) + exp(UE)/exp(TE))/2))}
+	options(warn = 0)
 	dr[which(dr <= 0)] = NA
 	hl = log(2)/dr
 	sr = LE*(alpha + dr)/(exp(alpha*timepoint)-exp(-dr*timepoint))	

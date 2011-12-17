@@ -17,26 +17,21 @@ DTA.singleestimate = function(phenomat, # phenotype matrix, "nr" should be numbe
 		usefractions = "LandT",			# from which fractions should the decay rate be calculated: "LandT", "UandT" or "both"
 		ratio = NULL, 					# coefficient to rescale the fractions
 		relevant = NULL, 				# choose the arrays to be used for halflives calculation, vector due to experiments variable 
-		check = TRUE, 					# if check=TRUE, control messages and plots will be generated
-		labeling = TRUE, 				# should the labeling bias be plotted
-		correctedlabeling = FALSE,		# should the corrected labeling bias be plotted
-		regression = TRUE,				# should the regression results be plotted
-		rankpairs = TRUE, 				# should the ranks of 1-L/T, U/T or (1-L/T+U/T)/2 be compared in heatpairs plot
-		assessment = TRUE,				# should 1-L/T, U/T or (1-L/T+U/T)/2 be assessed due to limitations of the decay rate formula
-		correlation = TRUE, 			# should the correlation be plotted
+		check = TRUE, 					# if check = TRUE, control messages and plots will be generated
 		error = FALSE,					# should standard deviation and coefficient of variation be calculated
 		bicor = TRUE, 					# should the labeling bias be corrected
 		condition = "", 				# to be added to the plotnames
 		timepoint = "",					# to be added to the plotnames
 		upper = 700, 					# upper bound for labeling bias estimation
 		lower = 500, 					# lower bound for labeling bias estimation
-		plots = FALSE, 					# if plots=TRUE, control plots will be saved
+		save.plots = FALSE, 			# if save.plots = TRUE, control plots will be saved
 		resolution = 1,					# resolution scaling factor for plotting
 		notinR = FALSE,					# should plot be not plotted in R
+		RStudio = FALSE,				# for RStudio users
 		folder = NULL, 					# folder, where to save the plots
-		addformat = NULL, 				# additional fileformat for plots to be saved
+		fileformat = "jpeg", 			# save the plot as jpeg, png, bmp, tiff, ps or pdf
 		totaloverwt = 1, 				# total mRNA over WT
-		simulation = FALSE,				# should the simulation be plotted
+		simulation = FALSE,				# simulated data via sim.object ?
 		dynamic = FALSE,				# should be TRUE for timecourse data
 		initials = NULL,				# initial values of total for timecourse data
 		truemus = NULL,					# the true synthesis rates
@@ -95,7 +90,7 @@ DTA.singleestimate = function(phenomat, # phenotype matrix, "nr" should be numbe
 		triples = rbind(triples,c(isT,isU,isL))
 	}
 	results[["triples"]] = triples
-
+	
 	### UNLABELED CHECK ###
 	
 	if (any(is.na(triples[,"U"]))) {
@@ -105,7 +100,7 @@ DTA.singleestimate = function(phenomat, # phenotype matrix, "nr" should be numbe
 		if (any(usefractions %in% c("UandT","both"))){print("usefractions is set to 'LandT' !")}
 		usefractions = "LandT"
 	} else {unlabeledfraction = TRUE}
-
+	
 	### ESTIMATION OF plabel L/T ###
 	
 	for (expnr in seq(experiments)){Tnr = which((phenomat[,"nr"] == experiments[expnr]) & (phenomat[,"fraction"] == "T"))
@@ -257,50 +252,48 @@ DTA.singleestimate = function(phenomat, # phenotype matrix, "nr" should be numbe
 			### PLOTS OF REGRESSION ###
 			
 			if (check){
-				if (regression){
-					plotsfkt = function(){
-						par(mfrow=windowxy(nrexperiments))
-						parfkt("default",nrexperiments)
-						for (expnr in seq(experiments)){
-							Tnr = which((phenomat[,"nr"] == experiments[expnr]) & (phenomat[,"fraction"] == "T"))
-							ylim = c(-max(abs(t(planes[[expnr]])[,3])),max(abs(t(planes[[expnr]])[,3])))
-							heatscatter(log(t(planes[[expnr]])[,1]),t(planes[[expnr]])[,3],cor=FALSE,ylim=ylim,xlab="",ylab="",main="")
-							points(log(t(planes[[expnr]])[,1])[discards[[expnr]]],t(planes[[expnr]])[,3][discards[[expnr]]],col = "red")
-							xlab = expression(paste("log( Orthogonal projection on ",L[gr]," )"))
-							ylab = expression("Normal of the plane")
-							main = expression(paste("Regression plane:  ratio of  ",L[gr]/T[gr]))
-							sub = paste("(",phenomat[Tnr,"name"],"  c = ",signif(crbyarestimate[expnr],digits=2),")")
-							mtextfkt("default",nrexperiments,main,xlab,ylab,sub)
-							abline(h = 0,col = "green",lwd=2)
-							abline(h = max(t(planes[[expnr]])[,3]),col = "red",lwd=1)
-							abline(h = min(t(planes[[expnr]])[,3]),col = "red",lwd=1)
-						}
+				plotsfkt = function(){
+					par(mfrow=windowxy(nrexperiments))
+					parfkt("default",nrexperiments)
+					for (expnr in seq(experiments)){
+						Tnr = which((phenomat[,"nr"] == experiments[expnr]) & (phenomat[,"fraction"] == "T"))
+						ylim = c(-max(abs(t(planes[[expnr]])[,3])),max(abs(t(planes[[expnr]])[,3])))
+						heatscatter(log(t(planes[[expnr]])[,1]),t(planes[[expnr]])[,3],cor=FALSE,ylim=ylim,xlab="",ylab="",main="")
+						points(log(t(planes[[expnr]])[,1])[discards[[expnr]]],t(planes[[expnr]])[,3][discards[[expnr]]],col = "red")
+						xlab = expression(paste("log( Orthogonal projection on ",L[gr]," )"))
+						ylab = expression("Normal of the plane")
+						main = expression(paste("Regression plane:  ratio of  ",L[gr]/T[gr]))
+						sub = paste("(",phenomat[Tnr,"name"],"  c = ",signif(crbyarestimate[expnr],digits=2),")")
+						mtextfkt("default",nrexperiments,main,xlab,ylab,sub)
+						abline(h = 0,col = "green",lwd=2)
+						abline(h = max(t(planes[[expnr]])[,3]),col = "red",lwd=1)
+						abline(h = min(t(planes[[expnr]])[,3]),col = "red",lwd=1)
 					}
-					DTA.plot.it(filename = paste(folder,"/regression_hyperline_",condition,"_",timepoint,sep=""),sw = resolution*windowxy(nrexperiments)[2],sh = resolution*windowxy(nrexperiments)[1],sres = resolution,plotsfkt = plotsfkt,ww = 7*windowxy(nrexperiments)[2],wh = 7*windowxy(nrexperiments)[1],saveit = plots,addformat = addformat,notinR = notinR)
-					
-					plotsfkt = function(){
-						par(mfrow=windowxy(nrexperiments))
-						parfkt("default",nrexperiments)
-						for (expnr in seq(experiments)){
-							Tnr = which((phenomat[,"nr"] == experiments[expnr]) & (phenomat[,"fraction"] == "T"))
-							zlim = c(-max(abs(t(planes[[expnr]])[,3])),max(abs(t(planes[[expnr]])[,3])))
-							s3d <- scatterplot3d(t(planes[[expnr]])[,1],t(planes[[expnr]])[,2],t(planes[[expnr]])[,3],pch=20,xlab="",ylab="",zlab="",scale.y=1,angle=40,
-									mar = parfkt("scatterplot3d",nrexperiments),highlight.3d=TRUE,main="",grid=TRUE,zlim=zlim)
-							
-							xlab = expression(paste("Orthogonal projection on  ",L[gr]))
-							ylab = expression("Normal of the plane")
-							zlab = expression(paste("Orthogonal projection on  ",U[gr]))
-							main = expression(paste("Regression plane 3D:  ratio of  ",L[gr]/T[gr]))
-							sub = paste("(",phenomat[Tnr,"name"],"  c = ",signif(crbyarestimate[expnr],digits=2),")")
-							mtextfkt("scatterplot3d",nrexperiments,main,xlab,ylab,sub,zlab)
-							s3d$points3d(t(planes[[expnr]])[,1][discards[[expnr]]],t(planes[[expnr]])[,2][discards[[expnr]]],t(planes[[expnr]])[,3][discards[[expnr]]],pch=20,col = "red")
-							s3d$plane3d(c(0,0,0), lty = "solid", lty.box = "solid",col = "green",lwd=2)
-							s3d$plane3d(c(max(t(planes[[expnr]])[,3]),0,0), lty = "solid", lty.box = "solid",col = "red",lwd=1)
-							s3d$plane3d(c(min(t(planes[[expnr]])[,3]),0,0), lty = "solid", lty.box = "solid",col = "red",lwd=1)
-						}
-					}
-					DTA.plot.it(filename = paste(folder,"/regression_hyperplane_",condition,"_",timepoint,sep=""),sw = resolution*windowxy(nrexperiments)[2],sh = resolution*windowxy(nrexperiments)[1],sres = resolution,plotsfkt = plotsfkt,ww = 7*windowxy(nrexperiments)[2],wh = 7*windowxy(nrexperiments)[1],saveit = plots,addformat = addformat,notinR = notinR)		
 				}
+				DTA.plot.it(filename = paste(folder,"/regression_hyperline_",condition,"_",timepoint,sep=""),sw = resolution*windowxy(nrexperiments)[2],sh = resolution*windowxy(nrexperiments)[1],sres = resolution,plotsfkt = plotsfkt,ww = 7*windowxy(nrexperiments)[2],wh = 7*windowxy(nrexperiments)[1],saveit = save.plots,fileformat = fileformat,notinR = notinR,RStudio = RStudio)
+				
+				plotsfkt = function(){
+					par(mfrow=windowxy(nrexperiments))
+					parfkt("default",nrexperiments)
+					for (expnr in seq(experiments)){
+						Tnr = which((phenomat[,"nr"] == experiments[expnr]) & (phenomat[,"fraction"] == "T"))
+						zlim = c(-max(abs(t(planes[[expnr]])[,3])),max(abs(t(planes[[expnr]])[,3])))
+						s3d <- scatterplot3d(t(planes[[expnr]])[,1],t(planes[[expnr]])[,2],t(planes[[expnr]])[,3],pch=20,xlab="",ylab="",zlab="",scale.y=1,angle=40,
+								mar = parfkt("scatterplot3d",nrexperiments),highlight.3d=TRUE,main="",grid=TRUE,zlim=zlim)
+						
+						xlab = expression(paste("Orthogonal projection on  ",L[gr]))
+						ylab = expression("Normal of the plane")
+						zlab = expression(paste("Orthogonal projection on  ",U[gr]))
+						main = expression(paste("Regression plane 3D:  ratio of  ",L[gr]/T[gr]))
+						sub = paste("(",phenomat[Tnr,"name"],"  c = ",signif(crbyarestimate[expnr],digits=2),")")
+						mtextfkt("scatterplot3d",nrexperiments,main,xlab,ylab,sub,zlab)
+						s3d$points3d(t(planes[[expnr]])[,1][discards[[expnr]]],t(planes[[expnr]])[,2][discards[[expnr]]],t(planes[[expnr]])[,3][discards[[expnr]]],pch=20,col = "red")
+						s3d$plane3d(c(0,0,0), lty = "solid", lty.box = "solid",col = "green",lwd=2)
+						s3d$plane3d(c(max(t(planes[[expnr]])[,3]),0,0), lty = "solid", lty.box = "solid",col = "red",lwd=1)
+						s3d$plane3d(c(min(t(planes[[expnr]])[,3]),0,0), lty = "solid", lty.box = "solid",col = "red",lwd=1)
+					}
+				}
+				DTA.plot.it(filename = paste(folder,"/regression_hyperplane_",condition,"_",timepoint,sep=""),sw = resolution*windowxy(nrexperiments)[2],sh = resolution*windowxy(nrexperiments)[1],sres = resolution,plotsfkt = plotsfkt,ww = 7*windowxy(nrexperiments)[2],wh = 7*windowxy(nrexperiments)[1],saveit = save.plots,fileformat = fileformat,notinR = notinR,RStudio = RStudio)		
 			}
 			
 			if (ratiomethod == "lm"){ratio = crbyarestimate
@@ -350,86 +343,84 @@ DTA.singleestimate = function(phenomat, # phenotype matrix, "nr" should be numbe
 	### PLOTS OF LABELING BIAS ###
 	
 	if (check){
-		if (labeling){
-			plotsfkt = function(){
-				par(mfrow=windowxy(nrexperiments))
-				parfkt("default",nrexperiments)
-				for (expnr in seq(experiments)){
-					Tnr = which((phenomat[,"nr"] == experiments[expnr]) & (phenomat[,"fraction"] == "T"))
-					Tname = phenomat[Tnr,"name"]
-					Lnr = which((phenomat[,"nr"] == experiments[expnr]) & (phenomat[,"fraction"] == "L"))
-					Lname = phenomat[Lnr,"name"]
-					thistime = as.numeric(phenomat[Tnr,"time"])
-					largeT = which(tnumberreliable>upper)
-					asymptote = log(median( calcdatamatreliable[largeT,Lname]/calcdatamatreliable[largeT,Tname] ))
-					smallT = which(tnumberreliable<lower)
-					main = expression(paste("Labeling Bias ",l[gr]))
-					xlab = expression(paste("Number of Uridine residues ",'#u'[g]))
-					ylab = expression(paste("log( ",L[gr]/T[gr]," )"))
-					sub = paste("( ",Tname,"  p = ",signif(plabel[expnr],2),"  asymptote = ",signif(asymptote,2)," )",sep="")
-					tseq = min(tnumberreliable,na.rm=TRUE):max(tnumberreliable,na.rm=TRUE)
-					if (!bicor){main = expression(paste("(not corrected) Labeling Bias ",l[gr]))}
-					heatscatter(tnumberreliable,log(calcdatamatreliable[,Lname]/calcdatamatreliable[,Tname]),xlab="",ylab="",main="",xlim=c(0,2000),ylim=c(-4,4),cor=FALSE)
-					mtextfkt("default",nrexperiments,main,xlab,ylab,sub)
-					points(tseq,log(bias(plabel[expnr],tseq))+asymptote,type="l",col="black",lwd=3)
-					if (!is.null(trueplabel[experiments[expnr]]) & !is.null(trueLasymptote[experiments[expnr]])){points(tseq,log(bias(trueplabel[experiments[expnr]],tseq))+asymptote,type="l",col="grey",lwd=3,lty=2)}
-				}
+		plotsfkt = function(){
+			par(mfrow=windowxy(nrexperiments))
+			parfkt("default",nrexperiments)
+			for (expnr in seq(experiments)){
+				Tnr = which((phenomat[,"nr"] == experiments[expnr]) & (phenomat[,"fraction"] == "T"))
+				Tname = phenomat[Tnr,"name"]
+				Lnr = which((phenomat[,"nr"] == experiments[expnr]) & (phenomat[,"fraction"] == "L"))
+				Lname = phenomat[Lnr,"name"]
+				thistime = as.numeric(phenomat[Tnr,"time"])
+				largeT = which(tnumberreliable>upper)
+				asymptote = log(median( calcdatamatreliable[largeT,Lname]/calcdatamatreliable[largeT,Tname] ))
+				smallT = which(tnumberreliable<lower)
+				main = expression(paste("Labeling Bias ",l[gr]))
+				xlab = expression(paste("Number of Uridine residues ",'#u'[g]))
+				ylab = expression(paste("log( ",L[gr]/T[gr]," )"))
+				sub = paste("( ",Tname,"  p = ",signif(plabel[expnr],2),"  asymptote = ",signif(asymptote,2)," )",sep="")
+				tseq = min(tnumberreliable,na.rm=TRUE):max(tnumberreliable,na.rm=TRUE)
+				if (!bicor){main = expression(paste("(not corrected) Labeling Bias ",l[gr]))}
+				heatscatter(tnumberreliable,log(calcdatamatreliable[,Lname]/calcdatamatreliable[,Tname]),xlab="",ylab="",main="",xlim=c(0,2000),ylim=c(-4,4),cor=FALSE)
+				mtextfkt("default",nrexperiments,main,xlab,ylab,sub)
+				if (bicor){points(tseq,log(bias(plabel[expnr],tseq))+asymptote,type="l",col="black",lwd=3)} else {abline(h = asymptote,lwd=3)}
+				if (!is.null(trueplabel[experiments[expnr]]) & !is.null(trueLasymptote[experiments[expnr]])){points(tseq,log(bias(trueplabel[experiments[expnr]],tseq))+asymptote,type="l",col="grey",lwd=3,lty=2)}
 			}
-			DTA.plot.it(filename = paste(folder,"/estimation_bias_L_",condition,"_",timepoint,sep=""),sw = resolution*windowxy(nrexperiments)[2],sh = resolution*windowxy(nrexperiments)[1],sres = resolution,plotsfkt = plotsfkt,ww = 7*windowxy(nrexperiments)[2],wh = 7*windowxy(nrexperiments)[1],saveit = plots,addformat = addformat,notinR = notinR)    
-			if (unlabeledfraction){
-				if (is.null(ratiodummy) & ratiomethod == "bias"){
-					plotsfkt = function(){
-						par(mfrow=windowxy(nrexperiments))
-						parfkt("default",nrexperiments)
-						for (expnr in seq(experiments)){
-							Tnr = which((phenomat[,"nr"] == experiments[expnr]) & (phenomat[,"fraction"] == "T"))
-							Tname = phenomat[Tnr,"name"]
-							Unr = which((phenomat[,"nr"] == experiments[expnr]) & (phenomat[,"fraction"] == "U"))
-							Uname = phenomat[Unr,"name"]
-							thistime = as.numeric(phenomat[Tnr,"time"])
-							largeT = which(tnumberreliable>upper)
-							asymptote = log(median( calcdatamatreliable[largeT,Uname]/calcdatamatreliable[largeT,Tname] ))
-							smallT = which(tnumberreliable<lower)
-							main = expression(paste("Labeling Bias ",u[gr]))
-							xlab = expression(paste("Number of Uridine residues ",'#u'[g]))
-							ylab = expression(paste("log( ",U[gr]/T[gr]," )"))
-							sub = paste("( ",Tname,"  p = ",signif(plabel[expnr],2),"  asymptote = ",signif(asymptote,2)," )",sep="")
-							tseq = min(tnumberreliable,na.rm=TRUE):max(tnumberreliable,na.rm=TRUE)
-							if (!bicor){main = expression(paste("(not corrected) Labeling Bias ",u[gr]))}
-							heatscatter(tnumberreliable,log(calcdatamatreliable[,Uname]/calcdatamatreliable[,Tname]),xlab="",ylab="",main="",xlim=c(0,2000),ylim=c(-4,4),cor=FALSE)
-							mtextfkt("default",nrexperiments,main,xlab,ylab,sub)
-							points(tseq,log(1 + brbyarestimate[expnr]*biasdev(plabel[expnr],tseq))+asymptote,type="l",col="black",lwd=3)
-							if (!is.null(trueplabel[experiments[expnr]]) & !is.null(trueUasymptote[experiments[expnr]])){points(tseq,log(1 + brbyarestimate[expnr]*biasdev(trueplabel[experiments[expnr]],tseq))+asymptote,type="l",col="grey",lwd=3,lty=2)}
-						}
+		}
+		DTA.plot.it(filename = paste(folder,"/estimation_bias_L_",condition,"_",timepoint,sep=""),sw = resolution*windowxy(nrexperiments)[2],sh = resolution*windowxy(nrexperiments)[1],sres = resolution,plotsfkt = plotsfkt,ww = 7*windowxy(nrexperiments)[2],wh = 7*windowxy(nrexperiments)[1],saveit = save.plots,fileformat = fileformat,notinR = notinR,RStudio = RStudio)    
+		if (unlabeledfraction){
+			if (is.null(ratiodummy) & ratiomethod == "bias"){
+				plotsfkt = function(){
+					par(mfrow=windowxy(nrexperiments))
+					parfkt("default",nrexperiments)
+					for (expnr in seq(experiments)){
+						Tnr = which((phenomat[,"nr"] == experiments[expnr]) & (phenomat[,"fraction"] == "T"))
+						Tname = phenomat[Tnr,"name"]
+						Unr = which((phenomat[,"nr"] == experiments[expnr]) & (phenomat[,"fraction"] == "U"))
+						Uname = phenomat[Unr,"name"]
+						thistime = as.numeric(phenomat[Tnr,"time"])
+						largeT = which(tnumberreliable>upper)
+						asymptote = log(median( calcdatamatreliable[largeT,Uname]/calcdatamatreliable[largeT,Tname] ))
+						smallT = which(tnumberreliable<lower)
+						main = expression(paste("Labeling Bias ",u[gr]))
+						xlab = expression(paste("Number of Uridine residues ",'#u'[g]))
+						ylab = expression(paste("log( ",U[gr]/T[gr]," )"))
+						sub = paste("( ",Tname,"  p = ",signif(plabel[expnr],2),"  asymptote = ",signif(asymptote,2)," )",sep="")
+						tseq = min(tnumberreliable,na.rm=TRUE):max(tnumberreliable,na.rm=TRUE)
+						if (!bicor){main = expression(paste("(not corrected) Labeling Bias ",u[gr]))}
+						heatscatter(tnumberreliable,log(calcdatamatreliable[,Uname]/calcdatamatreliable[,Tname]),xlab="",ylab="",main="",xlim=c(0,2000),ylim=c(-4,4),cor=FALSE)
+						mtextfkt("default",nrexperiments,main,xlab,ylab,sub)
+						if (bicor){points(tseq,log(1 + brbyarestimate[expnr]*biasdev(plabel[expnr],tseq))+asymptote,type="l",col="black",lwd=3)} else {abline(h = asymptote,lwd=3)}
+						if (!is.null(trueplabel[experiments[expnr]]) & !is.null(trueUasymptote[experiments[expnr]])){points(tseq,log(1 + brbyarestimate[expnr]*biasdev(trueplabel[experiments[expnr]],tseq))+asymptote,type="l",col="grey",lwd=3,lty=2)}
 					}
-					DTA.plot.it(filename = paste(folder,"/estimation_bias_U_",condition,"_",timepoint,sep=""),sw = resolution*windowxy(nrexperiments)[2],sh = resolution*windowxy(nrexperiments)[1],sres = resolution,plotsfkt = plotsfkt,ww = 7*windowxy(nrexperiments)[2],wh = 7*windowxy(nrexperiments)[1],saveit = plots,addformat = addformat,notinR = notinR)
-				} else {
-					plotsfkt = function(){
-						par(mfrow=windowxy(nrexperiments))
-						parfkt("default",nrexperiments)
-						for (expnr in seq(experiments)){
-							Tnr = which((phenomat[,"nr"] == experiments[expnr]) & (phenomat[,"fraction"] == "T"))
-							Tname = phenomat[Tnr,"name"]
-							Unr = which((phenomat[,"nr"] == experiments[expnr]) & (phenomat[,"fraction"] == "U"))
-							Uname = phenomat[Unr,"name"]
-							thistime = as.numeric(phenomat[Tnr,"time"])
-							largeT = which(tnumberreliable>upper)
-							asymptote = log(median( calcdatamatreliable[largeT,Uname]/calcdatamatreliable[largeT,Tname] ))
-							smallT = which(tnumberreliable<lower)
-							main = expression(paste("Labeling Bias ",u[gr]))
-							xlab = expression(paste("Number of Uridine residues ",'#u'[g]))
-							ylab = expression(paste("log( ",U[gr]/T[gr]," )"))
-							sub = paste("( ",Tname,"  p = ",signif(plabel[expnr],2),"  asymptote = ",signif(asymptote,2)," )",sep="")
-							tseq = min(tnumberreliable,na.rm=TRUE):max(tnumberreliable,na.rm=TRUE)
-							if (!bicor){main = expression(paste("(not corrected) Labeling Bias ",u[gr]))}
-							heatscatter(tnumberreliable,log(calcdatamatreliable[,Uname]/calcdatamatreliable[,Tname]),xlab="",ylab="",main="",xlim=c(0,2000),ylim=c(-4,4),cor=FALSE)
-							mtextfkt("default",nrexperiments,main,xlab,ylab,sub)
-							points(tseq,log(1 + labelratio[expnr]*biasdev(plabel[expnr],tseq))+asymptote,type="l",col="black",lwd=3)
-							if (!is.null(trueplabel[experiments[expnr]]) & !is.null(trueUasymptote[experiments[expnr]])){points(tseq,log(1 + labelratio[expnr]*biasdev(trueplabel[experiments[expnr]],tseq))+asymptote,type="l",col="grey",lwd=3,lty=2)}
-						}
-					}
-					DTA.plot.it(filename = paste(folder,"/estimation_bias_U_",condition,"_",timepoint,sep=""),sw = resolution*windowxy(nrexperiments)[2],sh = resolution*windowxy(nrexperiments)[1],sres = resolution,plotsfkt = plotsfkt,ww = 7*windowxy(nrexperiments)[2],wh = 7*windowxy(nrexperiments)[1],saveit = plots,addformat = addformat,notinR = notinR)
 				}
+				DTA.plot.it(filename = paste(folder,"/estimation_bias_U_",condition,"_",timepoint,sep=""),sw = resolution*windowxy(nrexperiments)[2],sh = resolution*windowxy(nrexperiments)[1],sres = resolution,plotsfkt = plotsfkt,ww = 7*windowxy(nrexperiments)[2],wh = 7*windowxy(nrexperiments)[1],saveit = save.plots,fileformat = fileformat,notinR = notinR,RStudio = RStudio)
+			} else {
+				plotsfkt = function(){
+					par(mfrow=windowxy(nrexperiments))
+					parfkt("default",nrexperiments)
+					for (expnr in seq(experiments)){
+						Tnr = which((phenomat[,"nr"] == experiments[expnr]) & (phenomat[,"fraction"] == "T"))
+						Tname = phenomat[Tnr,"name"]
+						Unr = which((phenomat[,"nr"] == experiments[expnr]) & (phenomat[,"fraction"] == "U"))
+						Uname = phenomat[Unr,"name"]
+						thistime = as.numeric(phenomat[Tnr,"time"])
+						largeT = which(tnumberreliable>upper)
+						asymptote = log(median( calcdatamatreliable[largeT,Uname]/calcdatamatreliable[largeT,Tname] ))
+						smallT = which(tnumberreliable<lower)
+						main = expression(paste("Labeling Bias ",u[gr]))
+						xlab = expression(paste("Number of Uridine residues ",'#u'[g]))
+						ylab = expression(paste("log( ",U[gr]/T[gr]," )"))
+						sub = paste("( ",Tname,"  p = ",signif(plabel[expnr],2),"  asymptote = ",signif(asymptote,2)," )",sep="")
+						tseq = min(tnumberreliable,na.rm=TRUE):max(tnumberreliable,na.rm=TRUE)
+						if (!bicor){main = expression(paste("(not corrected) Labeling Bias ",u[gr]))}
+						heatscatter(tnumberreliable,log(calcdatamatreliable[,Uname]/calcdatamatreliable[,Tname]),xlab="",ylab="",main="",xlim=c(0,2000),ylim=c(-4,4),cor=FALSE)
+						mtextfkt("default",nrexperiments,main,xlab,ylab,sub)
+						if (bicor){points(tseq,log(1 + labelratio[expnr]*biasdev(plabel[expnr],tseq))+asymptote,type="l",col="black",lwd=3)} else {abline(h = asymptote,lwd=3)}
+						if (!is.null(trueplabel[experiments[expnr]]) & !is.null(trueUasymptote[experiments[expnr]])){points(tseq,log(1 + labelratio[expnr]*biasdev(trueplabel[experiments[expnr]],tseq))+asymptote,type="l",col="grey",lwd=3,lty=2)}
+					}
+				}
+				DTA.plot.it(filename = paste(folder,"/estimation_bias_U_",condition,"_",timepoint,sep=""),sw = resolution*windowxy(nrexperiments)[2],sh = resolution*windowxy(nrexperiments)[1],sres = resolution,plotsfkt = plotsfkt,ww = 7*windowxy(nrexperiments)[2],wh = 7*windowxy(nrexperiments)[1],saveit = save.plots,fileformat = fileformat,notinR = notinR,RStudio = RStudio)
 			}
 		}
 	}
@@ -461,89 +452,87 @@ DTA.singleestimate = function(phenomat, # phenotype matrix, "nr" should be numbe
 	### PLOTS OF LABELING BIAS CORRECTION ###
 	
 	if (check){
-		if (correctedlabeling){
-			plotsfkt = function(){
-				par(mfrow=windowxy(nrexperiments))
-				parfkt("default",nrexperiments)
-				for (expnr in seq(experiments)){
-					Tnr = which((phenomat[,"nr"] == experiments[expnr]) & (phenomat[,"fraction"] == "T"))
-					Tname = phenomat[Tnr,"name"]
-					Lnr = which((phenomat[,"nr"] == experiments[expnr]) & (phenomat[,"fraction"] == "L"))
-					Lname = phenomat[Lnr,"name"]
-					thistime = as.numeric(phenomat[Tnr,"time"])
-					largeT = which(tnumberreliable>upper)
-					asymptote = log(median( calcdatamatreliable[largeT,Lname]/calcdatamatreliable[largeT,Tname] ))
-					smallT = which(tnumberreliable<lower)
-					main = expression(paste("Labeling Bias ",l[gr]))
-					xlab = expression(paste("Number of Uridine residues ",'#u'[g]))
-					ylab = expression(paste("log( ",L[gr]/T[gr]," )"))
-					sub = paste("( ",Tname,"  p = ",signif(1,2),"  asymptote = ",signif(asymptote,2)," )",sep="")
-					tseq = min(tnumberreliable,na.rm=TRUE):max(tnumberreliable,na.rm=TRUE)
-					main = expression(paste("(corrected) Labeling Bias ",l[gr]))
-					if (!bicor){main = expression(paste("(not corrected) Labeling Bias ",l[gr]))}
-					heatscatter(tnumberreliable,log(calcdatamatreliable[,Lname]/calcdatamatreliable[,Tname]),xlab="",ylab="",main="",xlim=c(0,2000),ylim=c(-4,4),cor=FALSE)
-					mtextfkt("default",nrexperiments,main,xlab,ylab,sub)
-					points(tseq,log(bias(1,tseq))+asymptote,type="l",col="black",lwd=3)
-					if (!is.null(trueLasymptote[experiments[expnr]])){points(tseq,log(bias(1,tseq))+asymptote,type="l",col="grey",lwd=3,lty=2)}
-				}
+		plotsfkt = function(){
+			par(mfrow=windowxy(nrexperiments))
+			parfkt("default",nrexperiments)
+			for (expnr in seq(experiments)){
+				Tnr = which((phenomat[,"nr"] == experiments[expnr]) & (phenomat[,"fraction"] == "T"))
+				Tname = phenomat[Tnr,"name"]
+				Lnr = which((phenomat[,"nr"] == experiments[expnr]) & (phenomat[,"fraction"] == "L"))
+				Lname = phenomat[Lnr,"name"]
+				thistime = as.numeric(phenomat[Tnr,"time"])
+				largeT = which(tnumberreliable>upper)
+				asymptote = log(median( calcdatamatreliable[largeT,Lname]/calcdatamatreliable[largeT,Tname] ))
+				smallT = which(tnumberreliable<lower)
+				main = expression(paste("Labeling Bias ",l[gr]))
+				xlab = expression(paste("Number of Uridine residues ",'#u'[g]))
+				ylab = expression(paste("log( ",L[gr]/T[gr]," )"))
+				sub = paste("( ",Tname,"  p = ",signif(1,2),"  asymptote = ",signif(asymptote,2)," )",sep="")
+				tseq = min(tnumberreliable,na.rm=TRUE):max(tnumberreliable,na.rm=TRUE)
+				main = expression(paste("(corrected) Labeling Bias ",l[gr]))
+				if (!bicor){main = expression(paste("(not corrected) Labeling Bias ",l[gr]))}
+				heatscatter(tnumberreliable,log(calcdatamatreliable[,Lname]/calcdatamatreliable[,Tname]),xlab="",ylab="",main="",xlim=c(0,2000),ylim=c(-4,4),cor=FALSE)
+				mtextfkt("default",nrexperiments,main,xlab,ylab,sub)
+				if (bicor){points(tseq,log(bias(1,tseq))+asymptote,type="l",col="black",lwd=3)} else {abline(h = asymptote,lwd=3)}
+				if (!is.null(trueLasymptote[experiments[expnr]])){points(tseq,log(bias(1,tseq))+asymptote,type="l",col="grey",lwd=3,lty=2)}
 			}
-			DTA.plot.it(filename = paste(folder,"/estimation_bias_L_",condition,"_",timepoint,"_corrected",sep=""),sw = resolution*windowxy(nrexperiments)[2],sh = resolution*windowxy(nrexperiments)[1],sres = resolution,plotsfkt = plotsfkt,ww = 7*windowxy(nrexperiments)[2],wh = 7*windowxy(nrexperiments)[1],saveit = plots,addformat = addformat,notinR = notinR)    
-			if (unlabeledfraction){
-				if (is.null(ratiodummy) & ratiomethod == "bias"){
-					plotsfkt = function(){
-						par(mfrow=windowxy(nrexperiments))
-						parfkt("default",nrexperiments)
-						for (expnr in seq(experiments)){
-							Tnr = which((phenomat[,"nr"] == experiments[expnr]) & (phenomat[,"fraction"] == "T"))
-							Tname = phenomat[Tnr,"name"]
-							Unr = which((phenomat[,"nr"] == experiments[expnr]) & (phenomat[,"fraction"] == "U"))
-							Uname = phenomat[Unr,"name"]
-							thistime = as.numeric(phenomat[Tnr,"time"])
-							largeT = which(tnumberreliable>upper)
-							asymptote = log(median( calcdatamatreliable[largeT,Uname]/calcdatamatreliable[largeT,Tname] ))
-							smallT = which(tnumberreliable<lower)
-							main = expression(paste("Labeling Bias ",u[gr]))
-							xlab = expression(paste("Number of Uridine residues ",'#u'[g]))
-							ylab = expression(paste("log( ",U[gr]/T[gr]," )"))
-							sub = paste("( ",Tname,"  p = ",signif(1,2),"  asymptote = ",signif(asymptote,2)," )",sep="")
-							tseq = min(tnumberreliable,na.rm=TRUE):max(tnumberreliable,na.rm=TRUE)
-							main = expression(paste("(corrected) Labeling Bias ",u[gr]))
-							if (!bicor){main = expression(paste("(not corrected) Labeling Bias ",u[gr]))}
-							heatscatter(tnumberreliable,log(calcdatamatreliable[,Uname]/calcdatamatreliable[,Tname]),xlab="",ylab="",main="",xlim=c(0,2000),ylim=c(-4,4),cor=FALSE)
-							mtextfkt("default",nrexperiments,main,xlab,ylab,sub)
-							points(tseq,log(1 + 1*biasdev(1,tseq))+asymptote,type="l",col="black",lwd=3)
-							if (!is.null(trueUasymptote[experiments[expnr]])){points(tseq,log(1 + 1*biasdev(1,tseq))+asymptote,type="l",col="grey",lwd=3,lty=2)}
-						}
+		}
+		DTA.plot.it(filename = paste(folder,"/estimation_bias_L_",condition,"_",timepoint,"_corrected",sep=""),sw = resolution*windowxy(nrexperiments)[2],sh = resolution*windowxy(nrexperiments)[1],sres = resolution,plotsfkt = plotsfkt,ww = 7*windowxy(nrexperiments)[2],wh = 7*windowxy(nrexperiments)[1],saveit = save.plots,fileformat = fileformat,notinR = notinR,RStudio = RStudio)    
+		if (unlabeledfraction){
+			if (is.null(ratiodummy) & ratiomethod == "bias"){
+				plotsfkt = function(){
+					par(mfrow=windowxy(nrexperiments))
+					parfkt("default",nrexperiments)
+					for (expnr in seq(experiments)){
+						Tnr = which((phenomat[,"nr"] == experiments[expnr]) & (phenomat[,"fraction"] == "T"))
+						Tname = phenomat[Tnr,"name"]
+						Unr = which((phenomat[,"nr"] == experiments[expnr]) & (phenomat[,"fraction"] == "U"))
+						Uname = phenomat[Unr,"name"]
+						thistime = as.numeric(phenomat[Tnr,"time"])
+						largeT = which(tnumberreliable>upper)
+						asymptote = log(median( calcdatamatreliable[largeT,Uname]/calcdatamatreliable[largeT,Tname] ))
+						smallT = which(tnumberreliable<lower)
+						main = expression(paste("Labeling Bias ",u[gr]))
+						xlab = expression(paste("Number of Uridine residues ",'#u'[g]))
+						ylab = expression(paste("log( ",U[gr]/T[gr]," )"))
+						sub = paste("( ",Tname,"  p = ",signif(1,2),"  asymptote = ",signif(asymptote,2)," )",sep="")
+						tseq = min(tnumberreliable,na.rm=TRUE):max(tnumberreliable,na.rm=TRUE)
+						main = expression(paste("(corrected) Labeling Bias ",u[gr]))
+						if (!bicor){main = expression(paste("(not corrected) Labeling Bias ",u[gr]))}
+						heatscatter(tnumberreliable,log(calcdatamatreliable[,Uname]/calcdatamatreliable[,Tname]),xlab="",ylab="",main="",xlim=c(0,2000),ylim=c(-4,4),cor=FALSE)
+						mtextfkt("default",nrexperiments,main,xlab,ylab,sub)
+						if (bicor){points(tseq,log(1 + 1*biasdev(1,tseq))+asymptote,type="l",col="black",lwd=3)} else {abline(h = asymptote,lwd=3)}
+						if (!is.null(trueUasymptote[experiments[expnr]])){points(tseq,log(1 + 1*biasdev(1,tseq))+asymptote,type="l",col="grey",lwd=3,lty=2)}
 					}
-					DTA.plot.it(filename = paste(folder,"/estimation_bias_U_",condition,"_",timepoint,"_corrected",sep=""),sw = resolution*windowxy(nrexperiments)[2],sh = resolution*windowxy(nrexperiments)[1],sres = resolution,plotsfkt = plotsfkt,ww = 7*windowxy(nrexperiments)[2],wh = 7*windowxy(nrexperiments)[1],saveit = plots,addformat = addformat,notinR = notinR)
-				} else {
-					plotsfkt = function(){
-						par(mfrow=windowxy(nrexperiments))
-						parfkt("default",nrexperiments)
-						for (expnr in seq(experiments)){
-							Tnr = which((phenomat[,"nr"] == experiments[expnr]) & (phenomat[,"fraction"] == "T"))
-							Tname = phenomat[Tnr,"name"]
-							Unr = which((phenomat[,"nr"] == experiments[expnr]) & (phenomat[,"fraction"] == "U"))
-							Uname = phenomat[Unr,"name"]
-							thistime = as.numeric(phenomat[Tnr,"time"])
-							largeT = which(tnumberreliable>upper)
-							asymptote = log(median( calcdatamatreliable[largeT,Uname]/calcdatamatreliable[largeT,Tname] ))
-							smallT = which(tnumberreliable<lower)
-							main = expression(paste("Labeling Bias ",u[gr]))
-							xlab = expression(paste("Number of Uridine residues ",'#u'[g]))
-							ylab = expression(paste("log( ",U[gr]/T[gr]," )"))
-							sub = paste("( ",Tname,"  p = ",signif(1,2),"  asymptote = ",signif(asymptote,2)," )",sep="")
-							tseq = min(tnumberreliable,na.rm=TRUE):max(tnumberreliable,na.rm=TRUE)
-							main = expression(paste("(corrected) Labeling Bias ",u[gr]))
-							if (!bicor){main = expression(paste("(not corrected) Labeling Bias ",u[gr]))}
-							heatscatter(tnumberreliable,log(calcdatamatreliable[,Uname]/calcdatamatreliable[,Tname]),xlab="",ylab="",main="",xlim=c(0,2000),ylim=c(-4,4),cor=FALSE)
-							mtextfkt("default",nrexperiments,main,xlab,ylab,sub)
-							points(tseq,log(1 + 1*biasdev(1,tseq))+asymptote,type="l",col="black",lwd=3)
-							if (!is.null(trueUasymptote[experiments[expnr]])){points(tseq,log(1 + 1*biasdev(1,tseq))+asymptote,type="l",col="grey",lwd=3,lty=2)}
-						}
-					}
-					DTA.plot.it(filename = paste(folder,"/estimation_bias_U_",condition,"_",timepoint,"_corrected",sep=""),sw = resolution*windowxy(nrexperiments)[2],sh = resolution*windowxy(nrexperiments)[1],sres = resolution,plotsfkt = plotsfkt,ww = 7*windowxy(nrexperiments)[2],wh = 7*windowxy(nrexperiments)[1],saveit = plots,addformat = addformat,notinR = notinR)
 				}
+				DTA.plot.it(filename = paste(folder,"/estimation_bias_U_",condition,"_",timepoint,"_corrected",sep=""),sw = resolution*windowxy(nrexperiments)[2],sh = resolution*windowxy(nrexperiments)[1],sres = resolution,plotsfkt = plotsfkt,ww = 7*windowxy(nrexperiments)[2],wh = 7*windowxy(nrexperiments)[1],saveit = save.plots,fileformat = fileformat,notinR = notinR,RStudio = RStudio)
+			} else {
+				plotsfkt = function(){
+					par(mfrow=windowxy(nrexperiments))
+					parfkt("default",nrexperiments)
+					for (expnr in seq(experiments)){
+						Tnr = which((phenomat[,"nr"] == experiments[expnr]) & (phenomat[,"fraction"] == "T"))
+						Tname = phenomat[Tnr,"name"]
+						Unr = which((phenomat[,"nr"] == experiments[expnr]) & (phenomat[,"fraction"] == "U"))
+						Uname = phenomat[Unr,"name"]
+						thistime = as.numeric(phenomat[Tnr,"time"])
+						largeT = which(tnumberreliable>upper)
+						asymptote = log(median( calcdatamatreliable[largeT,Uname]/calcdatamatreliable[largeT,Tname] ))
+						smallT = which(tnumberreliable<lower)
+						main = expression(paste("Labeling Bias ",u[gr]))
+						xlab = expression(paste("Number of Uridine residues ",'#u'[g]))
+						ylab = expression(paste("log( ",U[gr]/T[gr]," )"))
+						sub = paste("( ",Tname,"  p = ",signif(1,2),"  asymptote = ",signif(asymptote,2)," )",sep="")
+						tseq = min(tnumberreliable,na.rm=TRUE):max(tnumberreliable,na.rm=TRUE)
+						main = expression(paste("(corrected) Labeling Bias ",u[gr]))
+						if (!bicor){main = expression(paste("(not corrected) Labeling Bias ",u[gr]))}
+						heatscatter(tnumberreliable,log(calcdatamatreliable[,Uname]/calcdatamatreliable[,Tname]),xlab="",ylab="",main="",xlim=c(0,2000),ylim=c(-4,4),cor=FALSE)
+						mtextfkt("default",nrexperiments,main,xlab,ylab,sub)
+						if (bicor){points(tseq,log(1 + 1*biasdev(1,tseq))+asymptote,type="l",col="black",lwd=3)} else {abline(h = asymptote,lwd=3)}
+						if (!is.null(trueUasymptote[experiments[expnr]])){points(tseq,log(1 + 1*biasdev(1,tseq))+asymptote,type="l",col="grey",lwd=3,lty=2)}
+					}
+				}
+				DTA.plot.it(filename = paste(folder,"/estimation_bias_U_",condition,"_",timepoint,"_corrected",sep=""),sw = resolution*windowxy(nrexperiments)[2],sh = resolution*windowxy(nrexperiments)[1],sres = resolution,plotsfkt = plotsfkt,ww = 7*windowxy(nrexperiments)[2],wh = 7*windowxy(nrexperiments)[1],saveit = save.plots,fileformat = fileformat,notinR = notinR,RStudio = RStudio)
 			}
 		}
 	}
@@ -608,58 +597,54 @@ DTA.singleestimate = function(phenomat, # phenotype matrix, "nr" should be numbe
 	
 	if (usefractions == "LandT"){
 		if (check){
-			if (rankpairs){
-				if (!is.null(initialdummy)){
-					main = expression(paste("Rank heatpairs of  ",(T['gr,i']-(c['r,i']/a['r,i']*l['gr,i'])*L['gr,i'])/T['gr,i'-1]))
-				} else {
-					main = expression(paste("Rank heatpairs of  ",1-(c[r]/a[r]*l[gr])*L[gr]/T[gr]))
+			if (!is.null(initialdummy)){
+				main = expression(paste("Rank heatpairs of  ",(T['gr,i']-(c['r,i']/a['r,i']*l['gr,i'])*L['gr,i'])/T['gr,i'-1]))
+			} else {
+				main = expression(paste("Rank heatpairs of  ",1-(c[r]/a[r]*l[gr])*L[gr]/T[gr]))
+			}
+			if (ncol(LTmat) > 2){
+				rcex = ncol(LTmat)/2
+				plotsfkt = function(){
+					parfkt("rankpairs",ncol(LTmat))
+					heatmat = apply(LTmat,2,rank)
+					colnames(heatmat) = colnames(LTmat)
+					rownames(heatmat) = rownames(LTmat)
+					heatpairs(heatmat,main="",cex.labels = min(1/(max(nchar(colnames(LTmat)))/10)*3.5,2))
+					sub = paste("( max median fold = ",round(max(abs(diff(apply(LTmat,2,median)))),2),")")
+					mtextfkt("rankpairs",ncol(LTmat),main)
 				}
-				if (ncol(LTmat) > 2){
-					rcex = ncol(LTmat)/2
-					plotsfkt = function(){
-						parfkt("rankpairs",ncol(LTmat))
-						heatmat = apply(LTmat,2,rank)
-						colnames(heatmat) = colnames(LTmat)
-						rownames(heatmat) = rownames(LTmat)
-						heatpairs(heatmat,main="",cex.labels = min(1/(max(nchar(colnames(LTmat)))/10)*3.5,2))
-						sub = paste("( max median fold = ",round(max(abs(diff(apply(LTmat,2,median)))),2),")")
-						mtextfkt("rankpairs",ncol(LTmat),main)
-					}
-					DTA.plot.it(filename = paste(folder,"/rank_heatpairs_",condition,"_",timepoint,sep=""),sw = resolution*rcex,sh = resolution*rcex,sres = resolution,plotsfkt = plotsfkt,ww = rcex*3.5,wh = rcex*3.5,saveit = plots,addformat = addformat,notinR = notinR)
-				}
+				DTA.plot.it(filename = paste(folder,"/rank_heatpairs_",condition,"_",timepoint,sep=""),sw = resolution*rcex,sh = resolution*rcex,sres = resolution,plotsfkt = plotsfkt,ww = rcex*3.5,wh = rcex*3.5,saveit = save.plots,fileformat = fileformat,notinR = notinR,RStudio = RStudio)
 			}
 			
-			if (assessment){
-				plotsfkt = function(){
-					par(mfrow=windowxy(ncol(LTmat)))
-					parfkt("default",ncol(LTmat))
-					for (i in 1:ncol(LTmat)){
-						assess = function(x){- alpha - ((1/labelingtime)*log(x))}
-						if (!is.null(initialdummy)){
-							xlab = expression(paste((T['gr,i']-(c['r,i']/a['r,i']*l['gr,i'])*L['gr,i'])/T['gr,i'-1]))
-							ylab = expression(paste("Decay rate  ",lambda['gr,i']))
-							main = expression(paste("Limit assessment of  ",lambda['gr,i']))
-							sub = paste("(",colnames(LTmat)[i],")")
-						} else {
-							xlab = expression(paste(1-(c[r]/a[r]*l[gr])*L[gr]/T[gr]))
-							ylab = expression(paste("Decay rate  ",lambda[gr]))
-							main = expression(paste("Limit assessment of  ",lambda[gr]))
-							sub = paste("(",colnames(LTmat)[i],")")
-						}
-						plot(0,type="n",xlim=c(-2*exp(-alpha*labelingtime),3*exp(-alpha*labelingtime)),ylim=c(-0.5,max(hist(LTmat[,ncol(LTmat)],breaks=seq(floor(min(LTmat)),ceiling(max(LTmat)),0.25),plot=FALSE)$density)/2*3),xlab="",ylab="",main="")
-						mtextfkt("default",ncol(LTmat),main,xlab,ylab,sub)
-						hist(LTmat[,i],add=TRUE,freq=FALSE,breaks=seq(floor(min(LTmat)),ceiling(max(LTmat)),0.25),col="lightgrey")
-						plot(assess,add=TRUE,xlim=c(10^-8,5),col="black",lwd=2)
-						abline(h=0,col="darkred")
-						abline(v=0,col="darkred",lty=2)
-						abline(v=exp(-alpha*labelingtime),col="darkred",lty=2)
-						text(exp(-alpha*labelingtime)/2,-0.25,sum(LTmat[,i] > 0 & LTmat[,i] < exp(-alpha*labelingtime)),cex=1.5)
-						text(-exp(-alpha*labelingtime)/2,-0.25,sum(LTmat[,i] <= 0),cex=1.5)
-						text(3*exp(-alpha*labelingtime)/2,-0.25,sum(LTmat[,i] >= exp(-alpha*labelingtime)),cex=1.5)
+			plotsfkt = function(){
+				par(mfrow=windowxy(ncol(LTmat)))
+				parfkt("default",ncol(LTmat))
+				for (i in 1:ncol(LTmat)){
+					assess = function(x){- alpha - ((1/labelingtime)*log(x))}
+					if (!is.null(initialdummy)){
+						xlab = expression(paste((T['gr,i']-(c['r,i']/a['r,i']*l['gr,i'])*L['gr,i'])/T['gr,i'-1]))
+						ylab = expression(paste("Decay rate  ",lambda['gr,i']))
+						main = expression(paste("Limit assessment of  ",lambda['gr,i']))
+						sub = paste("(",colnames(LTmat)[i],")")
+					} else {
+						xlab = expression(paste(1-(c[r]/a[r]*l[gr])*L[gr]/T[gr]))
+						ylab = expression(paste("Decay rate  ",lambda[gr]))
+						main = expression(paste("Limit assessment of  ",lambda[gr]))
+						sub = paste("(",colnames(LTmat)[i],")")
 					}
+					plot(0,type="n",xlim=c(-2*exp(-alpha*labelingtime),3*exp(-alpha*labelingtime)),ylim=c(-0.5,max(hist(LTmat[,ncol(LTmat)],breaks=seq(floor(min(LTmat)),ceiling(max(LTmat)),0.25),plot=FALSE)$density)/2*3),xlab="",ylab="",main="")
+					mtextfkt("default",ncol(LTmat),main,xlab,ylab,sub)
+					hist(LTmat[,i],add=TRUE,freq=FALSE,breaks=seq(floor(min(LTmat)),ceiling(max(LTmat)),0.25),col="lightgrey")
+					plot(assess,add=TRUE,xlim=c(10^-8,5),col="black",lwd=2)
+					abline(h=0,col="darkred")
+					abline(v=0,col="darkred",lty=2)
+					abline(v=exp(-alpha*labelingtime),col="darkred",lty=2)
+					text(exp(-alpha*labelingtime)/2,-0.25,sum(LTmat[,i] > 0 & LTmat[,i] < exp(-alpha*labelingtime)),cex=1.5)
+					text(-exp(-alpha*labelingtime)/2,-0.25,sum(LTmat[,i] <= 0),cex=1.5)
+					text(3*exp(-alpha*labelingtime)/2,-0.25,sum(LTmat[,i] >= exp(-alpha*labelingtime)),cex=1.5)
 				}
-				DTA.plot.it(filename = paste(folder,"/range_assessment_",condition,"_",timepoint,sep=""),sw = resolution*windowxy(ncol(LTmat))[2],sh = resolution*windowxy(ncol(LTmat))[1],sres = resolution,plotsfkt = plotsfkt,ww = 7*windowxy(ncol(LTmat))[2],wh = 7*windowxy(ncol(LTmat))[1],saveit = plots,addformat = addformat,notinR = notinR)
 			}
+			DTA.plot.it(filename = paste(folder,"/range_assessment_",condition,"_",timepoint,sep=""),sw = resolution*windowxy(ncol(LTmat))[2],sh = resolution*windowxy(ncol(LTmat))[1],sres = resolution,plotsfkt = plotsfkt,ww = 7*windowxy(ncol(LTmat))[2],wh = 7*windowxy(ncol(LTmat))[1],saveit = save.plots,fileformat = fileformat,notinR = notinR,RStudio = RStudio)
 		}
 		
 		nrexp = ncol(LTmat)
@@ -668,7 +653,9 @@ DTA.singleestimate = function(phenomat, # phenotype matrix, "nr" should be numbe
 		LT = LtoTmat[,nrexp]
 		results[["LT"]] = LT
 		
+		options(warn = -1)
 		LTdrmat = - alpha - ((1/labelingtime)*log(LTmat))
+		options(warn = 0)
 		rownames(LTdrmat) = rownames(calcdatamat)
 		colnames(LTdrmat) = colnames(LTmat)
 		
@@ -682,58 +669,54 @@ DTA.singleestimate = function(phenomat, # phenotype matrix, "nr" should be numbe
 	}
 	if (usefractions == "UandT"){
 		if (check){
-			if (rankpairs){
-				if (!is.null(initialdummy)){
-					main = expression(paste("Rank heatpairs of  ",(c['r,i']/b['r,i']*u['gr,i'])*U['gr,i']/T['gr,i'-1]))
-				} else {
-					main = expression(paste("Rank heatpairs of  ",(c[r]/b[r]*u[gr])*U[gr]/T[gr]))
+			if (!is.null(initialdummy)){
+				main = expression(paste("Rank heatpairs of  ",(c['r,i']/b['r,i']*u['gr,i'])*U['gr,i']/T['gr,i'-1]))
+			} else {
+				main = expression(paste("Rank heatpairs of  ",(c[r]/b[r]*u[gr])*U[gr]/T[gr]))
+			}
+			if (ncol(UTmat) > 2){
+				rcex = ncol(UTmat)/2
+				plotsfkt = function(){
+					parfkt("rankpairs",ncol(UTmat))
+					heatmat = apply(UTmat,2,rank)
+					colnames(heatmat) = colnames(UTmat)
+					rownames(heatmat) = rownames(UTmat)
+					heatpairs(heatmat,main="",cex.labels = min(1/(max(nchar(colnames(UTmat)))/10)*3.5,2))
+					sub = paste("( max median fold = ",round(max(abs(diff(apply(UTmat,2,median)))),2),")")
+					mtextfkt("rankpairs",ncol(UTmat),main)
 				}
-				if (ncol(UTmat) > 2){
-					rcex = ncol(UTmat)/2
-					plotsfkt = function(){
-						parfkt("rankpairs",ncol(UTmat))
-						heatmat = apply(UTmat,2,rank)
-						colnames(heatmat) = colnames(UTmat)
-						rownames(heatmat) = rownames(UTmat)
-						heatpairs(heatmat,main="",cex.labels = min(1/(max(nchar(colnames(UTmat)))/10)*3.5,2))
-						sub = paste("( max median fold = ",round(max(abs(diff(apply(UTmat,2,median)))),2),")")
-						mtextfkt("rankpairs",ncol(UTmat),main)
-					}
-					DTA.plot.it(filename = paste(folder,"/rank_heatpairs_",condition,"_",timepoint,sep=""),sw = resolution*rcex,sh = resolution*rcex,sres = resolution,plotsfkt = plotsfkt,ww = rcex*3.5,wh = rcex*3.5,saveit = plots,addformat = addformat,notinR = notinR)
-				}
+				DTA.plot.it(filename = paste(folder,"/rank_heatpairs_",condition,"_",timepoint,sep=""),sw = resolution*rcex,sh = resolution*rcex,sres = resolution,plotsfkt = plotsfkt,ww = rcex*3.5,wh = rcex*3.5,saveit = save.plots,fileformat = fileformat,notinR = notinR,RStudio = RStudio)
 			}
 			
-			if (assessment){
-				plotsfkt = function(){
-					par(mfrow=windowxy(ncol(UTmat)))
-					parfkt("default",ncol(UTmat))
-					for (i in 1:ncol(UTmat)){
-						assess = function(x){- alpha - ((1/labelingtime)*log(x))}
-						if (!is.null(initialdummy)){
-							xlab = expression(paste((c['r,i']/b['r,i']*u['gr,i'])*U['gr,i']/T['gr,i'-1]))
-							ylab = expression(paste("Decay rate  ",lambda['gr,i']))
-							main = expression(paste("Limit assessment of  ",lambda['gr,i']))
-							sub = paste("(",colnames(UTmat)[i],")")
-						} else {
-							xlab = expression(paste((c[r]/b[r]*u[gr])*U[gr]/T[gr]))
-							ylab = expression(paste("Decay rate  ",lambda[gr]))
-							main = expression(paste("Limit assessment of  ",lambda[gr]))
-							sub = paste("(",colnames(UTmat)[i],")")
-						}
-						plot(0,type="n",xlim=c(-2*exp(-alpha*labelingtime),3*exp(-alpha*labelingtime)),ylim=c(-0.5,max(hist(UTmat[,ncol(UTmat)],breaks=seq(floor(min(UTmat)),ceiling(max(UTmat)),0.25),plot=FALSE)$density)/2*3),xlab="",ylab="",main="")
-						mtextfkt("default",ncol(UTmat),main,xlab,ylab,sub)
-						hist(UTmat[,i],add=TRUE,freq=FALSE,breaks=seq(floor(min(UTmat)),ceiling(max(UTmat)),0.25),col="lightgrey")
-						plot(assess,add=TRUE,xlim=c(10^-8,5),col="black",lwd=2)
-						abline(h=0,col="darkred")
-						abline(v=0,col="darkred",lty=2)
-						abline(v=exp(-alpha*labelingtime),col="darkred",lty=2)
-						text(exp(-alpha*labelingtime)/2,-0.25,sum(UTmat[,i] > 0 & UTmat[,i] < exp(-alpha*labelingtime)),cex=1.5)
-						text(-exp(-alpha*labelingtime)/2,-0.25,sum(UTmat[,i] <= 0),cex=1.5)
-						text(3*exp(-alpha*labelingtime)/2,-0.25,sum(UTmat[,i] >= exp(-alpha*labelingtime)),cex=1.5)
+			plotsfkt = function(){
+				par(mfrow=windowxy(ncol(UTmat)))
+				parfkt("default",ncol(UTmat))
+				for (i in 1:ncol(UTmat)){
+					assess = function(x){- alpha - ((1/labelingtime)*log(x))}
+					if (!is.null(initialdummy)){
+						xlab = expression(paste((c['r,i']/b['r,i']*u['gr,i'])*U['gr,i']/T['gr,i'-1]))
+						ylab = expression(paste("Decay rate  ",lambda['gr,i']))
+						main = expression(paste("Limit assessment of  ",lambda['gr,i']))
+						sub = paste("(",colnames(UTmat)[i],")")
+					} else {
+						xlab = expression(paste((c[r]/b[r]*u[gr])*U[gr]/T[gr]))
+						ylab = expression(paste("Decay rate  ",lambda[gr]))
+						main = expression(paste("Limit assessment of  ",lambda[gr]))
+						sub = paste("(",colnames(UTmat)[i],")")
 					}
+					plot(0,type="n",xlim=c(-2*exp(-alpha*labelingtime),3*exp(-alpha*labelingtime)),ylim=c(-0.5,max(hist(UTmat[,ncol(UTmat)],breaks=seq(floor(min(UTmat)),ceiling(max(UTmat)),0.25),plot=FALSE)$density)/2*3),xlab="",ylab="",main="")
+					mtextfkt("default",ncol(UTmat),main,xlab,ylab,sub)
+					hist(UTmat[,i],add=TRUE,freq=FALSE,breaks=seq(floor(min(UTmat)),ceiling(max(UTmat)),0.25),col="lightgrey")
+					plot(assess,add=TRUE,xlim=c(10^-8,5),col="black",lwd=2)
+					abline(h=0,col="darkred")
+					abline(v=0,col="darkred",lty=2)
+					abline(v=exp(-alpha*labelingtime),col="darkred",lty=2)
+					text(exp(-alpha*labelingtime)/2,-0.25,sum(UTmat[,i] > 0 & UTmat[,i] < exp(-alpha*labelingtime)),cex=1.5)
+					text(-exp(-alpha*labelingtime)/2,-0.25,sum(UTmat[,i] <= 0),cex=1.5)
+					text(3*exp(-alpha*labelingtime)/2,-0.25,sum(UTmat[,i] >= exp(-alpha*labelingtime)),cex=1.5)
 				}
-				DTA.plot.it(filename = paste(folder,"/range_assessment_",condition,"_",timepoint,sep=""),sw = resolution*windowxy(ncol(UTmat))[2],sh = resolution*windowxy(ncol(UTmat))[1],sres = resolution,plotsfkt = plotsfkt,ww = 7*windowxy(ncol(UTmat))[2],wh = 7*windowxy(ncol(UTmat))[1],saveit = plots,addformat = addformat,notinR = notinR)
 			}
+			DTA.plot.it(filename = paste(folder,"/range_assessment_",condition,"_",timepoint,sep=""),sw = resolution*windowxy(ncol(UTmat))[2],sh = resolution*windowxy(ncol(UTmat))[1],sres = resolution,plotsfkt = plotsfkt,ww = 7*windowxy(ncol(UTmat))[2],wh = 7*windowxy(ncol(UTmat))[1],saveit = save.plots,fileformat = fileformat,notinR = notinR,RStudio = RStudio)
 		}
 		
 		nrexp = ncol(UTmat)
@@ -742,7 +725,9 @@ DTA.singleestimate = function(phenomat, # phenotype matrix, "nr" should be numbe
 		UT = UTmat[,nrexp]
 		results[["UT"]] = UT
 		
+		options(warn = -1)
 		UTdrmat = - alpha - ((1/labelingtime)*log(UTmat))
+		options(warn = 0)
 		rownames(UTdrmat) = rownames(calcdatamat)
 		colnames(UTdrmat) = colnames(UTmat)
 		
@@ -759,58 +744,54 @@ DTA.singleestimate = function(phenomat, # phenotype matrix, "nr" should be numbe
 		Bmat = (LTmat + UTmat)/2
 		
 		if (check){
-			if (rankpairs){
-				if (!is.null(initialdummy)){
-					main = expression(paste("Rank heatpairs of  ",((T['gr,i']-(c['r,i']/a['r,i']*l['gr,i'])*L['gr,i'])/T['gr,i'-1]+(c['r,i']/b['r,i']*u['gr,i'])*U['gr,i']/T['gr,i'-1])/2))
-				} else {
-					main = expression(paste("Rank heatpairs of  ",(1-(c[r]/a[r]*l[gr])*L[gr]/T[gr]+(c[r]/b[r]*u[gr])*U[gr]/T[gr])/2))
+			if (!is.null(initialdummy)){
+				main = expression(paste("Rank heatpairs of  ",((T['gr,i']-(c['r,i']/a['r,i']*l['gr,i'])*L['gr,i'])/T['gr,i'-1]+(c['r,i']/b['r,i']*u['gr,i'])*U['gr,i']/T['gr,i'-1])/2))
+			} else {
+				main = expression(paste("Rank heatpairs of  ",(1-(c[r]/a[r]*l[gr])*L[gr]/T[gr]+(c[r]/b[r]*u[gr])*U[gr]/T[gr])/2))
+			}
+			if (ncol(Bmat) > 2){
+				rcex = ncol(Bmat)/2
+				plotsfkt = function(){
+					parfkt("rankpairs",ncol(Bmat))
+					heatmat = apply(Bmat,2,rank)
+					colnames(heatmat) = colnames(Bmat)
+					rownames(heatmat) = rownames(Bmat)
+					heatpairs(heatmat,main="",cex.labels = min(1/(max(nchar(colnames(Bmat)))/10)*3.5,2))
+					sub = paste("( max median fold = ",round(max(abs(diff(apply(Bmat,2,median)))),2),")")
+					mtextfkt("rankpairs",ncol(Bmat),main)
 				}
-				if (ncol(Bmat) > 2){
-					rcex = ncol(Bmat)/2
-					plotsfkt = function(){
-						parfkt("rankpairs",ncol(Bmat))
-						heatmat = apply(Bmat,2,rank)
-						colnames(heatmat) = colnames(Bmat)
-						rownames(heatmat) = rownames(Bmat)
-						heatpairs(heatmat,main="",cex.labels = min(1/(max(nchar(colnames(Bmat)))/10)*3.5,2))
-						sub = paste("( max median fold = ",round(max(abs(diff(apply(Bmat,2,median)))),2),")")
-						mtextfkt("rankpairs",ncol(Bmat),main)
-					}
-					DTA.plot.it(filename = paste(folder,"/rank_heatpairs_",condition,"_",timepoint,sep=""),sw = resolution*rcex,sh = resolution*rcex,sres = resolution,plotsfkt = plotsfkt,ww = rcex*3.5,wh = rcex*3.5,saveit = plots,addformat = addformat,notinR = notinR)
-				}
+				DTA.plot.it(filename = paste(folder,"/rank_heatpairs_",condition,"_",timepoint,sep=""),sw = resolution*rcex,sh = resolution*rcex,sres = resolution,plotsfkt = plotsfkt,ww = rcex*3.5,wh = rcex*3.5,saveit = save.plots,fileformat = fileformat,notinR = notinR,RStudio = RStudio)
 			}
 			
-			if (assessment){
-				plotsfkt = function(){
-					par(mfrow=windowxy(ncol(Bmat)))
-					parfkt("default",ncol(Bmat))
-					for (i in 1:ncol(Bmat)){
-						assess = function(x){- alpha - ((1/labelingtime)*log(x))}
-						if (!is.null(initialdummy)){
-							xlab = expression(paste(((T['gr,i']-(c['r,i']/a['r,i']*l['gr,i'])*L['gr,i'])/T['gr,i'-1]+(c['r,i']/b['r,i']*u['gr,i'])*U['gr,i']/T['gr,i'-1])/2))
-							ylab = expression(paste("Decay rate  ",lambda['gr,i']))
-							main = expression(paste("Limit assessment of  ",lambda['gr,i']))
-							sub = paste("(",colnames(Bmat)[i],")")
-						} else {
-							xlab = expression(paste((1-(c[r]/a[r]*l[gr])*L[gr]/T[gr]+(c[r]/b[r]*u[gr])*U[gr]/T[gr])/2))
-							ylab = expression(paste("Decay rate  ",lambda[gr]))
-							main = expression(paste("Limit assessment of  ",lambda[gr]))
-							sub = paste("(",colnames(Bmat)[i],")")
-						}
-						plot(0,type="n",xlim=c(-2*exp(-alpha*labelingtime),3*exp(-alpha*labelingtime)),ylim=c(-0.5,max(hist(Bmat[,ncol(Bmat)],breaks=seq(floor(min(Bmat)),ceiling(max(Bmat)),0.25),plot=FALSE)$density)/2*3),xlab="",ylab="",main="")
-						mtextfkt("default",ncol(Bmat),main,xlab,ylab,sub)
-						hist(Bmat[,i],add=TRUE,freq=FALSE,breaks=seq(floor(min(Bmat)),ceiling(max(Bmat)),0.25),col="lightgrey")
-						plot(assess,add=TRUE,xlim=c(10^-8,5),col="black",lwd=2)
-						abline(h=0,col="darkred")
-						abline(v=0,col="darkred",lty=2)
-						abline(v=exp(-alpha*labelingtime),col="darkred",lty=2)
-						text(exp(-alpha*labelingtime)/2,-0.25,sum(Bmat[,i] > 0 & Bmat[,i] < exp(-alpha*labelingtime)),cex=1.5)
-						text(-exp(-alpha*labelingtime)/2,-0.25,sum(Bmat[,i] <= 0),cex=1.5)
-						text(3*exp(-alpha*labelingtime)/2,-0.25,sum(Bmat[,i] >= exp(-alpha*labelingtime)),cex=1.5)
+			plotsfkt = function(){
+				par(mfrow=windowxy(ncol(Bmat)))
+				parfkt("default",ncol(Bmat))
+				for (i in 1:ncol(Bmat)){
+					assess = function(x){- alpha - ((1/labelingtime)*log(x))}
+					if (!is.null(initialdummy)){
+						xlab = expression(paste(((T['gr,i']-(c['r,i']/a['r,i']*l['gr,i'])*L['gr,i'])/T['gr,i'-1]+(c['r,i']/b['r,i']*u['gr,i'])*U['gr,i']/T['gr,i'-1])/2))
+						ylab = expression(paste("Decay rate  ",lambda['gr,i']))
+						main = expression(paste("Limit assessment of  ",lambda['gr,i']))
+						sub = paste("(",colnames(Bmat)[i],")")
+					} else {
+						xlab = expression(paste((1-(c[r]/a[r]*l[gr])*L[gr]/T[gr]+(c[r]/b[r]*u[gr])*U[gr]/T[gr])/2))
+						ylab = expression(paste("Decay rate  ",lambda[gr]))
+						main = expression(paste("Limit assessment of  ",lambda[gr]))
+						sub = paste("(",colnames(Bmat)[i],")")
 					}
+					plot(0,type="n",xlim=c(-2*exp(-alpha*labelingtime),3*exp(-alpha*labelingtime)),ylim=c(-0.5,max(hist(Bmat[,ncol(Bmat)],breaks=seq(floor(min(Bmat)),ceiling(max(Bmat)),0.25),plot=FALSE)$density)/2*3),xlab="",ylab="",main="")
+					mtextfkt("default",ncol(Bmat),main,xlab,ylab,sub)
+					hist(Bmat[,i],add=TRUE,freq=FALSE,breaks=seq(floor(min(Bmat)),ceiling(max(Bmat)),0.25),col="lightgrey")
+					plot(assess,add=TRUE,xlim=c(10^-8,5),col="black",lwd=2)
+					abline(h=0,col="darkred")
+					abline(v=0,col="darkred",lty=2)
+					abline(v=exp(-alpha*labelingtime),col="darkred",lty=2)
+					text(exp(-alpha*labelingtime)/2,-0.25,sum(Bmat[,i] > 0 & Bmat[,i] < exp(-alpha*labelingtime)),cex=1.5)
+					text(-exp(-alpha*labelingtime)/2,-0.25,sum(Bmat[,i] <= 0),cex=1.5)
+					text(3*exp(-alpha*labelingtime)/2,-0.25,sum(Bmat[,i] >= exp(-alpha*labelingtime)),cex=1.5)
 				}
-				DTA.plot.it(filename = paste(folder,"/range_assessment_",condition,"_",timepoint,sep=""),sw = resolution*windowxy(ncol(Bmat))[2],sh = resolution*windowxy(ncol(Bmat))[1],sres = resolution,plotsfkt = plotsfkt,ww = 7*windowxy(ncol(Bmat))[2],wh = 7*windowxy(ncol(Bmat))[1],saveit = plots,addformat = addformat,notinR = notinR)
 			}
+			DTA.plot.it(filename = paste(folder,"/range_assessment_",condition,"_",timepoint,sep=""),sw = resolution*windowxy(ncol(Bmat))[2],sh = resolution*windowxy(ncol(Bmat))[1],sres = resolution,plotsfkt = plotsfkt,ww = 7*windowxy(ncol(Bmat))[2],wh = 7*windowxy(ncol(Bmat))[1],saveit = save.plots,fileformat = fileformat,notinR = notinR,RStudio = RStudio)
 		}
 		
 		nrexp = ncol(Bmat)
@@ -819,7 +800,9 @@ DTA.singleestimate = function(phenomat, # phenotype matrix, "nr" should be numbe
 		B = Bmat[,nrexp]
 		results[["B"]] = B
 		
+		options(warn = -1)
 		Bdrmat = - alpha - ((1/labelingtime)*log(Bmat))
+		options(warn = 0)
 		rownames(Bdrmat) = rownames(calcdatamat)
 		colnames(Bdrmat) = colnames(Bmat)
 		
@@ -895,229 +878,227 @@ DTA.singleestimate = function(phenomat, # phenotype matrix, "nr" should be numbe
 	
 	### CORRELATION ###
 	
-	if (check){
-		if (correlation) {
-			vecmat = cbind(TE,LE,tnumber,sr,dr,(log(2)/dr))
-			vecmat = vecmat[reliable,]
-			compsmat = matrix(0,ncol=3,nrow=3)
-			for (i in 1:3){for (j in 1:3){compsmat[i,j] = cor(vecmat[,i],vecmat[,j+3],method = "pearson",use = "na.or.complete")}}
-			rownames(compsmat) = c("TE","LE","#U")
-			colnames(compsmat) = c("SR","DR","HL")
-			print(t(compsmat))
-			
-			plotsfkt = function(){
-				par(mfrow=c(1,2))
-				layout(matrix(data=c(1,2),nrow=1,ncol=2),widths=c(6,1)) 
-				parfkt("correlationleft",1)
-				image(t(t(compsmat)[3:1,]),axes=FALSE,col = colorRampPalette(c("darkred","lightgrey","darkgreen"))(500),breaks = seq(-1,1,length.out=501),main="",xlab="",ylab="")
-				xlab = expression("Data inputs")
-				ylab = expression("Extracted rates")
-				main = expression(paste("Correlation analysis"))
-				sub = paste("( pearson correlation for gene-wise medians )")
-				mtextfkt("default",1,main,xlab,ylab,sub)
-				axis(1,at=c(0,0.5,1),labels=c(expression(T[gr]),expression(L[gr]),expression('#u'[g])))
-				axis(2,at=c(0,0.5,1),labels=c(expression(t[1/2][gr]),expression(lambda[gr]),expression(mu[gr])),las=2)
-				abline(v=c(0.75,0.25),h=c(0.75,0.25),cex=0.5)
-				box()
-				text(c(0,0.5,1,0,0.5,1,0,0.5,1),c(0,0,0,0.5,0.5,0.5,1,1,1),round(as.vector(t(t(compsmat)[3:1,])),2))
-				parfkt("correlationright",1)
-				image(1,seq(-1,1,length.out=501),matrix(data=seq(-1,1,length.out=501),ncol=length(seq(-1,1,length.out=501)),nrow=1),col=colorRampPalette(c("darkred","lightgrey","darkgreen"))(500),xlab="",ylab="",axes=FALSE)
-				axis(4,at=c(-1,-0.5,0,0.5,1),labels=c(-1,-0.5,0,0.5,1),las=2)
-				box()
-			}
-			DTA.plot.it(filename = paste(folder,"/correlation_analysis_",condition,"_",timepoint,sep=""),sw = resolution,sh = resolution,sres = resolution,plotsfkt = plotsfkt,ww = 7,wh = 7,saveit = plots,addformat = addformat,notinR = notinR)
+	if (check) {
+		vecmat = cbind(TE,LE,tnumber,sr,dr,(log(2)/dr))
+		vecmat = vecmat[reliable,]
+		compsmat = matrix(0,ncol=3,nrow=3)
+		for (i in 1:3){for (j in 1:3){compsmat[i,j] = cor(vecmat[,i],vecmat[,j+3],method = "pearson",use = "na.or.complete")}}
+		rownames(compsmat) = c("TE","LE","#U")
+		colnames(compsmat) = c("SR","DR","HL")
+		print(t(compsmat))
+		
+		plotsfkt = function(){
+			par(mfrow=c(1,2))
+			layout(matrix(data=c(1,2),nrow=1,ncol=2),widths=c(6,1)) 
+			parfkt("correlationleft",1)
+			image(t(t(compsmat)[3:1,]),axes=FALSE,col = colorRampPalette(c("darkred","lightgrey","darkgreen"))(500),breaks = seq(-1,1,length.out=501),main="",xlab="",ylab="")
+			xlab = expression("Data inputs")
+			ylab = expression("Extracted rates")
+			main = expression(paste("Correlation analysis"))
+			sub = paste("( pearson correlation for gene-wise medians )")
+			mtextfkt("default",1,main,xlab,ylab,sub)
+			axis(1,at=c(0,0.5,1),labels=c(expression(T[gr]),expression(L[gr]),expression('#u'[g])))
+			axis(2,at=c(0,0.5,1),labels=c(expression(t[1/2][gr]),expression(lambda[gr]),expression(mu[gr])),las=2)
+			abline(v=c(0.75,0.25),h=c(0.75,0.25),cex=0.5)
+			box()
+			text(c(0,0.5,1,0,0.5,1,0,0.5,1),c(0,0,0,0.5,0.5,0.5,1,1,1),round(as.vector(t(t(compsmat)[3:1,])),2))
+			parfkt("correlationright",1)
+			image(1,seq(-1,1,length.out=501),matrix(data=seq(-1,1,length.out=501),ncol=length(seq(-1,1,length.out=501)),nrow=1),col=colorRampPalette(c("darkred","lightgrey","darkgreen"))(500),xlab="",ylab="",axes=FALSE)
+			axis(4,at=c(-1,-0.5,0,0.5,1),labels=c(-1,-0.5,0,0.5,1),las=2)
+			box()
 		}
-		
-		### GENERATE CV PROGRESSION ###
-
-		TEmat = cbind(calcdatamat[,which(phenomat[,"fraction"] == "T")])
-		LEmat = cbind(calcdatamat[,which(phenomat[,"fraction"] == "L")])
-		results[["TE.sd"]] = apply(TEmat,1,sd)
-		results[["LE.sd"]] = apply(LEmat,1,sd)
-		results[["TE.cv"]] = apply(TEmat,1,sd)/apply(TEmat,1,mean)
-		results[["LE.cv"]] = apply(LEmat,1,sd)/apply(LEmat,1,mean)
-		TEmat = log(TEmat)
-		LEmat = log(LEmat)
-		
-		if (unlabeledfraction){
-			UEmat = cbind(calcdatamat[,which(phenomat[,"fraction"] == "U")])
-			results[["UE.sd"]] = apply(UEmat,1,sd)
-			results[["UE.cv"]] = apply(UEmat,1,sd)/apply(UEmat,1,mean)
-			UEmat = log(UEmat)
-		}
-		
-		SDmat = matrix(NA,ncol=3,nrow=nrow(TEmat))
-		rownames(SDmat) = rownames(TEmat)
-		colnames(SDmat) = c("DR","HL","SR")
-		CVmat = matrix(NA,ncol=3,nrow=nrow(TEmat))
-		rownames(CVmat) = rownames(TEmat)
-		colnames(CVmat) = c("DR","HL","SR")
-		if (error){
-			if (dynamic){errorpossible = (!is.null(dim(initials)) & !is.null(dim(TEmat)))} else {errorpossible = !is.null(dim(TEmat))}
-			if (errorpossible){
-				if (dynamic){
-					if (!is.null(initialdummy)){
-						TImat = initials
-						results[["TI.sd"]] = apply(TImat,1,sd)
-						results[["TI.cv"]] = apply(TImat,1,sd)/apply(TImat,1,mean)
-						TImat = log(TImat)
-						Imean = mean(TImat[i,])
-						Isd = sd(TImat[i,])
-					}  else {
-						Imean = NULL
-						Isd = NULL
-					}
-				} else {
+		DTA.plot.it(filename = paste(folder,"/correlation_analysis_",condition,"_",timepoint,sep=""),sw = resolution,sh = resolution,sres = resolution,plotsfkt = plotsfkt,ww = 7,wh = 7,saveit = save.plots,fileformat = fileformat,notinR = notinR,RStudio = RStudio)
+	}
+	
+	### GENERATE CV PROGRESSION ###
+	
+	TEmat = cbind(calcdatamat[,which(phenomat[,"fraction"] == "T")])
+	LEmat = cbind(calcdatamat[,which(phenomat[,"fraction"] == "L")])
+	results[["TE.sd"]] = apply(TEmat,1,sd)
+	results[["LE.sd"]] = apply(LEmat,1,sd)
+	results[["TE.cv"]] = apply(TEmat,1,sd)/apply(TEmat,1,mean)
+	results[["LE.cv"]] = apply(LEmat,1,sd)/apply(LEmat,1,mean)
+	TEmat = log(TEmat)
+	LEmat = log(LEmat)
+	
+	if (unlabeledfraction){
+		UEmat = cbind(calcdatamat[,which(phenomat[,"fraction"] == "U")])
+		results[["UE.sd"]] = apply(UEmat,1,sd)
+		results[["UE.cv"]] = apply(UEmat,1,sd)/apply(UEmat,1,mean)
+		UEmat = log(UEmat)
+	}
+	
+	SDmat = matrix(NA,ncol=3,nrow=nrow(TEmat))
+	rownames(SDmat) = rownames(TEmat)
+	colnames(SDmat) = c("DR","HL","SR")
+	CVmat = matrix(NA,ncol=3,nrow=nrow(TEmat))
+	rownames(CVmat) = rownames(TEmat)
+	colnames(CVmat) = c("DR","HL","SR")
+	if (error){
+		if (dynamic){errorpossible = (!is.null(dim(initials)) & !is.null(dim(TEmat)))} else {errorpossible = !is.null(dim(TEmat))}
+		if (errorpossible){
+			if (dynamic){
+				if (!is.null(initialdummy)){
+					TImat = initials
+					results[["TI.sd"]] = apply(TImat,1,sd)
+					results[["TI.cv"]] = apply(TImat,1,sd)/apply(TImat,1,mean)
+					TImat = log(TImat)
+					Imean = mean(TImat[i,])
+					Isd = sd(TImat[i,])
+				}  else {
 					Imean = NULL
 					Isd = NULL
 				}
-				if (usefractions == "LandT"){
-					for (i in names(dr[!is.na(dr)])){
-						err = LT.error.progression(Tmean = mean(TEmat[i,]),Tsd = sd(TEmat[i,]),Lmean = mean(LEmat[i,]),Lsd = sd(LEmat[i,]),timepoint = labelingtime,alpha = alpha,Imean = Imean,Isd = Isd)
-						SDmat[i,] = err[["sds"]]
-						CVmat[i,] = err[["cvs"]]
-					}
-				}
-				if (usefractions == "UandT"){
-					for (i in names(dr[!is.na(dr)])){
-						err = UT.error.progression(Tmean = mean(TEmat[i,]),Tsd = sd(TEmat[i,]),Lmean = mean(LEmat[i,]),Lsd = sd(LEmat[i,]),Umean = mean(UEmat[i,]),Usd = sd(UEmat[i,]),timepoint = labelingtime,alpha = alpha,Imean = Imean,Isd = Isd)
-						SDmat[i,] = err[["sds"]]
-						CVmat[i,] = err[["cvs"]]
-					}					
-				}
-				if (usefractions == "both"){
-					for (i in names(dr[!is.na(dr)])){
-						err = BOTH.error.progression(Tmean = mean(TEmat[i,]),Tsd = sd(TEmat[i,]),Lmean = mean(LEmat[i,]),Lsd = sd(LEmat[i,]),Umean = mean(UEmat[i,]),Usd = sd(UEmat[i,]),timepoint = labelingtime,alpha = alpha,Imean = Imean,Isd = Isd)
-						SDmat[i,] = err[["sds"]]
-						CVmat[i,] = err[["cvs"]]
-					}					
-				}
-			} else {print("Your data is not suitable for error assessment due to lack of replicates")}	
-		}
-		results[["dr.sd"]] = SDmat[,"DR"]
-		results[["hl.sd"]] = SDmat[,"HL"]
-		results[["sr.sd"]] = SDmat[,"SR"]
-		results[["dr.cv"]] = CVmat[,"DR"]
-		results[["hl.cv"]] = CVmat[,"HL"]
-		results[["sr.cv"]] = CVmat[,"SR"]
-		
-		### SIMULATION ###
-		
-		if (simulation){	
-			plotsfkt = function(){
-				par(mfrow=c(3,3))
-				#parfkt("default",9)
-				if (dynamic){
-					truehl = truehalflivesaveraged
-					truedr = truelambdasaveraged
-					truesr = truemusaveraged
-				} else {
-					truehl = truehalflives
-					truedr = truelambdas
-					truesr = truemus
-				}
-				
-				hllims = c(0,mean(quantile(truehl,0.99,na.rm=TRUE),quantile(results[["hl"]],0.99,na.rm=TRUE)))
-				hlindi = (!is.na(results[["hl"]]) & results[["hl"]] > 0 & results[["hl"]] < hllims[2])
-				drlims = c(mean(quantile(truedr,0.01,na.rm=TRUE),quantile(results[["dr"]],0.01,na.rm=TRUE)),mean(quantile(truedr,0.99,na.rm=TRUE),quantile(results[["dr"]],0.99,na.rm=TRUE)))
-				drindi = (!is.na(results[["dr"]]) & results[["dr"]] > 0 & results[["dr"]] < drlims[2])
-				srlims = c(0,mean(quantile(truesr,0.99,na.rm=TRUE),quantile(results[["sr"]],0.99,na.rm=TRUE)))
-				srindi = (!is.na(results[["sr"]]) & results[["sr"]] > 0 & results[["sr"]] < srlims[2])
-				
-				parfkt("default",9)
-				heatscatter(truehl,results[["hl"]],main="",xlab="",ylab="",cor=FALSE,xlim=hllims,ylim=hllims)
-				xlab = expression(paste("True half-life  ",t[1/2][gr]))
-				ylab = expression(paste("Estimated half-life  ",t[1/2][gr]^'*'))
-				main = expression(paste("Half-life  ",t[1/2][gr]))
-				sub = paste("( heatscatter p-cor = ",pcor(truehl,results[["hl"]],use="na.or.complete"),")")
-				mtextfkt("default",9,main,xlab,ylab,sub)
-				linfactor = coefficients(tls((results[["hl"]][hlindi]) ~ (truehl[hlindi]) + 0))[1]
-				abline(a=0,b=linfactor,col="black",lwd=3)
-				abline(a=0,b=1,col="grey",lwd=3,lty=2)
-				cat("Factor estimated/true:",linfactor,"\n")
-				heatscatter(rank(truehl),rank(results[["hl"]]),main="",xlab="",ylab="",cor=FALSE)
-				xlab = expression(paste("True half-life  ",t[1/2][gr],"  rank"))
-				ylab = expression(paste("Estimated half-life  ",t[1/2][gr]^'*',"  rank"))
-				main = expression(paste("Half-life  ",t[1/2][gr],"  rank"))
-				sub = paste("( heatscatter s-cor = ",scor(rank(truehl),rank(results[["hl"]]),use="na.or.complete"),")")
-				mtextfkt("default",9,main,xlab,ylab,sub)
-				abline(a=0,b=1,col="black",lwd=3)
-				abline(a=0,b=1,col="grey",lwd=3,lty=2)
-				meanreldev = mean(abs(results[["hl"]][hlindi]-truehl[hlindi])/truehl[hlindi])
-				cat("Mean relative deviation: ",signif(meanreldev,2),"\n")
-				den = density(log2(results[["hl"]][hlindi]/truehl[hlindi]))
-				den = cbind(den$x,den$y)
-				hist(log2(results[["hl"]][hlindi]/truehl[hlindi]),xlim=c(-5,5),breaks=40,main="",xlab="",ylab="")
-				xlab = expression(paste("log2( ",t[1/2][gr]^'*'/t[1/2][gr]," )"))
-				ylab = expression(paste("Frequency"))
-				main = expression(paste("Log-ratio  log2( ",t[1/2][gr]^'*'/t[1/2][gr]," )"))
-				sub = paste("( MRD: ",signif(meanreldev,2), ",mode: ",signif(den[which(den[,2] == max(den[,2]))],2)," )")
-				mtextfkt("default",9,main,xlab,ylab,sub)
-				abline(v=0,col="grey",lwd=3,lty=2)
-				abline(v=den[which(den[,2] == max(den[,2]))],col="black",lwd=3)
-				
-				heatscatter(truedr,results[["dr"]],log="xy",main="",xlab="",ylab="",cor=FALSE,xlim=drlims,ylim=drlims)
-				xlab = expression(paste("True decay rate  ",lambda[gr]))
-				ylab = expression(paste("Estimated decay rate  ",lambda[gr]^'*'))
-				main = expression(paste("Deacy rate  ",lambda[gr]))
-				sub = paste("( heatscatter p-cor = ",pcor(truedr,results[["dr"]],use="na.or.complete"),")")
-				mtextfkt("default",9,main,xlab,ylab,sub)
-				lindev = median(log10(results[["dr"]][drindi])-log10(truedr[drindi]))
-				abline(lindev,b=1,col="black",lwd=3)
-				abline(a=0,b=1,col="grey",lwd=3,lty=2)
-				heatscatter(rank(truedr),rank(results[["dr"]]),main="",xlab="",ylab="",cor=FALSE)
-				xlab = expression(paste("True decay rate  ",lambda[gr],"  rank"))
-				ylab = expression(paste("Estimated decay  ",lambda[gr]^'*',"  rank"))
-				main = expression(paste("Decay rate  ",lambda[gr],"  rank"))
-				sub = paste("( heatscatter s-cor = ",scor(rank(truedr),rank(results[["dr"]]),use="na.or.complete"),")")
-				mtextfkt("default",9,main,xlab,ylab,sub)
-				abline(a=0,b=1,col="black",lwd=3)
-				abline(a=0,b=1,col="grey",lwd=3,lty=2)
-				meanreldev = mean(abs(results[["dr"]][drindi]-truedr[drindi])/truedr[drindi])
-				cat("Mean relative deviation: ",signif(meanreldev,2),"\n")
-				den = density(log2(results[["dr"]][drindi]/truedr[drindi]))
-				den = cbind(den$x,den$y)
-				hist(log2(results[["dr"]][drindi]/truedr[drindi]),xlim=c(-5,5),breaks=40,main="",xlab="",ylab="")
-				xlab = expression(paste("log2( ",lambda[gr]^'*'/lambda[gr]," )"))
-				ylab = expression(paste("Frequency"))
-				main = expression(paste("Log-ratio  log2( ",lambda[gr]^'*'/lambda[gr]," )"))
-				sub = paste("( MRD: ",signif(meanreldev,2), ",mode: ",signif(den[which(den[,2] == max(den[,2]))],2)," )")
-				mtextfkt("default",9,main,xlab,ylab,sub)
-				abline(v=0,col="grey",lwd=3,lty=2)
-				abline(v=den[which(den[,2] == max(den[,2]))],col="black",lwd=3)
-				
-				heatscatter(truesr,results[["sr"]],main="",xlab="",ylab="",cor=FALSE,xlim=srlims,ylim=srlims)
-				xlab = expression(paste("True synthesis rate  ",mu[gr]))
-				ylab = expression(paste("Estimated synthesis rate  ",mu[gr]^'*'))
-				main = expression(paste("Synthesis rate  ",mu[gr]))
-				sub = paste("( heatscatter p-cor = ",pcor(truesr,results[["sr"]],use="na.or.complete"),")")
-				mtextfkt("default",9,main,xlab,ylab,sub)
-				linfactor = coefficients(tls((results[["sr"]][srindi]) ~ (truesr[srindi]) + 0))[1]
-				abline(a=0,b=linfactor,col="black",lwd=3)
-				abline(a=0,b=1,col="grey",lwd=3,lty=2)
-				heatscatter(rank(truesr),rank(results[["sr"]]),main="",xlab="",ylab="",cor=FALSE)
-				xlab = expression(paste("True synthesis rate  ",mu[gr],"  rank"))
-				ylab = expression(paste("Estimated synthesis  ",mu[gr]^'*',"  rank"))
-				main = expression(paste("Synthesis rate  ",mu[gr],"  rank"))
-				sub = paste("( heatscatter s-cor = ",scor(rank(truesr),rank(results[["sr"]]),use="na.or.complete"),")")
-				mtextfkt("default",9,main,xlab,ylab,sub)
-				abline(a=0,b=1,col="black",lwd=3)
-				abline(a=0,b=1,col="grey",lwd=3,lty=2)
-				meanreldev = mean(abs(results[["sr"]][srindi]-truesr[srindi])/truesr[srindi])
-				cat("Mean relative deviation: ",signif(meanreldev,2),"\n")
-				den = density(log2(results[["sr"]][srindi]/truesr[srindi]))
-				den = cbind(den$x,den$y)
-				hist(log2(results[["sr"]][srindi]/truesr[srindi]),xlim=c(-5,5),breaks=40,main="",xlab="",ylab="")
-				xlab = expression(paste("log2( ",mu[gr]^'*'/mu[gr]," )"))
-				ylab = expression(paste("Frequency"))
-				main = expression(paste("Log-ratio  log2( ",mu[gr]^'*'/mu[gr]," )"))
-				sub = paste("( MRD: ",signif(meanreldev,2), ",mode: ",signif(den[which(den[,2] == max(den[,2]))],2)," )")
-				mtextfkt("default",9,main,xlab,ylab,sub)
-				abline(v=0,col="grey",lwd=3,lty=2)
-				abline(v=den[which(den[,2] == max(den[,2]))],col="black",lwd=3)
+			} else {
+				Imean = NULL
+				Isd = NULL
 			}
-			DTA.plot.it(filename = paste(folder,"/simulation_",condition,"_",timepoint,sep=""),sw = resolution*3,sh = resolution*3,sres = resolution,plotsfkt = plotsfkt,ww = 21,wh = 21,saveit = plots,addformat = addformat,notinR = notinR)
+			if (usefractions == "LandT"){
+				for (i in names(dr[!is.na(dr)])){
+					err = LT.error.progression(Tmean = mean(TEmat[i,]),Tsd = sd(TEmat[i,]),Lmean = mean(LEmat[i,]),Lsd = sd(LEmat[i,]),timepoint = labelingtime,alpha = alpha,Imean = Imean,Isd = Isd)
+					SDmat[i,] = err[["sds"]]
+					CVmat[i,] = err[["cvs"]]
+				}
+			}
+			if (usefractions == "UandT"){
+				for (i in names(dr[!is.na(dr)])){
+					err = UT.error.progression(Tmean = mean(TEmat[i,]),Tsd = sd(TEmat[i,]),Lmean = mean(LEmat[i,]),Lsd = sd(LEmat[i,]),Umean = mean(UEmat[i,]),Usd = sd(UEmat[i,]),timepoint = labelingtime,alpha = alpha,Imean = Imean,Isd = Isd)
+					SDmat[i,] = err[["sds"]]
+					CVmat[i,] = err[["cvs"]]
+				}					
+			}
+			if (usefractions == "both"){
+				for (i in names(dr[!is.na(dr)])){
+					err = BOTH.error.progression(Tmean = mean(TEmat[i,]),Tsd = sd(TEmat[i,]),Lmean = mean(LEmat[i,]),Lsd = sd(LEmat[i,]),Umean = mean(UEmat[i,]),Usd = sd(UEmat[i,]),timepoint = labelingtime,alpha = alpha,Imean = Imean,Isd = Isd)
+					SDmat[i,] = err[["sds"]]
+					CVmat[i,] = err[["cvs"]]
+				}					
+			}
+		} else {print("Your data is not suitable for error assessment due to lack of replicates")}	
+	}
+	results[["dr.sd"]] = SDmat[,"DR"]
+	results[["hl.sd"]] = SDmat[,"HL"]
+	results[["sr.sd"]] = SDmat[,"SR"]
+	results[["dr.cv"]] = CVmat[,"DR"]
+	results[["hl.cv"]] = CVmat[,"HL"]
+	results[["sr.cv"]] = CVmat[,"SR"]
+	
+	### SIMULATION ###
+	
+	if (simulation){	
+		plotsfkt = function(){
+			par(mfrow=c(3,3))
+			#parfkt("default",9)
+			if (dynamic){
+				truehl = truehalflivesaveraged
+				truedr = truelambdasaveraged
+				truesr = truemusaveraged
+			} else {
+				truehl = truehalflives
+				truedr = truelambdas
+				truesr = truemus
+			}
+			
+			hllims = c(0,mean(quantile(truehl,0.99,na.rm=TRUE),quantile(results[["hl"]],0.99,na.rm=TRUE)))
+			hlindi = (!is.na(results[["hl"]]) & results[["hl"]] > 0 & results[["hl"]] < hllims[2])
+			drlims = c(mean(quantile(truedr,0.01,na.rm=TRUE),quantile(results[["dr"]],0.01,na.rm=TRUE)),mean(quantile(truedr,0.99,na.rm=TRUE),quantile(results[["dr"]],0.99,na.rm=TRUE)))
+			drindi = (!is.na(results[["dr"]]) & results[["dr"]] > 0 & results[["dr"]] < drlims[2])
+			srlims = c(0,mean(quantile(truesr,0.99,na.rm=TRUE),quantile(results[["sr"]],0.99,na.rm=TRUE)))
+			srindi = (!is.na(results[["sr"]]) & results[["sr"]] > 0 & results[["sr"]] < srlims[2])
+			
+			parfkt("default",9)
+			heatscatter(truehl,results[["hl"]],main="",xlab="",ylab="",cor=FALSE,xlim=hllims,ylim=hllims)
+			xlab = expression(paste("True half-life  ",t[1/2][gr]))
+			ylab = expression(paste("Estimated half-life  ",t[1/2][gr]^'*'))
+			main = expression(paste("Half-life  ",t[1/2][gr]))
+			sub = paste("( heatscatter p-cor = ",pcor(truehl,results[["hl"]],use="na.or.complete"),")")
+			mtextfkt("default",9,main,xlab,ylab,sub)
+			linfactor = coefficients(tls((results[["hl"]][hlindi]) ~ (truehl[hlindi]) + 0))[1]
+			abline(a=0,b=linfactor,col="black",lwd=3)
+			abline(a=0,b=1,col="grey",lwd=3,lty=2)
+			cat("Factor estimated/true:",linfactor,"\n")
+			heatscatter(rank(truehl),rank(results[["hl"]]),main="",xlab="",ylab="",cor=FALSE)
+			xlab = expression(paste("True half-life  ",t[1/2][gr],"  rank"))
+			ylab = expression(paste("Estimated half-life  ",t[1/2][gr]^'*',"  rank"))
+			main = expression(paste("Half-life  ",t[1/2][gr],"  rank"))
+			sub = paste("( heatscatter s-cor = ",scor(rank(truehl),rank(results[["hl"]]),use="na.or.complete"),")")
+			mtextfkt("default",9,main,xlab,ylab,sub)
+			abline(a=0,b=1,col="black",lwd=3)
+			abline(a=0,b=1,col="grey",lwd=3,lty=2)
+			meanreldev = mean(abs(results[["hl"]][hlindi]-truehl[hlindi])/truehl[hlindi])
+			cat("Mean relative deviation: ",signif(meanreldev,2),"\n")
+			den = density(log2(results[["hl"]][hlindi]/truehl[hlindi]))
+			den = cbind(den$x,den$y)
+			hist(log2(results[["hl"]][hlindi]/truehl[hlindi]),xlim=c(-5,5),breaks=40,main="",xlab="",ylab="")
+			xlab = expression(paste("log2( ",t[1/2][gr]^'*'/t[1/2][gr]," )"))
+			ylab = expression(paste("Frequency"))
+			main = expression(paste("Log-ratio  log2( ",t[1/2][gr]^'*'/t[1/2][gr]," )"))
+			sub = paste("( MRD: ",signif(meanreldev,2), ",mode: ",signif(den[which(den[,2] == max(den[,2]))],2)," )")
+			mtextfkt("default",9,main,xlab,ylab,sub)
+			abline(v=0,col="grey",lwd=3,lty=2)
+			abline(v=den[which(den[,2] == max(den[,2]))],col="black",lwd=3)
+			
+			heatscatter(truedr,results[["dr"]],log="xy",main="",xlab="",ylab="",cor=FALSE,xlim=drlims,ylim=drlims)
+			xlab = expression(paste("True decay rate  ",lambda[gr]))
+			ylab = expression(paste("Estimated decay rate  ",lambda[gr]^'*'))
+			main = expression(paste("Deacy rate  ",lambda[gr]))
+			sub = paste("( heatscatter p-cor = ",pcor(truedr,results[["dr"]],use="na.or.complete"),")")
+			mtextfkt("default",9,main,xlab,ylab,sub)
+			lindev = median(log10(results[["dr"]][drindi])-log10(truedr[drindi]))
+			abline(lindev,b=1,col="black",lwd=3)
+			abline(a=0,b=1,col="grey",lwd=3,lty=2)
+			heatscatter(rank(truedr),rank(results[["dr"]]),main="",xlab="",ylab="",cor=FALSE)
+			xlab = expression(paste("True decay rate  ",lambda[gr],"  rank"))
+			ylab = expression(paste("Estimated decay  ",lambda[gr]^'*',"  rank"))
+			main = expression(paste("Decay rate  ",lambda[gr],"  rank"))
+			sub = paste("( heatscatter s-cor = ",scor(rank(truedr),rank(results[["dr"]]),use="na.or.complete"),")")
+			mtextfkt("default",9,main,xlab,ylab,sub)
+			abline(a=0,b=1,col="black",lwd=3)
+			abline(a=0,b=1,col="grey",lwd=3,lty=2)
+			meanreldev = mean(abs(results[["dr"]][drindi]-truedr[drindi])/truedr[drindi])
+			cat("Mean relative deviation: ",signif(meanreldev,2),"\n")
+			den = density(log2(results[["dr"]][drindi]/truedr[drindi]))
+			den = cbind(den$x,den$y)
+			hist(log2(results[["dr"]][drindi]/truedr[drindi]),xlim=c(-5,5),breaks=40,main="",xlab="",ylab="")
+			xlab = expression(paste("log2( ",lambda[gr]^'*'/lambda[gr]," )"))
+			ylab = expression(paste("Frequency"))
+			main = expression(paste("Log-ratio  log2( ",lambda[gr]^'*'/lambda[gr]," )"))
+			sub = paste("( MRD: ",signif(meanreldev,2), ",mode: ",signif(den[which(den[,2] == max(den[,2]))],2)," )")
+			mtextfkt("default",9,main,xlab,ylab,sub)
+			abline(v=0,col="grey",lwd=3,lty=2)
+			abline(v=den[which(den[,2] == max(den[,2]))],col="black",lwd=3)
+			
+			heatscatter(truesr,results[["sr"]],main="",xlab="",ylab="",cor=FALSE,xlim=srlims,ylim=srlims)
+			xlab = expression(paste("True synthesis rate  ",mu[gr]))
+			ylab = expression(paste("Estimated synthesis rate  ",mu[gr]^'*'))
+			main = expression(paste("Synthesis rate  ",mu[gr]))
+			sub = paste("( heatscatter p-cor = ",pcor(truesr,results[["sr"]],use="na.or.complete"),")")
+			mtextfkt("default",9,main,xlab,ylab,sub)
+			linfactor = coefficients(tls((results[["sr"]][srindi]) ~ (truesr[srindi]) + 0))[1]
+			abline(a=0,b=linfactor,col="black",lwd=3)
+			abline(a=0,b=1,col="grey",lwd=3,lty=2)
+			heatscatter(rank(truesr),rank(results[["sr"]]),main="",xlab="",ylab="",cor=FALSE)
+			xlab = expression(paste("True synthesis rate  ",mu[gr],"  rank"))
+			ylab = expression(paste("Estimated synthesis  ",mu[gr]^'*',"  rank"))
+			main = expression(paste("Synthesis rate  ",mu[gr],"  rank"))
+			sub = paste("( heatscatter s-cor = ",scor(rank(truesr),rank(results[["sr"]]),use="na.or.complete"),")")
+			mtextfkt("default",9,main,xlab,ylab,sub)
+			abline(a=0,b=1,col="black",lwd=3)
+			abline(a=0,b=1,col="grey",lwd=3,lty=2)
+			meanreldev = mean(abs(results[["sr"]][srindi]-truesr[srindi])/truesr[srindi])
+			cat("Mean relative deviation: ",signif(meanreldev,2),"\n")
+			den = density(log2(results[["sr"]][srindi]/truesr[srindi]))
+			den = cbind(den$x,den$y)
+			hist(log2(results[["sr"]][srindi]/truesr[srindi]),xlim=c(-5,5),breaks=40,main="",xlab="",ylab="")
+			xlab = expression(paste("log2( ",mu[gr]^'*'/mu[gr]," )"))
+			ylab = expression(paste("Frequency"))
+			main = expression(paste("Log-ratio  log2( ",mu[gr]^'*'/mu[gr]," )"))
+			sub = paste("( MRD: ",signif(meanreldev,2), ",mode: ",signif(den[which(den[,2] == max(den[,2]))],2)," )")
+			mtextfkt("default",9,main,xlab,ylab,sub)
+			abline(v=0,col="grey",lwd=3,lty=2)
+			abline(v=den[which(den[,2] == max(den[,2]))],col="black",lwd=3)
 		}
+		DTA.plot.it(filename = paste(folder,"/simulation_",condition,"_",timepoint,sep=""),sw = resolution*3,sh = resolution*3,sres = resolution,plotsfkt = plotsfkt,ww = 21,wh = 21,saveit = save.plots,fileformat = fileformat,notinR = notinR,RStudio = RStudio)
 	}
 	
 	### RETURN RESULTS IN A LIST ###
@@ -1132,9 +1113,9 @@ DTA.singleestimate = function(phenomat, # phenotype matrix, "nr" should be numbe
 DTA.estimate = function(phenomat = NULL,# phenotype matrix, "nr" should be numbered by experiments not by replicates
 		datamat = NULL, 				# data matrix, should only contain the rows of phenomat as columns
 		tnumber = NULL, 				# #uridines, should have the rownames of datamat
+		reliable = NULL, 				# vector of reliable genes, which are used for regression
 		ccl = NULL, 					# the cell cycle length of the cells
 		mRNAs = NULL,					# estimated number of mRNAs in a cell
-		reliable = NULL, 				# vector of reliable genes, which are used for regression
 		mediancenter = TRUE, 			# should the L/T resp. U/T ratio of replicates be rescaled to a common median before rate extraction
 		usefractions = "LandT",			# from which fractions should the decay rate be calculated: "LandT", "UandT" or "both"
 		LtoTratio = NULL, 				# coefficient to rescale L/T
@@ -1142,25 +1123,20 @@ DTA.estimate = function(phenomat = NULL,# phenotype matrix, "nr" should be numbe
 		largest = 5, 					# percentage of largest residues from the first regression not to be used in the second regression
 		weighted = TRUE, 				# should the regression be weighted with 1/(T^2 + median(T))
 		relevant = NULL, 				# choose the arrays to be used for halflives calculation, vector due to experiments variable 
-		check = TRUE, 					# if check=TRUE, control messages and plots will be generated
-		regression = TRUE,				# should the regression results be plotted
-		labeling = TRUE, 				# should the labeling bias be plotted
-		correctedlabeling = FALSE,		# should the corrected labeling bias be plotted
-		rankpairs = TRUE, 				# should the ranks of 1-L/T, U/T or (1-L/T+U/T)/2 be compared in heatpairs plot
-		assessment = TRUE,				# should 1-L/T, U/T or (1-L/T+U/T)/2 be assessed due to limitations of the decay rate formula
-		correlation = TRUE, 			# should the correlation be plotted
-		error = FALSE,					# should standard deviation and coefficient of variation be calculated
-		bicor = TRUE, 					# should the labeling bias be corrected
-		condition = "", 				# to be added to the plotnames
 		upper = 700, 					# upper bound for labeling bias estimation
 		lower = 500, 					# lower bound for labeling bias estimation
-		plots = FALSE, 					# if plots=TRUE, control plots will be saved
+		error = FALSE,					# should standard deviation and coefficient of variation be calculated
+		bicor = TRUE, 					# should the labeling bias be corrected		
+		check = TRUE, 					# if check = TRUE, control messages and plots will be generated
+		condition = "", 				# to be added to the plotnames
+		save.plots = FALSE, 			# if save.plots = TRUE, control plots will be saved
 		resolution = 1,					# resolution scaling factor for plotting
 		notinR = FALSE,					# should plot be not plotted in R
+		RStudio = FALSE,				# for RStudio users
 		folder = NULL, 					# folder, where to save the plots
-		addformat = NULL, 				# additional fileformat for plots to be saved
+		fileformat = "jpeg", 			# save the plot as jpeg, png, bmp, tiff, ps or pdf
 		totaloverwt = 1, 				# total mRNA over WT
-		simulation = FALSE,				# should the simulation be plotted
+		simulation = FALSE,				# simulated data via sim.object ?
 		sim.object = NULL				# simulation object created by DTA.generate
 )
 {
@@ -1193,10 +1169,9 @@ DTA.estimate = function(phenomat = NULL,# phenotype matrix, "nr" should be numbe
 		truebrbyar = sim.object$truebrbyar
 		names(truebrbyar) = phenomat[which(phenomat[,"fraction"]=="T"),"nr"]
 	}
-	if (!setequal(rownames(phenomat),colnames(datamat))){stop("The rownames of the phenomat should be equal to the colnames of the datamat !")}
-	if (!setequal(rownames(datamat),names(tnumber))){stop("The colnames of the datamat should be equal to the names of tnumber !")}
+	if (!all(rownames(phenomat) %in% colnames(datamat))){stop("The rownames of the phenomat should be among the colnames of the datamat !")}
+	if (length(intersect(rownames(datamat),names(tnumber))) == 0){stop("The rownames of the datamat should be the same identifiers as the names of tnumber !")}
 	if (is.null(ccl)){print("If you do not specify the Cell Cycle Length (ccl), growth is set to zero or as specified in your sim.object !")}
-	if (is.null(mRNAs)){print("If you do not specify the number of mRNAs in the cells (mRNAs), the synthesis rate will be in arbitrary scale !")}
 	if (is.null(reliable)){print("If you do not specify a vector of reliable identifiers (reliable), the parameter estimation is done on all identifiers !")
 		reliable = rownames(datamat)}
 	if (!any(usefractions %in% c("LandT","UandT","both"))){stop("usefractions need to be 'LandT', 'UandT' or 'both' !")}
@@ -1206,12 +1181,20 @@ DTA.estimate = function(phenomat = NULL,# phenotype matrix, "nr" should be numbe
 		ratiomethod = "tls"
 		if (length(unique(phenomat[,"time"])) != length(LtoTratio)){stop(paste("The number of specified ratios of L to T (LtoTratio) should correspond to the number of labeling durations:",length(unique(phenomat[,"time"])),"!"))}
 	}
-	if (plots){if (is.null(folder)){stop("You need to specify the folder, where the plots should be saved !")}}
+	if (save.plots){
+		if (is.null(folder)){stop("You need to specify the folder, where the plots should be saved !")}
+		if (!is.null(folder)){
+			if (file.access(folder,0) != 0){stop("The specified folder needs to exist !")}
+			if (file.access(folder,2) != 0){stop("The specified folder has no write permission !")}
+		}
+	}
 	
 	### PRELIMINARIES ###
 	
-	datamat = datamat[,rownames(phenomat)]
-	tnumber = tnumber[rownames(datamat)]
+	possibles = intersect(rownames(datamat),names(tnumber))
+	tnumber = tnumber[possibles]
+	datamat = datamat[possibles,]
+	reliable = intersect(reliable,possibles)
 	
 	labtimes = unique(phenomat[,"time"])
 	names(labtimes) = labtimes
@@ -1274,11 +1257,10 @@ DTA.estimate = function(phenomat = NULL,# phenotype matrix, "nr" should be numbe
 	res = list()
 	for (labtime in labtimes){
 		res[[labtime]] = DTA.singleestimate(phenomats[[labtime]],datamats[[labtime]],tnumber,labelingtime = as.numeric(labtimes[labtime]),ccl = ccl,mRNAs = mRNAs,
-				reliable = reliable,mediancenter = mediancenter,usefractions = usefractions,ratiomethod = ratiomethod,assessment = assessment,resolution = resolution,
-				largest = largest,weighted = weighted,ratio = ratios[[labtime]],relevant = relevants[[labtime]],check = check,labeling = labeling,
-				totaloverwt = totaloverwt,correctedlabeling = correctedlabeling,rankpairs = rankpairs,correlation = correlation,error = error,bicor = bicor,
-				condition = condition,timepoint = labtime,regression = regression,upper = upper,lower = lower,plots = plots,notinR = notinR,folder = folder,
-				addformat = addformat,simulation = simulation,truemus = truemus,truelambdas = truelambdas,truehalflives = truehalflives,trueplabel=trueplabels[[labtime]],
+				reliable = reliable,mediancenter = mediancenter,usefractions = usefractions,ratiomethod = ratiomethod,resolution = resolution,RStudio = RStudio,
+				largest = largest,weighted = weighted,ratio = ratios[[labtime]],relevant = relevants[[labtime]],check = check,totaloverwt = totaloverwt,
+				error = error,bicor = bicor,condition = condition,timepoint = labtime,upper = upper,lower = lower,save.plots = save.plots,notinR = notinR,folder = folder,
+				fileformat = fileformat,simulation = simulation,truemus = truemus,truelambdas = truelambdas,truehalflives = truehalflives,trueplabel=trueplabels[[labtime]],
 				trueLasymptote=trueLasymptotes[[labtime]],trueUasymptote=trueUasymptotes[[labtime]],truecrbyar=truecrbyars[[labtime]],
 				truecrbybr=truecrbybrs[[labtime]],truebrbyar=truebrbyars[[labtime]])
 	}

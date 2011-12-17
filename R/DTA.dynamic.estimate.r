@@ -17,31 +17,25 @@ DTA.dynamic.estimate = function(
 		largest = 5, 					# percentage of largest residues from the first regression not to be used in the second regression
 		weighted = TRUE, 				# should the regression be weighted with 1/(T^2 + median(T))
 		relevant = NULL, 				# choose the arrays to be used for halflives calculation, vector due to experiments variable 
-		check = TRUE, 					# if check=TRUE, control messages and plots will be generated
-		regression = TRUE,				# should the regression results be plotted
-		labeling = TRUE, 				# should the labeling bias be plotted
-		correctedlabeling = FALSE,		# should the corrected labeling bias be plotted
-		rankpairs = TRUE, 				# should the ranks of 1-L/T, U/T or (1-L/T+U/T)/2 be compared in heatpairs plot
-		assessment = TRUE,				# should 1-L/T, U/T or (1-L/T+U/T)/2 be assessed due to limitations of the decay rate formula
-		correlation = TRUE, 			# should the correlation be plotted
+		check = TRUE, 					# if check = TRUE, control messages and plots will be generated
 		error = FALSE,					# should standard deviation and coefficient of variation be calculated
 		bicor = TRUE, 					# should the labeling bias be corrected
 		condition = "", 				# to be added to the plotnames
 		upper = 700, 					# upper bound for labeling bias estimation
 		lower = 500, 					# lower bound for labeling bias estimation
-		plots = FALSE, 					# if plots=TRUE, control plots will be saved
+		save.plots = FALSE, 			# if save.plots = TRUE, control plots will be saved
 		resolution = 1,					# resolution scaling factor for plotting
 		folder = NULL, 					# folder, where to save the plots
-		addformat = NULL, 				# additional fileformat for plots to be saved
+		fileformat = "jpeg", 			# save the plot as jpeg, png, bmp, tiff, ps or pdf
 		totaloverwt = 1, 				# total mRNA over WT
-		folds = TRUE,					# should the dr vs sr folds be plotted
 		folds.lims = c(-5,5),			# limits of the folds plot
 		clusters = "sr",				# should the dr vs sr folds be plotted with clusters, choose 'sr', 'dr' for cluster selection or 'none' to omit it
 		ranktime = NULL,				# at which time should the rankgain be calculated, default is the last column
 		upperquant = 0.8,				# upper quantile for cluster selection
 		lowerquant = 0.6,				# lower quantile for cluster selection
 		notinR = FALSE,					# should plot be not plotted in R
-		simulation = FALSE,				# should the simulation be plotted
+		RStudio = FALSE,				# for RStudio users
+		simulation = FALSE,				# simulated data via sim.object ?
 		sim.object = NULL				# simulation object created by DTA.generate
 )
 {
@@ -77,23 +71,30 @@ DTA.dynamic.estimate = function(
 		truebrbyar = sim.object$truebrbyar
 		names(truebrbyar) = phenomat[which(phenomat[,"fraction"]=="T"),"nr"]
 	}
-	if (!setequal(rownames(phenomat),colnames(datamat))){stop("The rownames of the phenomat should be equal to the colnames of the datamat !")}
-	if (!setequal(rownames(datamat),names(tnumber))){stop("The colnames of the datamat should be equal to the names of tnumber !")}
+	if (!all(rownames(phenomat) %in% colnames(datamat))){stop("The rownames of the phenomat should be among the colnames of the datamat !")}
+	if (length(intersect(rownames(datamat),names(tnumber))) == 0){stop("The rownames of the datamat should be the same identifiers as the names of tnumber !")}
 	if (is.null(ccl)){print("If you do not specify the Cell Cycle Length (ccl), growth is set to zero or as specified in your sim.object !")}
-	if (is.null(mRNAs)){print("If you do not specify the number of mRNAs in the cells (mRNAs), the synthesis rate will be in arbitrary scale !")}
 	if (is.null(reliable)){print("If you do not specify a vector of reliable identifiers (reliable), the parameter estimation is done on all identifiers !")
 		reliable = rownames(datamat)}
 	if (!any(usefractions %in% c("LandT","UandT","both"))){stop("usefractions need to be 'LandT', 'UandT' or 'both' !")}
 	if (!any(ratiomethod %in% c("tls","lm","bias"))){stop("ratiomethod need to be 'bias', 'tls' or 'lm' !")}
 	if (is.null(LtoTratio)){print("If you do not specify ratio of L to T (LtoTratio), it is estimated from the data !")}
 	if (!is.null(LtoTratio)){if (length(unique(phenomat[,"timecourse"])) != length(LtoTratio)){stop(paste("The number of specified ratios of L to T (LtoTratio) should correspond to the number of timepoints:",length(unique(phenomat[,"timecourse"])),"!"))}}
-	if (plots){if (is.null(folder)){stop("You need to specify the folder, where the plots should be saved !")}}
+	if (save.plots){
+		if (is.null(folder)){stop("You need to specify the folder, where the plots should be saved !")}
+		if (!is.null(folder)){
+			if (file.access(folder,0) != 0){stop("The specified folder needs to exist !")}
+			if (file.access(folder,2) != 0){stop("The specified folder has no write permission !")}
+		}
+	}
 	if (!any(clusters %in% c("sr","dr","none"))){stop("clusters need to be 'sr', 'dr' or 'none' !")}
 	
 	### PRELIMINARIES ###
 	
-	datamat = datamat[,rownames(phenomat)]
-	tnumber = tnumber[rownames(datamat)]
+	possibles = intersect(rownames(datamat),names(tnumber))
+	tnumber = tnumber[possibles]
+	datamat = datamat[possibles,]
+	reliable = intersect(reliable,possibles)
 	nrgenes = nrow(datamat)
 	
 	labtimes = as.character(sort(as.numeric(unique(phenomat[,"timecourse"]))))
@@ -179,10 +180,9 @@ DTA.dynamic.estimate = function(
 		}
 		
 		res[[labtime]] = DTA.singleestimate(phenomats[[labtime]],datamats[[labtime]],tnumber,labelingtime = as.numeric(unique(phenomats[[labtime]][,"time"])),ccl = ccl,
-				mRNAs = mRNAs,reliable = reliable,mediancenter = mediancenter,usefractions = usefractions,ratiomethod = ratiomethod,assessment = assessment,
-				largest = largest,weighted = weighted,ratio = ratios[[labtime]],relevant = relevants[[labtime]],check = check,labeling = labeling,dynamic = TRUE,
-				initials = initials,correctedlabeling = correctedlabeling,rankpairs = rankpairs,correlation = correlation,error = error,notinR = notinR,bicor = bicor,
-				condition = condition,timepoint = labtime,regression = regression,upper = upper,lower = lower,plots = plots,folder = folder,addformat = addformat,
+				mRNAs = mRNAs,reliable = reliable,mediancenter = mediancenter,usefractions = usefractions,ratiomethod = ratiomethod,largest = largest,RStudio = RStudio,
+				weighted = weighted,ratio = ratios[[labtime]],relevant = relevants[[labtime]],check = check,dynamic = TRUE,initials = initials,error = error,
+				notinR = notinR,bicor = bicor,condition = condition,timepoint = labtime,upper = upper,lower = lower,save.plots = save.plots,folder = folder,fileformat = fileformat,
 				simulation = simulation,truemus = truemuslist[[labtime]],truemusaveraged = truemusaveragedlist[[labtime]],totaloverwt = totaloverwt,resolution = resolution,
 				truelambdas = truelambdaslist[[labtime]],truelambdasaveraged = truelambdasaveragedlist[[labtime]],truehalflives = truehalfliveslist[[labtime]],
 				truehalflivesaveraged = truehalflivesaveragedlist[[labtime]],trueplabel=trueplabels[[labtime]],trueLasymptote=trueLasymptotes[[labtime]],
@@ -200,7 +200,6 @@ DTA.dynamic.estimate = function(
 	### HALF-LIFE FOLDS VS. SYNTHESIS RATE FOLDS ###
 	
 	if (check){
-		if (folds){
 			plotable = intersect(reliable,rownames(drmat)[!apply(is.na(drmat),1,any)])
 			drfc = log2(drmat[plotable,]/drmat[plotable,1])
 			srfc = log2(srmat[plotable,]/srmat[plotable,1])
@@ -220,7 +219,7 @@ DTA.dynamic.estimate = function(
 						mtextfkt("default",nrseries,main,xlab,ylab,sub)
 						gridfkt(lim = folds.lims)}
 				}
-				DTA.plot.it(filename = paste(folder,"/drfc_vs_srfc_",condition,sep=""),sw = resolution*windowxy(nrseries)[2],sh = resolution*windowxy(nrseries)[1],sres = resolution,plotsfkt = plotsfkt,ww = 7*windowxy(nrseries)[2],wh = 7*windowxy(nrseries)[1],saveit = plots,addformat = addformat,notinR = notinR)
+				DTA.plot.it(filename = paste(folder,"/drfc_vs_srfc_",condition,sep=""),sw = resolution*windowxy(nrseries)[2],sh = resolution*windowxy(nrseries)[1],sres = resolution,plotsfkt = plotsfkt,ww = 7*windowxy(nrseries)[2],wh = 7*windowxy(nrseries)[1],saveit = save.plots,fileformat = fileformat,notinR = notinR,RStudio = RStudio)
 			} else {
 				if (clusters == "sr"){
 					srranks = apply(srmat[plotable,],2,rank)
@@ -288,9 +287,8 @@ DTA.dynamic.estimate = function(
 						if (j == 1){legend("topleft",rev(c(paste("down (",length(intersect(plotable,genecluster[["down"]])),")",sep = ""),paste("downeven (",length(intersect(plotable,genecluster[["downeven"]])),")",sep = ""),paste("even (",length(intersect(plotable,genecluster[["even"]])),")",sep = ""),paste("upeven (",length(intersect(plotable,genecluster[["upeven"]])),")",sep = ""),paste("up (",length(intersect(plotable,genecluster[["up"]])),")",sep = ""))),pt.bg=rev(c(downcol,downevencol,evencol,upevencol,upcol)),col=c("black","black","black","black","black"),bg="white",pch=21,cex=1.25,inset=0.02)}
 					}
 				}
-				DTA.plot.it(filename = paste(folder,"/drfc_vs_srfc_cluster_",condition,sep=""),sw = resolution*windowxy(nrseries)[2],sh = resolution*windowxy(nrseries)[1],sres = resolution,plotsfkt = plotsfkt,ww = 7*windowxy(nrseries)[2],wh = 7*windowxy(nrseries)[1],saveit = plots,addformat = addformat,notinR = notinR)
+				DTA.plot.it(filename = paste(folder,"/drfc_vs_srfc_cluster_",condition,sep=""),sw = resolution*windowxy(nrseries)[2],sh = resolution*windowxy(nrseries)[1],sres = resolution,plotsfkt = plotsfkt,ww = 7*windowxy(nrseries)[2],wh = 7*windowxy(nrseries)[1],saveit = save.plots,fileformat = fileformat,notinR = notinR,RStudio = RStudio)
 			}
-		}
 	}
 	
 	### RETURN RESULTS IN A LIST ###
