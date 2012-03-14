@@ -3,49 +3,51 @@
 ### singleestimate uses an experiment, given by a phenotype matrix, data matrix and the #uridines for each gene to estimate synthesis and decay rate of the genes ###
 
 
-DTA.singleestimate = function(phenomat, # phenotype matrix, "nr" should be numbered by experiments not by replicates
-		datamat, 						# data matrix, should only contain the rows of phenomat as columns
-		tnumber, 						# #uridines, should have the rownames of datamat
-		labelingtime,					# length of the labeling period
-		ccl = NULL, 					# the cell cycle length of the cells
-		mRNAs = NULL,					# estimated number of mRNAs in a cell
-		reliable = NULL, 				# vector of reliable genes, which are used for regression
-		mediancenter = TRUE, 			# should the L/T resp. U/T ratio of replicates be rescaled to a common median before rate extraction
-		ratiomethod = "tls", 			# choose the regression method to be used, possible methods are: tls, bias, lm
-		largest = 5, 					# percentage of largest residues from the first regression not to be used in the second regression
-		weighted = TRUE, 				# should the regression be weighted with 1/(T^2 + median(T))
-		usefractions = "LandT",			# from which fractions should the decay rate be calculated: "LandT", "UandT" or "both"
-		ratio = NULL, 					# coefficient to rescale the fractions
-		relevant = NULL, 				# choose the arrays to be used for halflives calculation, vector due to experiments variable 
-		check = TRUE, 					# if check = TRUE, control messages and plots will be generated
-		error = FALSE,					# should standard deviation and coefficient of variation be calculated
-		bicor = TRUE, 					# should the labeling bias be corrected
-		condition = "", 				# to be added to the plotnames
-		timepoint = "",					# to be added to the plotnames
-		upper = 700, 					# upper bound for labeling bias estimation
-		lower = 500, 					# lower bound for labeling bias estimation
-		save.plots = FALSE, 			# if save.plots = TRUE, control plots will be saved
-		resolution = 1,					# resolution scaling factor for plotting
-		notinR = FALSE,					# should plot be not plotted in R
-		RStudio = FALSE,				# for RStudio users
-		folder = NULL, 					# folder, where to save the plots
-		fileformat = "jpeg", 			# save the plot as jpeg, png, bmp, tiff, ps or pdf
-		totaloverwt = 1, 				# total mRNA over WT
-		simulation = FALSE,				# simulated data via sim.object ?
-		dynamic = FALSE,				# should be TRUE for timecourse data
-		initials = NULL,				# initial values of total for timecourse data
-		truemus = NULL,					# the true synthesis rates
-		truemusaveraged = NULL,			# the true synthesis rates (averaged over labeling period)
-		truelambdas = NULL,				# the true decay rates
-		truelambdasaveraged = NULL,		# the true decay rates (averaged over labeling period)
-		truehalflives = NULL,			# the true half-lives
-		truehalflivesaveraged = NULL,	# the true half-lives (averaged over labeling period)
-		trueplabel = NULL,				# the true labeling efficiency
-		trueLasymptote = NULL,			# the true Lasymptote
-		trueUasymptote = NULL,			# the true Uasymptote
-		truecrbyar = NULL,				# the true quotient truecr/truear
-		truecrbybr = NULL,				# the true quotient truecr/truebr
-		truebrbyar = NULL				# the true quotient truebr/truear
+DTA.singleestimate = function(phenomat, 	# phenotype matrix, "nr" should be numbered by experiments not by replicates
+		datamat, 							# data matrix, should only contain the rows of phenomat as columns
+		tnumber, 							# #uridines, should have the rownames of datamat
+		labelingtime,						# length of the labeling period
+		ccl = NULL, 						# the cell cycle length of the cells
+		mRNAs = NULL,						# estimated number of mRNAs in a cell
+		reliable = NULL, 					# vector of reliable genes, which are used for regression
+		mediancenter = TRUE, 				# should the L/T resp. U/T ratio of replicates be rescaled to a common median before rate extraction
+		ratiomethod = "tls", 				# choose the regression method to be used, possible methods are: tls, bias, lm
+		largest = 5, 						# percentage of largest residues from the first regression not to be used in the second regression
+		weighted = TRUE, 					# should the regression be weighted with 1/(T^2 + median(T))
+		usefractions = "LandT",				# from which fractions should the decay rate be calculated: "LandT", "UandT" or "both"
+		ratio = NULL, 						# coefficient to rescale the fractions
+		relevant = NULL, 					# choose the arrays to be used for halflives calculation, vector due to experiments variable 
+		check = TRUE, 						# if check = TRUE, control messages and plots will be generated
+		error = TRUE,						# should the measurement error be assessed
+		samplesize = 1000,					# error model samplesize for resampling
+		confidence.range = c(0.025,0.975),	# confidence region for error model
+		bicor = TRUE, 						# should the labeling bias be corrected
+		condition = "", 					# to be added to the plotnames
+		timepoint = "",						# to be added to the plotnames
+		upper = 700, 						# upper bound for labeling bias estimation
+		lower = 500, 						# lower bound for labeling bias estimation
+		save.plots = FALSE, 				# if save.plots = TRUE, control plots will be saved
+		resolution = 1,						# resolution scaling factor for plotting
+		notinR = FALSE,						# should plot be not plotted in R
+		RStudio = FALSE,					# for RStudio users
+		folder = NULL, 						# folder, where to save the plots
+		fileformat = "jpeg", 				# save the plot as jpeg, png, bmp, tiff, ps or pdf
+		totaloverwt = 1, 					# total mRNA over WT
+		simulation = FALSE,					# simulated data via sim.object ?
+		dynamic = FALSE,					# should be TRUE for timecourse data
+		initials = NULL,					# initial values of total for timecourse data
+		truemus = NULL,						# the true synthesis rates
+		truemusaveraged = NULL,				# the true synthesis rates (averaged over labeling period)
+		truelambdas = NULL,					# the true decay rates
+		truelambdasaveraged = NULL,			# the true decay rates (averaged over labeling period)
+		truehalflives = NULL,				# the true half-lives
+		truehalflivesaveraged = NULL,		# the true half-lives (averaged over labeling period)
+		trueplabel = NULL,					# the true labeling efficiency
+		trueLasymptote = NULL,				# the true Lasymptote
+		trueUasymptote = NULL,				# the true Uasymptote
+		truecrbyar = NULL,					# the true quotient truecr/truear
+		truecrbybr = NULL,					# the true quotient truecr/truebr
+		truebrbyar = NULL					# the true quotient truebr/truear
 )
 {
 	
@@ -579,12 +581,6 @@ DTA.singleestimate = function(phenomat, # phenotype matrix, "nr" should be numbe
 	LTmat = cbind(LTmat,median = apply(as.matrix(LTmat),1,median))
 	if (mediancenter){LTmat = medctr(LTmat,reliable,logscale = FALSE,protocol = FALSE)}
 	
-	LtoTmat = as.matrix(calcdatamat[,phenomat[which(phenomat[,"fraction"] == "L"),"name"]])
-	if (ncol(as.matrix(LtoTmat)) == ncol(as.matrix(initials))) {LtoTmat = as.matrix(LtoTmat/initials)} else {LtoTmat = as.matrix(LtoTmat/apply(initials,1,median))}
-	colnames(LtoTmat) = phenomat[which(phenomat[,"fraction"] == "T"),"name"]
-	LtoTmat = cbind(LtoTmat,median = apply(as.matrix(LtoTmat),1,median))
-	if (mediancenter){LtoTmat = medctr(LtoTmat,reliable,logscale = FALSE,protocol = FALSE)}
-	
 	### U/T ###
 	
 	if (unlabeledfraction){
@@ -649,8 +645,8 @@ DTA.singleestimate = function(phenomat, # phenotype matrix, "nr" should be numbe
 		
 		nrexp = ncol(LTmat)
 		
-		results[["LTmat"]] = LtoTmat
-		LT = LtoTmat[,nrexp]
+		results[["LTmat"]] = LTmat
+		LT = LTmat[,nrexp]
 		results[["LT"]] = LT
 		
 		options(warn = -1)
@@ -910,78 +906,447 @@ DTA.singleestimate = function(phenomat, # phenotype matrix, "nr" should be numbe
 		DTA.plot.it(filename = paste(folder,"/correlation_analysis_",condition,"_",timepoint,sep=""),sw = resolution,sh = resolution,sres = resolution,plotsfkt = plotsfkt,ww = 7,wh = 7,saveit = save.plots,fileformat = fileformat,notinR = notinR,RStudio = RStudio)
 	}
 	
-	### GENERATE CV PROGRESSION ###
-	
-	TEmat = cbind(calcdatamat[,which(phenomat[,"fraction"] == "T")])
-	LEmat = cbind(calcdatamat[,which(phenomat[,"fraction"] == "L")])
-	results[["TE.sd"]] = apply(TEmat,1,sd)
-	results[["LE.sd"]] = apply(LEmat,1,sd)
-	results[["TE.cv"]] = apply(TEmat,1,sd)/apply(TEmat,1,mean)
-	results[["LE.cv"]] = apply(LEmat,1,sd)/apply(LEmat,1,mean)
-	TEmat = log(TEmat)
-	LEmat = log(LEmat)
-	
-	if (unlabeledfraction){
-		UEmat = cbind(calcdatamat[,which(phenomat[,"fraction"] == "U")])
-		results[["UE.sd"]] = apply(UEmat,1,sd)
-		results[["UE.cv"]] = apply(UEmat,1,sd)/apply(UEmat,1,mean)
-		UEmat = log(UEmat)
-	}
-	
-	SDmat = matrix(NA,ncol=3,nrow=nrow(TEmat))
-	rownames(SDmat) = rownames(TEmat)
-	colnames(SDmat) = c("DR","HL","SR")
-	CVmat = matrix(NA,ncol=3,nrow=nrow(TEmat))
-	rownames(CVmat) = rownames(TEmat)
-	colnames(CVmat) = c("DR","HL","SR")
+	### ERROR MODEL ###
+			
 	if (error){
-		if (dynamic){errorpossible = (!is.null(dim(initials)) & !is.null(dim(TEmat)))} else {errorpossible = !is.null(dim(TEmat))}
+		TEmat = calcdatamat[,phenomatrelevant[which(phenomatrelevant[,"fraction"] == "T"),"name"]]
+		LEmat = calcdatamat[,phenomatrelevant[which(phenomatrelevant[,"fraction"] == "L"),"name"]]
+		if (unlabeledfraction){UEmat = calcdatamat[,phenomatrelevant[which(phenomatrelevant[,"fraction"] == "U"),"name"]]}
+		if (dynamic){if (!is.null(initialdummy)){TImat = initials} else {TImat =  c()}}
+		if (dynamic){if (!is.null(initialdummy)){errorpossible = (!is.null(dim(TImat)) & !is.null(dim(TEmat)))} else {errorpossible = !is.null(dim(TEmat))}} else {errorpossible = !is.null(dim(TEmat))}
 		if (errorpossible){
+			if (!is.null(dim(TEmat))){
+				cat("Assessing error in total expression measurements ... \n")
+				TEmat.norm = quantnorm(log(TEmat))
+				TEmat.norm.sd = apply(TEmat.norm,1,sd)
+				TEmat.norm.mean = apply(TEmat.norm,1,mean)
+				TEmat.norm.loess = loess(TEmat.norm.sd ~ TEmat.norm.mean,degree = 1)
+				TEmat.gamma.var = gamma.variance(TEmat.norm.loess$residuals - min(TEmat.norm.loess$residuals))
+				TEmat.feat = cbind(TEmat.norm,TEmat.norm.mean,TEmat.norm.loess$fitted)
+				nr.col = ncol(TEmat.norm)
+				options(warn = -1)
+				TEmat.norm.reg.sd = apply(TEmat.feat,1,function(x){likelihood.fct = function(q){likelihood(x[1:nr.col],x[nr.col + 1],q,x[nr.col + 2],TEmat.gamma.var[1])};optimize(likelihood.fct,interval = c(0,1),maximum = TRUE)$maximum})
+				options(warn = 0)
+				TEmat.norm.reg.sd[is.na(TEmat.norm.reg.sd)] = TEmat.norm.sd[is.na(TEmat.norm.reg.sd)]
+				if (check) {
+					plotsfkt = function(){
+						par(mfrow = c(1,2))
+						par(mar = c(1,4,4,2)+0.1+1)
+						par(cex = 1)
+						par(cex.axis = 1.5*0.75)
+						min.mean = min(TEmat.norm.mean,na.rm=TRUE)
+						max.mean = max(TEmat.norm.mean,na.rm=TRUE)
+						max.sd = max(TEmat.norm.sd,na.rm=TRUE)
+						x <- seq(min.mean,max.mean,length.out=6)
+						y <- seq(0,max.sd,length.out=6)
+						z <- matrix(0,6,6)
+						residuals = TEmat.norm.loess$residuals - min(TEmat.norm.loess$residuals)
+						res.hist = hist(residuals,plot = FALSE)
+						seq.gamma = seq(0,max.sd,length.out = 1000)
+						persp(x,y,z,theta = 60,phi = 30,expand = 0.5,ltheta = 120,shade = NA,ticktype = "detailed",xlab = "",ylab = "",zlab = "",zlim = c(0,max(res.hist$density)*5/4),lwd = 0.5,axes = FALSE,box = FALSE,bg = "transparent") -> persp.res
+						reliable.range = range(TEmat.norm.mean[reliable],na.rm = TRUE)
+						polygon(trans3d(c(reliable.range[1],reliable.range[1],reliable.range[2],reliable.range[2]),c(0,max.sd,max.sd,0),0,pmat = persp.res),col = convertcolor("lightslategray",20))
+						points(trans3d(TEmat.norm.mean,TEmat.norm.sd,0,pmat = persp.res),col = "black",pch = ".")
+						lines(trans3d(TEmat.norm.loess$x[order(TEmat.norm.loess$x)],TEmat.norm.loess$fitted[order(TEmat.norm.loess$x)],0,pmat = persp.res),col = "black",lwd = 2)
+						offset = max.sd/25
+						lines(trans3d(x,0 - offset,0,pmat = persp.res),lwd = 2)
+						text(trans3d(pretty(x)[pretty(x) > min.mean & pretty(x) < max.mean],0 - 2*offset,0,pmat = persp.res),as.character(pretty(x)[pretty(x) > min.mean & pretty(x) < max.mean]))
+						lines(trans3d(max.mean + offset*(max.mean-min.mean)/max.sd,y,0,pmat = persp.res),lwd = 2)
+						text(trans3d(max.mean + 2*offset*(max.mean-min.mean)/max.sd,pretty(y)[pretty(y) < max.sd],0,pmat = persp.res),as.character(pretty(y)[pretty(y) < max.sd]))						
+						for (j in 1:length(res.hist$density)){
+							polygon(trans3d(min.mean-(max.mean-min.mean)/10,c(res.hist$breaks[j],res.hist$breaks[j],res.hist$breaks[j+1],res.hist$breaks[j+1]),c(0,res.hist$density[j],res.hist$density[j],0),pmat = persp.res),col = convertcolor("lightgray",60))	
+						}
+						residuals.gamma = c(0,dgamma(x = seq.gamma, shape = TEmat.gamma.var[2], scale = TEmat.gamma.var[3]),0)
+						polygon(trans3d(x = min.mean-(max.mean-min.mean)/10,y = c(0,seq.gamma,max.sd),z = pmin(pmax(residuals.gamma,0),max(res.hist$density)*3),pmat = persp.res),col = "#FF000030",border = "darkred",lwd=3)
+						arrow.x.red = c(0,0.8,0.8,1,0.8,0.8,0)
+						arrow.y.red = c(-0.05,-0.05,-0.1,0,0.1,0.05,0.05)
+						max.gamma = seq.gamma[which.min(abs(residuals.gamma-max(residuals.gamma)))]
+						i = which.min(abs(TEmat.norm.loess$x-mean(TEmat.norm.mean[reliable])))
+						polygon(trans3d(arrow.x.red*(TEmat.norm.loess$x[i]-min.mean)/6*4 + min.mean,(arrow.y.red/5*min(TEmat.gamma.var[2],3)*max.sd + max.gamma),min(max(residuals.gamma),max(res.hist$density))/5*4,pmat = persp.res),col = "darkred",border = "darkred")
+						arrow.x.blue = c(0.3,0.8,0.8,1,0.8,0.8,0.3)-0.5
+						arrow.y.blue = c(-0.05,-0.05,-0.1,0,0.1,0.05,0.05)
+						rect.x.1.blue = c(0.15,0.225,0.225,0.15)-0.5
+						rect.x.2.blue = c(0,0.075,0.075,0)-0.5
+						rect.y.blue = c(-0.05,-0.05,0.05,0.05)
+						polygon(trans3d(arrow.x.blue*0.8*(TEmat.norm.loess$x[i]-min.mean)+min.mean+(TEmat.norm.loess$x[i]-min.mean)/2,(arrow.y.blue/1.5*max.sd+max.sd/3),0,pmat = persp.res),col = "#0000FF30",border = "darkblue")
+						polygon(trans3d(rect.x.1.blue*0.8*(TEmat.norm.loess$x[i]-min.mean)+min.mean+(TEmat.norm.loess$x[i]-min.mean)/2,(rect.y.blue/1.5*max.sd+max.sd/3),0,pmat = persp.res),col = "#0000FF30",border = "darkblue")
+						polygon(trans3d(rect.x.2.blue*0.8*(TEmat.norm.loess$x[i]-min.mean)+min.mean+(TEmat.norm.loess$x[i]-min.mean)/2,(rect.y.blue/1.5*max.sd+max.sd/3),0,pmat = persp.res),col = "#0000FF30",border = "darkblue")
+						polygon(trans3d(x = TEmat.norm.loess$x[i],y = c(0,seq.gamma,max.sd),z = pmin(pmax(c(0,dgamma(x = seq.gamma, shape = (TEmat.norm.loess$fitted[i]^2)/TEmat.gamma.var[1], scale = TEmat.gamma.var[1]/TEmat.norm.loess$fitted[i]),0),0),max(res.hist$density)*3),pmat = persp.res),col = "#0000FF30",border = "darkblue",lwd=3)
+						polygon(trans3d((-arrow.x.blue)*0.8*(max.mean-TEmat.norm.loess$x[i])+max.mean-(max.mean-TEmat.norm.loess$x[i])/2,(arrow.y.blue/1.5*max.sd+max.sd/3),0,pmat = persp.res),col = "#0000FF30",border = "darkblue")
+						polygon(trans3d((-rect.x.1.blue)*0.8*(max.mean-TEmat.norm.loess$x[i])+max.mean-(max.mean-TEmat.norm.loess$x[i])/2,(rect.y.blue/1.5*max.sd+max.sd/3),0,pmat = persp.res),col = "#0000FF30",border = "darkblue")
+						polygon(trans3d((-rect.x.2.blue)*0.8*(max.mean-TEmat.norm.loess$x[i])+max.mean-(max.mean-TEmat.norm.loess$x[i])/2,(rect.y.blue/1.5*max.sd+max.sd/3),0,pmat = persp.res),col = "#0000FF30",border = "darkblue")
+						xlab = expression(paste("Mean  ",T[gr]))
+						ylab = expression(paste("Standard deviation  ",sigma,"(",T[gr],")"))
+						main = expression(paste("Mean  ",T[gr],"  versus standard deviation  ",sigma,"(",T[gr],")"))
+						sub = paste("( smoothed loess fit of ",dim(TEmat)[2]," replicates )")
+						mtext(main,3,2,cex=2*0.75)
+						mtext(sub,3,0,col="darkgrey",cex=1.25*0.75)
+						text(trans3d(min.mean + (max.mean-min.mean)*0.6,-max.sd*0.2,-max(res.hist$density)/7,pmat = persp.res),xlab,cex = 1.65*0.75,srt = 90)
+						text(trans3d(max.mean + (max.mean-min.mean)/10,max.sd*0.6,-max(res.hist$density),pmat = persp.res),ylab,cex = 1.65*0.75,srt = 0)
+						legend("topright",c(expression(paste(Gamma," - distributed std. dev.  ",sigma[g])),expression(paste(Gamma," - distributed residuals  ",r[g]))),pt.bg=c("darkblue","darkred"),col=rep("black",2),bg="white",pch=21,cex=1,pt.cex=1,inset = 0.05)
+						par(mar = c(1,4,4,2)+0.1+1)
+						par(mai = c(1.1,1.1,1.2,0.7))
+						par(cex = 1)
+						par(cex.axis = 1.5*0.75)
+						heatscatter(TEmat.norm.sd,TEmat.norm.reg.sd,xlab="",ylab="",main="",cor=FALSE,xlim = c(0,max(c(TEmat.norm.sd,TEmat.norm.reg.sd),na.rm = TRUE)),ylim = c(0,max(c(TEmat.norm.sd,TEmat.norm.reg.sd),na.rm = TRUE)))
+						abline(0,1,lwd=1)
+						xlab = expression(paste("Empirical standard deviation  ",sigma,"(",T[gr],")"))
+						ylab = expression(paste("Regularized standard deviation  ",sigma^R,"(",T[gr],")"))
+						main = expression(paste("Regularized versus empirical standard deviation"))
+						mtext(main,3,3,cex=2*0.75)
+						mtext(xlab,1,3,cex=1.65*0.75)
+						mtext(ylab,2,3,cex=1.65*0.75)
+					}
+					DTA.plot.it(filename = paste(folder,"/error_assessment_TE_",condition,"_",timepoint,sep=""),sw = resolution*2,sh = resolution,sres = resolution,plotsfkt = plotsfkt,ww = 14,wh = 7,saveit = save.plots,fileformat = fileformat,notinR = notinR,RStudio = RStudio)
+				}
+				results[["TE.log.error"]] = cbind("log.mean" = TEmat.norm.mean,"log.sd" = TEmat.norm.reg.sd,"log.cv" = TEmat.norm.reg.sd/TEmat.norm.mean)		
+			}	
+			if (!is.null(dim(LEmat))){
+				cat("Assessing error in labeled expression measurements ... \n")
+				LEmat.norm = quantnorm(log(LEmat))
+				LEmat.norm.sd = apply(LEmat.norm,1,sd)
+				LEmat.norm.mean = apply(LEmat.norm,1,mean)
+				LEmat.norm.loess = loess(LEmat.norm.sd ~ LEmat.norm.mean,degree = 1)
+				LEmat.gamma.var = gamma.variance(LEmat.norm.loess$residuals - min(LEmat.norm.loess$residuals))
+				LEmat.feat = cbind(LEmat.norm,LEmat.norm.mean,LEmat.norm.loess$fitted)
+				nr.col = ncol(LEmat.norm)
+				options(warn = -1)
+				LEmat.norm.reg.sd = apply(LEmat.feat,1,function(x){likelihood.fct = function(q){likelihood(x[1:nr.col],x[nr.col + 1],q,x[nr.col + 2],LEmat.gamma.var[1])};optimize(likelihood.fct,interval = c(0,1),maximum = TRUE)$maximum})
+				options(warn = 0)
+				LEmat.norm.reg.sd[is.na(LEmat.norm.reg.sd)] = LEmat.norm.sd[is.na(LEmat.norm.reg.sd)]
+				if (check) {
+					plotsfkt = function(){
+						par(mfrow = c(1,2))
+						par(mar = c(1,4,4,2)+0.1+1)
+						par(cex = 1)
+						par(cex.axis = 1.5*0.75)
+						min.mean = min(LEmat.norm.mean,na.rm=TRUE)
+						max.mean = max(LEmat.norm.mean,na.rm=TRUE)
+						max.sd = max(LEmat.norm.sd,na.rm=TRUE)
+						x <- seq(min.mean,max.mean,length.out=6)
+						y <- seq(0,max.sd,length.out=6)
+						z <- matrix(0,6,6)
+						residuals = LEmat.norm.loess$residuals - min(LEmat.norm.loess$residuals)
+						res.hist = hist(residuals,plot = FALSE)
+						seq.gamma = seq(0,max.sd,length.out = 1000)
+						persp(x,y,z,theta = 60,phi = 30,expand = 0.5,ltheta = 120,shade = NA,ticktype = "detailed",xlab = "",ylab = "",zlab = "",zlim = c(0,max(res.hist$density)*5/4),lwd = 0.5,axes = FALSE,box = FALSE,bg = "transparent") -> persp.res
+						reliable.range = range(LEmat.norm.mean[reliable],na.rm = TRUE)
+						polygon(trans3d(c(reliable.range[1],reliable.range[1],reliable.range[2],reliable.range[2]),c(0,max.sd,max.sd,0),0,pmat = persp.res),col = convertcolor("lightslategray",20))
+						points(trans3d(LEmat.norm.mean,LEmat.norm.sd,0,pmat = persp.res),col = "black",pch = ".")
+						lines(trans3d(LEmat.norm.loess$x[order(LEmat.norm.loess$x)],LEmat.norm.loess$fitted[order(LEmat.norm.loess$x)],0,pmat = persp.res),col = "black",lwd = 2)
+						offset = max.sd/25
+						lines(trans3d(x,0 - offset,0,pmat = persp.res),lwd = 2)
+						text(trans3d(pretty(x)[pretty(x) > min.mean & pretty(x) < max.mean],0 - 2*offset,0,pmat = persp.res),as.character(pretty(x)[pretty(x) > min.mean & pretty(x) < max.mean]))
+						lines(trans3d(max.mean + offset*(max.mean-min.mean)/max.sd,y,0,pmat = persp.res),lwd = 2)
+						text(trans3d(max.mean + 2*offset*(max.mean-min.mean)/max.sd,pretty(y)[pretty(y) < max.sd],0,pmat = persp.res),as.character(pretty(y)[pretty(y) < max.sd]))						
+						for (j in 1:length(res.hist$density)){
+							polygon(trans3d(min.mean-(max.mean-min.mean)/10,c(res.hist$breaks[j],res.hist$breaks[j],res.hist$breaks[j+1],res.hist$breaks[j+1]),c(0,res.hist$density[j],res.hist$density[j],0),pmat = persp.res),col = convertcolor("lightgray",60))	
+						}
+						residuals.gamma = c(0,dgamma(x = seq.gamma, shape = LEmat.gamma.var[2], scale = LEmat.gamma.var[3]),0)
+						polygon(trans3d(x = min.mean-(max.mean-min.mean)/10,y = c(0,seq.gamma,max.sd),z = pmin(pmax(residuals.gamma,0),max(res.hist$density)*3),pmat = persp.res),col = "#FF000030",border = "darkred",lwd=3)
+						arrow.x.red = c(0,0.8,0.8,1,0.8,0.8,0)
+						arrow.y.red = c(-0.05,-0.05,-0.1,0,0.1,0.05,0.05)
+						max.gamma = seq.gamma[which.min(abs(residuals.gamma-max(residuals.gamma)))]
+						i = which.min(abs(LEmat.norm.loess$x-mean(LEmat.norm.mean[reliable])))
+						polygon(trans3d(arrow.x.red*(LEmat.norm.loess$x[i]-min.mean)/6*4 + min.mean,(arrow.y.red/5*min(LEmat.gamma.var[2],3)*max.sd + max.gamma),min(max(residuals.gamma),max(res.hist$density))/5*4,pmat = persp.res),col = "darkred",border = "darkred")
+						arrow.x.blue = c(0.3,0.8,0.8,1,0.8,0.8,0.3)-0.5
+						arrow.y.blue = c(-0.05,-0.05,-0.1,0,0.1,0.05,0.05)
+						rect.x.1.blue = c(0.15,0.225,0.225,0.15)-0.5
+						rect.x.2.blue = c(0,0.075,0.075,0)-0.5
+						rect.y.blue = c(-0.05,-0.05,0.05,0.05)
+						polygon(trans3d(arrow.x.blue*0.8*(LEmat.norm.loess$x[i]-min.mean)+min.mean+(LEmat.norm.loess$x[i]-min.mean)/2,(arrow.y.blue/1.5*max.sd+max.sd/3),0,pmat = persp.res),col = "#0000FF30",border = "darkblue")
+						polygon(trans3d(rect.x.1.blue*0.8*(LEmat.norm.loess$x[i]-min.mean)+min.mean+(LEmat.norm.loess$x[i]-min.mean)/2,(rect.y.blue/1.5*max.sd+max.sd/3),0,pmat = persp.res),col = "#0000FF30",border = "darkblue")
+						polygon(trans3d(rect.x.2.blue*0.8*(LEmat.norm.loess$x[i]-min.mean)+min.mean+(LEmat.norm.loess$x[i]-min.mean)/2,(rect.y.blue/1.5*max.sd+max.sd/3),0,pmat = persp.res),col = "#0000FF30",border = "darkblue")
+						polygon(trans3d(x = LEmat.norm.loess$x[i],y = c(0,seq.gamma,max.sd),z = pmin(pmax(c(0,dgamma(x = seq.gamma, shape = (LEmat.norm.loess$fitted[i]^2)/LEmat.gamma.var[1], scale = LEmat.gamma.var[1]/LEmat.norm.loess$fitted[i]),0),0),max(res.hist$density)*3),pmat = persp.res),col = "#0000FF30",border = "darkblue",lwd=3)
+						polygon(trans3d((-arrow.x.blue)*0.8*(max.mean-LEmat.norm.loess$x[i])+max.mean-(max.mean-LEmat.norm.loess$x[i])/2,(arrow.y.blue/1.5*max.sd+max.sd/3),0,pmat = persp.res),col = "#0000FF30",border = "darkblue")
+						polygon(trans3d((-rect.x.1.blue)*0.8*(max.mean-LEmat.norm.loess$x[i])+max.mean-(max.mean-LEmat.norm.loess$x[i])/2,(rect.y.blue/1.5*max.sd+max.sd/3),0,pmat = persp.res),col = "#0000FF30",border = "darkblue")
+						polygon(trans3d((-rect.x.2.blue)*0.8*(max.mean-LEmat.norm.loess$x[i])+max.mean-(max.mean-LEmat.norm.loess$x[i])/2,(rect.y.blue/1.5*max.sd+max.sd/3),0,pmat = persp.res),col = "#0000FF30",border = "darkblue")
+						xlab = expression(paste("Mean  ",L[gr]))
+						ylab = expression(paste("Standard deviation  ",sigma,"(",L[gr],")"))
+						main = expression(paste("Mean  ",L[gr],"  versus standard deviation  ",sigma,"(",L[gr],")"))
+						sub = paste("( smoothed loess fit of ",dim(LEmat)[2]," replicates )")
+						mtext(main,3,2,cex=2*0.75)
+						mtext(sub,3,0,col="darkgrey",cex=1.25*0.75)
+						text(trans3d(min.mean + (max.mean-min.mean)*0.6,-max.sd*0.2,-max(res.hist$density)/7,pmat = persp.res),xlab,cex = 1.65*0.75,srt = 90)
+						text(trans3d(max.mean + (max.mean-min.mean)/10,max.sd*0.6,-max(res.hist$density),pmat = persp.res),ylab,cex = 1.65*0.75,srt = 0)
+						legend("topright",c(expression(paste(Gamma," - distributed std. dev.  ",sigma[g])),expression(paste(Gamma," - distributed residuals  ",r[g]))),pt.bg=c("darkblue","darkred"),col=rep("black",2),bg="white",pch=21,cex=1,pt.cex=1,inset = 0.05)
+						par(mar = c(1,4,4,2)+0.1+1)
+						par(mai = c(1.1,1.1,1.2,0.7))
+						par(cex = 1)
+						par(cex.axis = 1.5*0.75)
+						heatscatter(LEmat.norm.sd,LEmat.norm.reg.sd,xlab="",ylab="",main="",cor=FALSE,xlim = c(0,max(c(LEmat.norm.sd,LEmat.norm.reg.sd),na.rm = TRUE)),ylim = c(0,max(c(LEmat.norm.sd,LEmat.norm.reg.sd),na.rm = TRUE)))
+						abline(0,1,lwd=1)
+						xlab = expression(paste("Empirical standard deviation  ",sigma,"(",L[gr],")"))
+						ylab = expression(paste("Regularized standard deviation  ",sigma^R,"(",L[gr],")"))
+						main = expression(paste("Regularized versus empirical standard deviation"))
+						mtext(main,3,3,cex=2*0.75)
+						mtext(xlab,1,3,cex=1.65*0.75)
+						mtext(ylab,2,3,cex=1.65*0.75)
+					}
+					DTA.plot.it(filename = paste(folder,"/error_assessment_LE_",condition,"_",timepoint,sep=""),sw = resolution*2,sh = resolution,sres = resolution,plotsfkt = plotsfkt,ww = 14,wh = 7,saveit = save.plots,fileformat = fileformat,notinR = notinR,RStudio = RStudio)
+				}
+				results[["LE.log.error"]] = cbind("log.mean" = LEmat.norm.mean,"log.sd" = LEmat.norm.reg.sd,"log.cv" = LEmat.norm.reg.sd/LEmat.norm.mean)		
+			}
+			if (unlabeledfraction){
+				if (!is.null(dim(UEmat))){
+					cat("Assessing error in unlabeled expression measurements ... \n")
+					UEmat.norm = quantnorm(log(UEmat))
+					UEmat.norm.sd = apply(UEmat.norm,1,sd)
+					UEmat.norm.mean = apply(UEmat.norm,1,mean)
+					UEmat.norm.loess = loess(UEmat.norm.sd ~ UEmat.norm.mean,degree = 1)
+					UEmat.gamma.var = gamma.variance(UEmat.norm.loess$residuals - min(UEmat.norm.loess$residuals))
+					UEmat.feat = cbind(UEmat.norm,UEmat.norm.mean,UEmat.norm.loess$fitted)
+					nr.col = ncol(UEmat.norm)
+					options(warn = -1)
+					UEmat.norm.reg.sd = apply(UEmat.feat,1,function(x){likelihood.fct = function(q){likelihood(x[1:nr.col],x[nr.col + 1],q,x[nr.col + 2],UEmat.gamma.var[1])};optimize(likelihood.fct,interval = c(0,1),maximum = TRUE)$maximum})
+					options(warn = 0)
+					UEmat.norm.reg.sd[is.na(UEmat.norm.reg.sd)] = UEmat.norm.sd[is.na(UEmat.norm.reg.sd)]
+					if (check) {
+						plotsfkt = function(){
+							par(mfrow = c(1,2))
+							par(mar = c(1,4,4,2)+0.1+1)
+							par(cex = 1)
+							par(cex.axis = 1.5*0.75)
+							min.mean = min(UEmat.norm.mean,na.rm=TRUE)
+							max.mean = max(UEmat.norm.mean,na.rm=TRUE)
+							max.sd = max(UEmat.norm.sd,na.rm=TRUE)
+							x <- seq(min.mean,max.mean,length.out=6)
+							y <- seq(0,max.sd,length.out=6)
+							z <- matrix(0,6,6)
+							residuals = UEmat.norm.loess$residuals - min(UEmat.norm.loess$residuals)
+							res.hist = hist(residuals,plot = FALSE)
+							seq.gamma = seq(0,max.sd,length.out = 1000)
+							persp(x,y,z,theta = 60,phi = 30,expand = 0.5,ltheta = 120,shade = NA,ticktype = "detailed",xlab = "",ylab = "",zlab = "",zlim = c(0,max(res.hist$density)*5/4),lwd = 0.5,axes = FALSE,box = FALSE,bg = "transparent") -> persp.res
+							reliable.range = range(UEmat.norm.mean[reliable],na.rm = TRUE)
+							polygon(trans3d(c(reliable.range[1],reliable.range[1],reliable.range[2],reliable.range[2]),c(0,max.sd,max.sd,0),0,pmat = persp.res),col = convertcolor("lightslategray",20))
+							points(trans3d(UEmat.norm.mean,UEmat.norm.sd,0,pmat = persp.res),col = "black",pch = ".")
+							lines(trans3d(UEmat.norm.loess$x[order(UEmat.norm.loess$x)],UEmat.norm.loess$fitted[order(UEmat.norm.loess$x)],0,pmat = persp.res),col = "black",lwd = 2)
+							offset = max.sd/25
+							lines(trans3d(x,0 - offset,0,pmat = persp.res),lwd = 2)
+							text(trans3d(pretty(x)[pretty(x) > min.mean & pretty(x) < max.mean],0 - 2*offset,0,pmat = persp.res),as.character(pretty(x)[pretty(x) > min.mean & pretty(x) < max.mean]))
+							lines(trans3d(max.mean + offset*(max.mean-min.mean)/max.sd,y,0,pmat = persp.res),lwd = 2)
+							text(trans3d(max.mean + 2*offset*(max.mean-min.mean)/max.sd,pretty(y)[pretty(y) < max.sd],0,pmat = persp.res),as.character(pretty(y)[pretty(y) < max.sd]))						
+							for (j in 1:length(res.hist$density)){
+								polygon(trans3d(min.mean-(max.mean-min.mean)/10,c(res.hist$breaks[j],res.hist$breaks[j],res.hist$breaks[j+1],res.hist$breaks[j+1]),c(0,res.hist$density[j],res.hist$density[j],0),pmat = persp.res),col = convertcolor("lightgray",60))	
+							}
+							residuals.gamma = c(0,dgamma(x = seq.gamma, shape = UEmat.gamma.var[2], scale = UEmat.gamma.var[3]),0)
+							polygon(trans3d(x = min.mean-(max.mean-min.mean)/10,y = c(0,seq.gamma,max.sd),z = pmin(pmax(residuals.gamma,0),max(res.hist$density)*3),pmat = persp.res),col = "#FF000030",border = "darkred",lwd=3)
+							arrow.x.red = c(0,0.8,0.8,1,0.8,0.8,0)
+							arrow.y.red = c(-0.05,-0.05,-0.1,0,0.1,0.05,0.05)
+							max.gamma = seq.gamma[which.min(abs(residuals.gamma-max(residuals.gamma)))]
+							i = which.min(abs(UEmat.norm.loess$x-mean(UEmat.norm.mean[reliable])))
+							polygon(trans3d(arrow.x.red*(UEmat.norm.loess$x[i]-min.mean)/6*4 + min.mean,(arrow.y.red/5*min(UEmat.gamma.var[2],3)*max.sd + max.gamma),min(max(residuals.gamma),max(res.hist$density))/5*4,pmat = persp.res),col = "darkred",border = "darkred")
+							arrow.x.blue = c(0.3,0.8,0.8,1,0.8,0.8,0.3)-0.5
+							arrow.y.blue = c(-0.05,-0.05,-0.1,0,0.1,0.05,0.05)
+							rect.x.1.blue = c(0.15,0.225,0.225,0.15)-0.5
+							rect.x.2.blue = c(0,0.075,0.075,0)-0.5
+							rect.y.blue = c(-0.05,-0.05,0.05,0.05)
+							polygon(trans3d(arrow.x.blue*0.8*(UEmat.norm.loess$x[i]-min.mean)+min.mean+(UEmat.norm.loess$x[i]-min.mean)/2,(arrow.y.blue/1.5*max.sd+max.sd/3),0,pmat = persp.res),col = "#0000FF30",border = "darkblue")
+							polygon(trans3d(rect.x.1.blue*0.8*(UEmat.norm.loess$x[i]-min.mean)+min.mean+(UEmat.norm.loess$x[i]-min.mean)/2,(rect.y.blue/1.5*max.sd+max.sd/3),0,pmat = persp.res),col = "#0000FF30",border = "darkblue")
+							polygon(trans3d(rect.x.2.blue*0.8*(UEmat.norm.loess$x[i]-min.mean)+min.mean+(UEmat.norm.loess$x[i]-min.mean)/2,(rect.y.blue/1.5*max.sd+max.sd/3),0,pmat = persp.res),col = "#0000FF30",border = "darkblue")
+							polygon(trans3d(x = UEmat.norm.loess$x[i],y = c(0,seq.gamma,max.sd),z = pmin(pmax(c(0,dgamma(x = seq.gamma, shape = (UEmat.norm.loess$fitted[i]^2)/UEmat.gamma.var[1], scale = UEmat.gamma.var[1]/UEmat.norm.loess$fitted[i]),0),0),max(res.hist$density)*3),pmat = persp.res),col = "#0000FF30",border = "darkblue",lwd=3)
+							polygon(trans3d((-arrow.x.blue)*0.8*(max.mean-UEmat.norm.loess$x[i])+max.mean-(max.mean-UEmat.norm.loess$x[i])/2,(arrow.y.blue/1.5*max.sd+max.sd/3),0,pmat = persp.res),col = "#0000FF30",border = "darkblue")
+							polygon(trans3d((-rect.x.1.blue)*0.8*(max.mean-UEmat.norm.loess$x[i])+max.mean-(max.mean-UEmat.norm.loess$x[i])/2,(rect.y.blue/1.5*max.sd+max.sd/3),0,pmat = persp.res),col = "#0000FF30",border = "darkblue")
+							polygon(trans3d((-rect.x.2.blue)*0.8*(max.mean-UEmat.norm.loess$x[i])+max.mean-(max.mean-UEmat.norm.loess$x[i])/2,(rect.y.blue/1.5*max.sd+max.sd/3),0,pmat = persp.res),col = "#0000FF30",border = "darkblue")
+							xlab = expression(paste("Mean  ",U[gr]))
+							ylab = expression(paste("Standard deviation  ",sigma,"(",U[gr],")"))
+							main = expression(paste("Mean  ",U[gr],"  versus standard deviation  ",sigma,"(",U[gr],")"))
+							sub = paste("( smoothed loess fit of ",dim(UEmat)[2]," replicates )")
+							mtext(main,3,2,cex=2*0.75)
+							mtext(sub,3,0,col="darkgrey",cex=1.25*0.75)
+							text(trans3d(min.mean + (max.mean-min.mean)*0.6,-max.sd*0.2,-max(res.hist$density)/7,pmat = persp.res),xlab,cex = 1.65*0.75,srt = 90)
+							text(trans3d(max.mean + (max.mean-min.mean)/10,max.sd*0.6,-max(res.hist$density),pmat = persp.res),ylab,cex = 1.65*0.75,srt = 0)
+							legend("topright",c(expression(paste(Gamma," - distributed std. dev.  ",sigma[g])),expression(paste(Gamma," - distributed residuals  ",r[g]))),pt.bg=c("darkblue","darkred"),col=rep("black",2),bg="white",pch=21,cex=1,pt.cex=1,inset = 0.05)
+							par(mar = c(1,4,4,2)+0.1+1)
+							par(mai = c(1.1,1.1,1.2,0.7))
+							par(cex = 1)
+							par(cex.axis = 1.5*0.75)
+							heatscatter(UEmat.norm.sd,UEmat.norm.reg.sd,xlab="",ylab="",main="",cor=FALSE,xlim = c(0,max(c(UEmat.norm.sd,UEmat.norm.reg.sd),na.rm = TRUE)),ylim = c(0,max(c(UEmat.norm.sd,UEmat.norm.reg.sd),na.rm = TRUE)))
+							abline(0,1,lwd=1)
+							xlab = expression(paste("Empirical standard deviation  ",sigma,"(",U[gr],")"))
+							ylab = expression(paste("Regularized standard deviation  ",sigma^R,"(",U[gr],")"))
+							main = expression(paste("Regularized versus empirical standard deviation"))
+							mtext(main,3,3,cex=2*0.75)
+							mtext(xlab,1,3,cex=1.65*0.75)
+							mtext(ylab,2,3,cex=1.65*0.75)
+						}
+						DTA.plot.it(filename = paste(folder,"/error_assessment_UE_",condition,"_",timepoint,sep=""),sw = resolution*2,sh = resolution,sres = resolution,plotsfkt = plotsfkt,ww = 14,wh = 7,saveit = save.plots,fileformat = fileformat,notinR = notinR,RStudio = RStudio)
+					}
+					results[["UE.log.error"]] = cbind("log.mean" = UEmat.norm.mean,"log.sd" = UEmat.norm.reg.sd,"log.cv" = UEmat.norm.reg.sd/UEmat.norm.mean)		
+				}
+			}			
 			if (dynamic){
 				if (!is.null(initialdummy)){
-					TImat = initials
-					results[["TI.sd"]] = apply(TImat,1,sd)
-					results[["TI.cv"]] = apply(TImat,1,sd)/apply(TImat,1,mean)
-					TImat = log(TImat)
-					Imean = mean(TImat[i,])
-					Isd = sd(TImat[i,])
-				}  else {
-					Imean = NULL
-					Isd = NULL
+					cat("Assessing error in total expression (initial timepoint) measurements ... \n")
+					TImat.norm = quantnorm(log(TImat))
+					TImat.norm.sd = apply(TImat.norm,1,sd)
+					TImat.norm.mean = apply(TImat.norm,1,mean)
+					TImat.norm.loess = loess(TImat.norm.sd ~ TImat.norm.mean,degree = 1)
+					TImat.gamma.var = gamma.variance(TImat.norm.loess$residuals - min(TImat.norm.loess$residuals))
+					TImat.feat = cbind(TImat.norm,TImat.norm.mean,TImat.norm.loess$fitted)
+					nr.col = ncol(TImat.norm)
+					options(warn = -1)
+					TImat.norm.reg.sd = apply(TImat.feat,1,function(x){likelihood.fct = function(q){likelihood(x[1:nr.col],x[nr.col + 1],q,x[nr.col + 2],TImat.gamma.var[1])};optimize(likelihood.fct,interval = c(0,1),maximum = TRUE)$maximum})
+					options(warn = 0)
+					TImat.norm.reg.sd[is.na(TImat.norm.reg.sd)] = TImat.norm.sd[is.na(TImat.norm.reg.sd)]
+					if (check) {
+						plotsfkt = function(){
+							par(mfrow = c(1,2))
+							par(mar = c(1,4,4,2)+0.1+1)
+							par(cex = 1)
+							par(cex.axis = 1.5*0.75)
+							min.mean = min(TImat.norm.mean,na.rm=TRUE)
+							max.mean = max(TImat.norm.mean,na.rm=TRUE)
+							max.sd = max(TImat.norm.sd,na.rm=TRUE)
+							x <- seq(min.mean,max.mean,length.out=6)
+							y <- seq(0,max.sd,length.out=6)
+							z <- matrix(0,6,6)
+							residuals = TImat.norm.loess$residuals - min(TImat.norm.loess$residuals)
+							res.hist = hist(residuals,plot = FALSE)
+							seq.gamma = seq(0,max.sd,length.out = 1000)
+							persp(x,y,z,theta = 60,phi = 30,expand = 0.5,ltheta = 120,shade = NA,ticktype = "detailed",xlab = "",ylab = "",zlab = "",zlim = c(0,max(res.hist$density)*5/4),lwd = 0.5,axes = FALSE,box = FALSE,bg = "transparent") -> persp.res
+							reliable.range = range(TImat.norm.mean[reliable],na.rm = TRUE)
+							polygon(trans3d(c(reliable.range[1],reliable.range[1],reliable.range[2],reliable.range[2]),c(0,max.sd,max.sd,0),0,pmat = persp.res),col = convertcolor("lightslategray",20))
+							points(trans3d(TImat.norm.mean,TImat.norm.sd,0,pmat = persp.res),col = "black",pch = ".")
+							lines(trans3d(TImat.norm.loess$x[order(TImat.norm.loess$x)],TImat.norm.loess$fitted[order(TImat.norm.loess$x)],0,pmat = persp.res),col = "black",lwd = 2)
+							offset = max.sd/25
+							lines(trans3d(x,0 - offset,0,pmat = persp.res),lwd = 2)
+							text(trans3d(pretty(x)[pretty(x) > min.mean & pretty(x) < max.mean],0 - 2*offset,0,pmat = persp.res),as.character(pretty(x)[pretty(x) > min.mean & pretty(x) < max.mean]))
+							lines(trans3d(max.mean + offset*(max.mean-min.mean)/max.sd,y,0,pmat = persp.res),lwd = 2)
+							text(trans3d(max.mean + 2*offset*(max.mean-min.mean)/max.sd,pretty(y)[pretty(y) < max.sd],0,pmat = persp.res),as.character(pretty(y)[pretty(y) < max.sd]))						
+							for (j in 1:length(res.hist$density)){
+								polygon(trans3d(min.mean-(max.mean-min.mean)/10,c(res.hist$breaks[j],res.hist$breaks[j],res.hist$breaks[j+1],res.hist$breaks[j+1]),c(0,res.hist$density[j],res.hist$density[j],0),pmat = persp.res),col = convertcolor("lightgray",60))	
+							}
+							residuals.gamma = c(0,dgamma(x = seq.gamma, shape = TImat.gamma.var[2], scale = TImat.gamma.var[3]),0)
+							polygon(trans3d(x = min.mean-(max.mean-min.mean)/10,y = c(0,seq.gamma,max.sd),z = pmin(pmax(residuals.gamma,0),max(res.hist$density)*3),pmat = persp.res),col = "#FF000030",border = "darkred",lwd=3)
+							arrow.x.red = c(0,0.8,0.8,1,0.8,0.8,0)
+							arrow.y.red = c(-0.05,-0.05,-0.1,0,0.1,0.05,0.05)
+							max.gamma = seq.gamma[which.min(abs(residuals.gamma-max(residuals.gamma)))]
+							i = which.min(abs(TImat.norm.loess$x-mean(TImat.norm.mean[reliable])))
+							polygon(trans3d(arrow.x.red*(TImat.norm.loess$x[i]-min.mean)/6*4 + min.mean,(arrow.y.red/5*min(TImat.gamma.var[2],3)*max.sd + max.gamma),min(max(residuals.gamma),max(res.hist$density))/5*4,pmat = persp.res),col = "darkred",border = "darkred")
+							arrow.x.blue = c(0.3,0.8,0.8,1,0.8,0.8,0.3)-0.5
+							arrow.y.blue = c(-0.05,-0.05,-0.1,0,0.1,0.05,0.05)
+							rect.x.1.blue = c(0.15,0.225,0.225,0.15)-0.5
+							rect.x.2.blue = c(0,0.075,0.075,0)-0.5
+							rect.y.blue = c(-0.05,-0.05,0.05,0.05)
+							polygon(trans3d(arrow.x.blue*0.8*(TImat.norm.loess$x[i]-min.mean)+min.mean+(TImat.norm.loess$x[i]-min.mean)/2,(arrow.y.blue/1.5*max.sd+max.sd/3),0,pmat = persp.res),col = "#0000FF30",border = "darkblue")
+							polygon(trans3d(rect.x.1.blue*0.8*(TImat.norm.loess$x[i]-min.mean)+min.mean+(TImat.norm.loess$x[i]-min.mean)/2,(rect.y.blue/1.5*max.sd+max.sd/3),0,pmat = persp.res),col = "#0000FF30",border = "darkblue")
+							polygon(trans3d(rect.x.2.blue*0.8*(TImat.norm.loess$x[i]-min.mean)+min.mean+(TImat.norm.loess$x[i]-min.mean)/2,(rect.y.blue/1.5*max.sd+max.sd/3),0,pmat = persp.res),col = "#0000FF30",border = "darkblue")
+							polygon(trans3d(x = TImat.norm.loess$x[i],y = c(0,seq.gamma,max.sd),z = pmin(pmax(c(0,dgamma(x = seq.gamma, shape = (TImat.norm.loess$fitted[i]^2)/TImat.gamma.var[1], scale = TImat.gamma.var[1]/TImat.norm.loess$fitted[i]),0),0),max(res.hist$density)*3),pmat = persp.res),col = "#0000FF30",border = "darkblue",lwd=3)
+							polygon(trans3d((-arrow.x.blue)*0.8*(max.mean-TImat.norm.loess$x[i])+max.mean-(max.mean-TImat.norm.loess$x[i])/2,(arrow.y.blue/1.5*max.sd+max.sd/3),0,pmat = persp.res),col = "#0000FF30",border = "darkblue")
+							polygon(trans3d((-rect.x.1.blue)*0.8*(max.mean-TImat.norm.loess$x[i])+max.mean-(max.mean-TImat.norm.loess$x[i])/2,(rect.y.blue/1.5*max.sd+max.sd/3),0,pmat = persp.res),col = "#0000FF30",border = "darkblue")
+							polygon(trans3d((-rect.x.2.blue)*0.8*(max.mean-TImat.norm.loess$x[i])+max.mean-(max.mean-TImat.norm.loess$x[i])/2,(rect.y.blue/1.5*max.sd+max.sd/3),0,pmat = persp.res),col = "#0000FF30",border = "darkblue")
+							xlab = expression(paste("Mean  ",T[gi]))
+							ylab = expression(paste("Standard deviation  ",sigma,"(",T[gi],")"))
+							main = expression(paste("Mean  ",T[gi],"  versus standard deviation  ",sigma,"(",T[gi],")"))
+							sub = paste("( smoothed loess fit of ",dim(TImat)[2]," replicates )")
+							mtext(main,3,2,cex=2*0.75)
+							mtext(sub,3,0,col="darkgrey",cex=1.25*0.75)
+							text(trans3d(min.mean + (max.mean-min.mean)*0.6,-max.sd*0.2,-max(res.hist$density)/7,pmat = persp.res),xlab,cex = 1.65*0.75,srt = 90)
+							text(trans3d(max.mean + (max.mean-min.mean)/10,max.sd*0.6,-max(res.hist$density),pmat = persp.res),ylab,cex = 1.65*0.75,srt = 0)
+							legend("topright",c(expression(paste(Gamma," - distributed std. dev.  ",sigma[g])),expression(paste(Gamma," - distributed residuals  ",r[g]))),pt.bg=c("darkblue","darkred"),col=rep("black",2),bg="white",pch=21,cex=1,pt.cex=1,inset = 0.05)
+							par(mar = c(1,4,4,2)+0.1+1)
+							par(mai = c(1.1,1.1,1.2,0.7))
+							par(cex = 1)
+							par(cex.axis = 1.5*0.75)
+							heatscatter(TImat.norm.sd,TImat.norm.reg.sd,xlab="",ylab="",main="",cor=FALSE,xlim = c(0,max(c(TImat.norm.sd,TImat.norm.reg.sd),na.rm = TRUE)),ylim = c(0,max(c(TImat.norm.sd,TImat.norm.reg.sd),na.rm = TRUE)))
+							abline(0,1,lwd=1)
+							xlab = expression(paste("Empirical standard deviation  ",sigma,"(",T[gi],")"))
+							ylab = expression(paste("Regularized standard deviation  ",sigma^R,"(",T[gi],")"))
+							main = expression(paste("Regularized versus empirical standard deviation"))
+							mtext(main,3,3,cex=2*0.75)
+							mtext(xlab,1,3,cex=1.65*0.75)
+							mtext(ylab,2,3,cex=1.65*0.75)
+						}
+						DTA.plot.it(filename = paste(folder,"/error_assessment_TI_",condition,"_",timepoint,sep=""),sw = resolution*2,sh = resolution,sres = resolution,plotsfkt = plotsfkt,ww = 14,wh = 7,saveit = save.plots,fileformat = fileformat,notinR = notinR,RStudio = RStudio)
+					}
+					results[["TI.log.error"]] = cbind("log.mean" = TImat.norm.mean,"log.sd" = TImat.norm.reg.sd,"log.cv" = TImat.norm.reg.sd/TImat.norm.mean)		
 				}
-			} else {
-				Imean = NULL
-				Isd = NULL
 			}
 			if (usefractions == "LandT"){
-				for (i in names(dr[!is.na(dr)])){
-					err = LT.error.progression(Tmean = mean(TEmat[i,]),Tsd = sd(TEmat[i,]),Lmean = mean(LEmat[i,]),Lsd = sd(LEmat[i,]),timepoint = labelingtime,alpha = alpha,Imean = Imean,Isd = Isd)
-					SDmat[i,] = err[["sds"]]
-					CVmat[i,] = err[["cvs"]]
-				}
+				if (!is.null(initialdummy)){
+					cat("Calculating confidence intervals ... \n")
+					possible = names(dr[!is.na(dr)])
+					possible.mat = cbind(TEmat.norm.mean[possible],TEmat.norm.sd[possible],LEmat.norm.mean[possible],LEmat.norm.sd[possible],TImat.norm.mean[possible],TImat.norm.sd[possible])
+					conf.ints = t(apply(possible.mat,1,function(x){TE = rnorm(samplesize,mean=x[1],sd=x[2]);LE = rnorm(samplesize,mean=x[3],sd=x[4]);TI = rnorm(samplesize,mean=x[5],sd=x[6]);options(warn = -1);dr = - alpha - ((1/labelingtime)*log((exp(TE) - exp(LE))/exp(TI)));options(warn = 0);dr[which(dr <= 0)] = NA;hl = log(2)/dr;sr = LE*(alpha + dr)/(exp(alpha*labelingtime)-exp(-dr*labelingtime));TE.quantiles = quantile(exp(TE),confidence.range,na.rm = TRUE);LE.quantiles = quantile(exp(LE),confidence.range,na.rm = TRUE);TI.quantiles = quantile(exp(TI),confidence.range,na.rm = TRUE);LT.quantiles = quantile((exp(TE) - exp(LE))/exp(TI),confidence.range,na.rm = TRUE);dr.quantiles = quantile(dr,confidence.range,na.rm = TRUE);hl.quantiles = quantile(hl,confidence.range,na.rm = TRUE);sr.quantiles = quantile(sr,confidence.range,na.rm = TRUE);c("TE" = paste(signif(TE.quantiles[1],3),"-",signif(TE.quantiles[2],3)),"LE" = paste(signif(LE.quantiles[1],3),"-",signif(LE.quantiles[2],3)),"TI" = paste(signif(TI.quantiles[1],3),"-",signif(TI.quantiles[2],3)),"LT" = paste(signif(LT.quantiles[1],3),"-",signif(LT.quantiles[2],3)),"dr" = paste(signif(dr.quantiles[1],3),"-",signif(dr.quantiles[2],3)),"hl" = paste(signif(hl.quantiles[1],3),"-",signif(hl.quantiles[2],3)),"sr" = paste(signif(sr.quantiles[1],3),"-",signif(sr.quantiles[2],3)))}))
+					results[["TE.confidence"]] = conf.ints[,"TE"]
+					results[["LE.confidence"]] = conf.ints[,"LE"]
+					results[["TI.confidence"]] = conf.ints[,"TI"]
+					results[["LT.confidence"]] = conf.ints[,"LT"]
+					results[["dr.confidence"]] = conf.ints[,"dr"]
+					results[["hl.confidence"]] = conf.ints[,"hl"]
+					results[["sr.confidence"]] = conf.ints[,"sr"]
+				}  else {
+					cat("Calculating confidence intervals ... \n")
+					possible = names(dr[!is.na(dr)])
+					possible.mat = cbind(TEmat.norm.mean[possible],TEmat.norm.sd[possible],LEmat.norm.mean[possible],LEmat.norm.sd[possible])
+					conf.ints = t(apply(possible.mat,1,function(x){TE = rnorm(samplesize,mean=x[1],sd=x[2]);LE = rnorm(samplesize,mean=x[3],sd=x[4]);options(warn = -1);dr = - alpha - ((1/labelingtime)*log(1 - exp(LE)/exp(TE)));options(warn = 0);dr[which(dr <= 0)] = NA;hl = log(2)/dr;sr = LE*(alpha + dr)/(exp(alpha*labelingtime)-exp(-dr*labelingtime));TE.quantiles = quantile(exp(TE),confidence.range,na.rm = TRUE);LE.quantiles = quantile(exp(LE),confidence.range,na.rm = TRUE);LT.quantiles = quantile(1 - exp(LE)/exp(TE),confidence.range,na.rm = TRUE);dr.quantiles = quantile(dr,confidence.range,na.rm = TRUE);hl.quantiles = quantile(hl,confidence.range,na.rm = TRUE);sr.quantiles = quantile(sr,confidence.range,na.rm = TRUE);c("TE" = paste(signif(TE.quantiles[1],3),"-",signif(TE.quantiles[2],3)),"LE" = paste(signif(LE.quantiles[1],3),"-",signif(LE.quantiles[2],3)),"LT" = paste(signif(LT.quantiles[1],3),"-",signif(LT.quantiles[2],3)),"dr" = paste(signif(dr.quantiles[1],3),"-",signif(dr.quantiles[2],3)),"hl" = paste(signif(hl.quantiles[1],3),"-",signif(hl.quantiles[2],3)),"sr" = paste(signif(sr.quantiles[1],3),"-",signif(sr.quantiles[2],3)))}))
+					results[["TE.confidence"]] = conf.ints[,"TE"]
+					results[["LE.confidence"]] = conf.ints[,"LE"]
+					results[["LT.confidence"]] = conf.ints[,"LT"]
+					results[["dr.confidence"]] = conf.ints[,"dr"]
+					results[["hl.confidence"]] = conf.ints[,"hl"]
+					results[["sr.confidence"]] = conf.ints[,"sr"]				
+				}			
 			}
 			if (usefractions == "UandT"){
-				for (i in names(dr[!is.na(dr)])){
-					err = UT.error.progression(Tmean = mean(TEmat[i,]),Tsd = sd(TEmat[i,]),Lmean = mean(LEmat[i,]),Lsd = sd(LEmat[i,]),Umean = mean(UEmat[i,]),Usd = sd(UEmat[i,]),timepoint = labelingtime,alpha = alpha,Imean = Imean,Isd = Isd)
-					SDmat[i,] = err[["sds"]]
-					CVmat[i,] = err[["cvs"]]
-				}					
+				if (!is.null(initialdummy)){
+					cat("Calculating confidence intervals ... \n")
+					possible = names(dr[!is.na(dr)])
+					possible.mat = cbind(TEmat.norm.mean[possible],TEmat.norm.sd[possible],LEmat.norm.mean[possible],LEmat.norm.sd[possible],UEmat.norm.mean[possible],UEmat.norm.sd[possible],TImat.norm.mean[possible],TImat.norm.sd[possible])
+					conf.ints = t(apply(possible.mat,1,function(x){TE = rnorm(samplesize,mean=x[1],sd=x[2]);LE = rnorm(samplesize,mean=x[3],sd=x[4]);UE = rnorm(samplesize,mean=x[5],sd=x[6]);TI = rnorm(samplesize,mean=x[7],sd=x[8]);options(warn = -1);dr = - alpha - ((1/labelingtime)*log(exp(UE)/exp(TI)));options(warn = 0);dr[which(dr <= 0)] = NA;hl = log(2)/dr;sr = LE*(alpha + dr)/(exp(alpha*labelingtime)-exp(-dr*labelingtime));TE.quantiles = quantile(exp(TE),confidence.range,na.rm = TRUE);LE.quantiles = quantile(exp(LE),confidence.range,na.rm = TRUE);UE.quantiles = quantile(exp(UE),confidence.range,na.rm = TRUE);TI.quantiles = quantile(exp(TI),confidence.range,na.rm = TRUE);LT.quantiles = quantile(exp(UE)/exp(TI),confidence.range,na.rm = TRUE);dr.quantiles = quantile(dr,confidence.range,na.rm = TRUE);hl.quantiles = quantile(hl,confidence.range,na.rm = TRUE);sr.quantiles = quantile(sr,confidence.range,na.rm = TRUE);c("TE" = paste(signif(TE.quantiles[1],3),"-",signif(TE.quantiles[2],3)),"LE" = paste(signif(LE.quantiles[1],3),"-",signif(LE.quantiles[2],3)),"UE" = paste(signif(UE.quantiles[1],3),"-",signif(UE.quantiles[2],3)),"TI" = paste(signif(TI.quantiles[1],3),"-",signif(TI.quantiles[2],3)),"LT" = paste(signif(LT.quantiles[1],3),"-",signif(LT.quantiles[2],3)),"dr" = paste(signif(dr.quantiles[1],3),"-",signif(dr.quantiles[2],3)),"hl" = paste(signif(hl.quantiles[1],3),"-",signif(hl.quantiles[2],3)),"sr" = paste(signif(sr.quantiles[1],3),"-",signif(sr.quantiles[2],3)))}))
+					results[["TE.confidence"]] = conf.ints[,"TE"]
+					results[["LE.confidence"]] = conf.ints[,"LE"]
+					results[["UE.confidence"]] = conf.ints[,"UE"]
+					results[["TI.confidence"]] = conf.ints[,"TI"]
+					results[["LT.confidence"]] = conf.ints[,"LT"]
+					results[["dr.confidence"]] = conf.ints[,"dr"]
+					results[["hl.confidence"]] = conf.ints[,"hl"]
+					results[["sr.confidence"]] = conf.ints[,"sr"]				
+				}  else {
+					cat("Calculating confidence intervals ... \n")
+					possible = names(dr[!is.na(dr)])
+					possible.mat = cbind(TEmat.norm.mean[possible],TEmat.norm.sd[possible],LEmat.norm.mean[possible],LEmat.norm.sd[possible],UEmat.norm.mean[possible],UEmat.norm.sd[possible])
+					conf.ints = t(apply(possible.mat,1,function(x){TE = rnorm(samplesize,mean=x[1],sd=x[2]);LE = rnorm(samplesize,mean=x[3],sd=x[4]);UE = rnorm(samplesize,mean=x[5],sd=x[6]);options(warn = -1);dr = - alpha - ((1/labelingtime)*log(exp(UE)/exp(TE)));options(warn = 0);dr[which(dr <= 0)] = NA;hl = log(2)/dr;sr = LE*(alpha + dr)/(exp(alpha*labelingtime)-exp(-dr*labelingtime));TE.quantiles = quantile(exp(TE),confidence.range,na.rm = TRUE);LE.quantiles = quantile(exp(LE),confidence.range,na.rm = TRUE);UE.quantiles = quantile(exp(UE),confidence.range,na.rm = TRUE);LT.quantiles = quantile(exp(UE)/exp(TE),confidence.range,na.rm = TRUE);dr.quantiles = quantile(dr,confidence.range,na.rm = TRUE);hl.quantiles = quantile(hl,confidence.range,na.rm = TRUE);sr.quantiles = quantile(sr,confidence.range,na.rm = TRUE);c("TE" = paste(signif(TE.quantiles[1],3),"-",signif(TE.quantiles[2],3)),"LE" = paste(signif(LE.quantiles[1],3),"-",signif(LE.quantiles[2],3)),"UE" = paste(signif(UE.quantiles[1],3),"-",signif(UE.quantiles[2],3)),"LT" = paste(signif(LT.quantiles[1],3),"-",signif(LT.quantiles[2],3)),"dr" = paste(signif(dr.quantiles[1],3),"-",signif(dr.quantiles[2],3)),"hl" = paste(signif(hl.quantiles[1],3),"-",signif(hl.quantiles[2],3)),"sr" = paste(signif(sr.quantiles[1],3),"-",signif(sr.quantiles[2],3)))}))
+					results[["TE.confidence"]] = conf.ints[,"TE"]
+					results[["LE.confidence"]] = conf.ints[,"LE"]
+					results[["UE.confidence"]] = conf.ints[,"UE"]
+					results[["LT.confidence"]] = conf.ints[,"LT"]
+					results[["dr.confidence"]] = conf.ints[,"dr"]
+					results[["hl.confidence"]] = conf.ints[,"hl"]
+					results[["sr.confidence"]] = conf.ints[,"sr"]				
+				}			
 			}
 			if (usefractions == "both"){
-				for (i in names(dr[!is.na(dr)])){
-					err = BOTH.error.progression(Tmean = mean(TEmat[i,]),Tsd = sd(TEmat[i,]),Lmean = mean(LEmat[i,]),Lsd = sd(LEmat[i,]),Umean = mean(UEmat[i,]),Usd = sd(UEmat[i,]),timepoint = labelingtime,alpha = alpha,Imean = Imean,Isd = Isd)
-					SDmat[i,] = err[["sds"]]
-					CVmat[i,] = err[["cvs"]]
-				}					
+				if (!is.null(initialdummy)){
+					cat("Calculating confidence intervals ... \n")
+					possible = names(dr[!is.na(dr)])
+					possible.mat = cbind(TEmat.norm.mean[possible],TEmat.norm.sd[possible],LEmat.norm.mean[possible],LEmat.norm.sd[possible],UEmat.norm.mean[possible],UEmat.norm.sd[possible],TImat.norm.mean[possible],TImat.norm.sd[possible])
+					conf.ints = t(apply(possible.mat,1,function(x){TE = rnorm(samplesize,mean=x[1],sd=x[2]);LE = rnorm(samplesize,mean=x[3],sd=x[4]);UE = rnorm(samplesize,mean=x[5],sd=x[6]);TI = rnorm(samplesize,mean=x[7],sd=x[8]);options(warn = -1);dr = - alpha - ((1/labelingtime)*log(((exp(TE) - exp(LE))/exp(TI) + exp(UE)/exp(TI))/2));options(warn = 0);dr[which(dr <= 0)] = NA;hl = log(2)/dr;sr = LE*(alpha + dr)/(exp(alpha*labelingtime)-exp(-dr*labelingtime));TE.quantiles = quantile(exp(TE),confidence.range,na.rm = TRUE);LE.quantiles = quantile(exp(LE),confidence.range,na.rm = TRUE);UE.quantiles = quantile(exp(UE),confidence.range,na.rm = TRUE);TI.quantiles = quantile(exp(TI),confidence.range,na.rm = TRUE);LT.quantiles = quantile(((exp(TE) - exp(LE))/exp(TI) + exp(UE)/exp(TI))/2,confidence.range,na.rm = TRUE);dr.quantiles = quantile(dr,confidence.range,na.rm = TRUE);hl.quantiles = quantile(hl,confidence.range,na.rm = TRUE);sr.quantiles = quantile(sr,confidence.range,na.rm = TRUE);c("TE" = paste(signif(TE.quantiles[1],3),"-",signif(TE.quantiles[2],3)),"LE" = paste(signif(LE.quantiles[1],3),"-",signif(LE.quantiles[2],3)),"UE" = paste(signif(UE.quantiles[1],3),"-",signif(UE.quantiles[2],3)),"TI" = paste(signif(TI.quantiles[1],3),"-",signif(TI.quantiles[2],3)),"LT" = paste(signif(LT.quantiles[1],3),"-",signif(LT.quantiles[2],3)),"dr" = paste(signif(dr.quantiles[1],3),"-",signif(dr.quantiles[2],3)),"hl" = paste(signif(hl.quantiles[1],3),"-",signif(hl.quantiles[2],3)),"sr" = paste(signif(sr.quantiles[1],3),"-",signif(sr.quantiles[2],3)))}))
+					results[["TE.confidence"]] = conf.ints[,"TE"]
+					results[["LE.confidence"]] = conf.ints[,"LE"]
+					results[["UE.confidence"]] = conf.ints[,"UE"]
+					results[["TI.confidence"]] = conf.ints[,"TI"]
+					results[["LT.confidence"]] = conf.ints[,"LT"]
+					results[["dr.confidence"]] = conf.ints[,"dr"]
+					results[["hl.confidence"]] = conf.ints[,"hl"]
+					results[["sr.confidence"]] = conf.ints[,"sr"]
+				}  else {
+					cat("Calculating confidence intervals ... \n")
+					possible = names(dr[!is.na(dr)])
+					possible.mat = cbind(TEmat.norm.mean[possible],TEmat.norm.sd[possible],LEmat.norm.mean[possible],LEmat.norm.sd[possible],UEmat.norm.mean[possible],UEmat.norm.sd[possible])
+					conf.ints = t(apply(possible.mat,1,function(x){TE = rnorm(samplesize,mean=x[1],sd=x[2]);LE = rnorm(samplesize,mean=x[3],sd=x[4]);UE = rnorm(samplesize,mean=x[5],sd=x[6]);options(warn = -1);dr = - alpha - ((1/labelingtime)*log((1 - exp(LE)/exp(TE) + exp(UE)/exp(TE))/2));options(warn = 0);dr[which(dr <= 0)] = NA;hl = log(2)/dr;sr = LE*(alpha + dr)/(exp(alpha*labelingtime)-exp(-dr*labelingtime));TE.quantiles = quantile(exp(TE),confidence.range,na.rm = TRUE);LE.quantiles = quantile(exp(LE),confidence.range,na.rm = TRUE);UE.quantiles = quantile(exp(UE),confidence.range,na.rm = TRUE);LT.quantiles = quantile((1 - exp(LE)/exp(TE) + exp(UE)/exp(TE))/2,confidence.range,na.rm = TRUE);dr.quantiles = quantile(dr,confidence.range,na.rm = TRUE);hl.quantiles = quantile(hl,confidence.range,na.rm = TRUE);sr.quantiles = quantile(sr,confidence.range,na.rm = TRUE);c("TE" = paste(signif(TE.quantiles[1],3),"-",signif(TE.quantiles[2],3)),"LE" = paste(signif(LE.quantiles[1],3),"-",signif(LE.quantiles[2],3)),"UE" = paste(signif(UE.quantiles[1],3),"-",signif(UE.quantiles[2],3)),"LT" = paste(signif(LT.quantiles[1],3),"-",signif(LT.quantiles[2],3)),"dr" = paste(signif(dr.quantiles[1],3),"-",signif(dr.quantiles[2],3)),"hl" = paste(signif(hl.quantiles[1],3),"-",signif(hl.quantiles[2],3)),"sr" = paste(signif(sr.quantiles[1],3),"-",signif(sr.quantiles[2],3)))}))
+					results[["TE.confidence"]] = conf.ints[,"TE"]
+					results[["LE.confidence"]] = conf.ints[,"LE"]
+					results[["UE.confidence"]] = conf.ints[,"UE"]
+					results[["LT.confidence"]] = conf.ints[,"LT"]
+					results[["dr.confidence"]] = conf.ints[,"dr"]
+					results[["hl.confidence"]] = conf.ints[,"hl"]
+					results[["sr.confidence"]] = conf.ints[,"sr"]
+				}			
 			}
-		} else {print("Your data is not suitable for error assessment due to lack of replicates")}	
+		} else {cat("Your data is not suitable for error assessment due to lack of replicates \n")}				
 	}
-	results[["dr.sd"]] = SDmat[,"DR"]
-	results[["hl.sd"]] = SDmat[,"HL"]
-	results[["sr.sd"]] = SDmat[,"SR"]
-	results[["dr.cv"]] = CVmat[,"DR"]
-	results[["hl.cv"]] = CVmat[,"HL"]
-	results[["sr.cv"]] = CVmat[,"SR"]
 	
 	### SIMULATION ###
 	
@@ -1110,34 +1475,36 @@ DTA.singleestimate = function(phenomat, # phenotype matrix, "nr" should be numbe
 ### estimate uses an experiment, given by a phenotype matrix, data matrix and the #uridines for each gene to estimate synthesis and decay rate of the genes ###
 
 
-DTA.estimate = function(phenomat = NULL,# phenotype matrix, "nr" should be numbered by experiments not by replicates
-		datamat = NULL, 				# data matrix, should only contain the rows of phenomat as columns
-		tnumber = NULL, 				# #uridines, should have the rownames of datamat
-		reliable = NULL, 				# vector of reliable genes, which are used for regression
-		ccl = NULL, 					# the cell cycle length of the cells
-		mRNAs = NULL,					# estimated number of mRNAs in a cell
-		mediancenter = TRUE, 			# should the L/T resp. U/T ratio of replicates be rescaled to a common median before rate extraction
-		usefractions = "LandT",			# from which fractions should the decay rate be calculated: "LandT", "UandT" or "both"
-		LtoTratio = NULL, 				# coefficient to rescale L/T
-		ratiomethod = "tls", 			# choose the regression method to be used, possible methods are: tls, bias, lm
-		largest = 5, 					# percentage of largest residues from the first regression not to be used in the second regression
-		weighted = TRUE, 				# should the regression be weighted with 1/(T^2 + median(T))
-		relevant = NULL, 				# choose the arrays to be used for halflives calculation, vector due to experiments variable 
-		upper = 700, 					# upper bound for labeling bias estimation
-		lower = 500, 					# lower bound for labeling bias estimation
-		error = FALSE,					# should standard deviation and coefficient of variation be calculated
-		bicor = TRUE, 					# should the labeling bias be corrected		
-		check = TRUE, 					# if check = TRUE, control messages and plots will be generated
-		condition = "", 				# to be added to the plotnames
-		save.plots = FALSE, 			# if save.plots = TRUE, control plots will be saved
-		resolution = 1,					# resolution scaling factor for plotting
-		notinR = FALSE,					# should plot be not plotted in R
-		RStudio = FALSE,				# for RStudio users
-		folder = NULL, 					# folder, where to save the plots
-		fileformat = "jpeg", 			# save the plot as jpeg, png, bmp, tiff, ps or pdf
-		totaloverwt = 1, 				# total mRNA over WT
-		simulation = FALSE,				# simulated data via sim.object ?
-		sim.object = NULL				# simulation object created by DTA.generate
+DTA.estimate = function(phenomat = NULL,	# phenotype matrix, "nr" should be numbered by experiments not by replicates
+		datamat = NULL, 					# data matrix, should only contain the rows of phenomat as columns
+		tnumber = NULL, 					# #uridines, should have the rownames of datamat
+		reliable = NULL, 					# vector of reliable genes, which are used for regression
+		ccl = NULL, 						# the cell cycle length of the cells
+		mRNAs = NULL,						# estimated number of mRNAs in a cell
+		mediancenter = TRUE, 				# should the L/T resp. U/T ratio of replicates be rescaled to a common median before rate extraction
+		usefractions = "LandT",				# from which fractions should the decay rate be calculated: "LandT", "UandT" or "both"
+		LtoTratio = NULL, 					# coefficient to rescale L/T
+		ratiomethod = "tls", 				# choose the regression method to be used, possible methods are: tls, bias, lm
+		largest = 5, 						# percentage of largest residues from the first regression not to be used in the second regression
+		weighted = TRUE, 					# should the regression be weighted with 1/(T^2 + median(T))
+		relevant = NULL, 					# choose the arrays to be used for halflives calculation, vector due to experiments variable 
+		upper = 700, 						# upper bound for labeling bias estimation
+		lower = 500, 						# lower bound for labeling bias estimation
+		error = TRUE,						# should the measurement error be assessed
+		samplesize = 1000,					# error model samplesize for resampling
+		confidence.range = c(0.025,0.975),	# confidence region for error model
+		bicor = TRUE, 						# should the labeling bias be corrected		
+		check = TRUE, 						# if check = TRUE, control messages and plots will be generated
+		condition = "", 					# to be added to the plotnames
+		save.plots = FALSE, 				# if save.plots = TRUE, control plots will be saved
+		resolution = 1,						# resolution scaling factor for plotting
+		notinR = FALSE,						# should plot be not plotted in R
+		RStudio = FALSE,					# for RStudio users
+		folder = NULL, 						# folder, where to save the plots
+		fileformat = "jpeg", 				# save the plot as jpeg, png, bmp, tiff, ps or pdf
+		totaloverwt = 1, 					# total mRNA over WT
+		simulation = FALSE,					# simulated data via sim.object ?
+		sim.object = NULL					# simulation object created by DTA.generate
 )
 {
 	
@@ -1171,12 +1538,12 @@ DTA.estimate = function(phenomat = NULL,# phenotype matrix, "nr" should be numbe
 	}
 	if (!all(rownames(phenomat) %in% colnames(datamat))){stop("The rownames of the phenomat should be among the colnames of the datamat !")}
 	if (length(intersect(rownames(datamat),names(tnumber))) == 0){stop("The rownames of the datamat should be the same identifiers as the names of tnumber !")}
-	if (is.null(ccl)){print("If you do not specify the Cell Cycle Length (ccl), growth is set to zero or as specified in your sim.object !")}
-	if (is.null(reliable)){print("If you do not specify a vector of reliable identifiers (reliable), the parameter estimation is done on all identifiers !")
+	if (is.null(ccl)){cat("If you do not specify the Cell Cycle Length (ccl), growth is set to zero or as specified in your sim.object ! \n")}
+	if (is.null(reliable)){cat("If you do not specify a vector of reliable identifiers (reliable), the parameter estimation is done on all identifiers ! \n")
 		reliable = rownames(datamat)}
 	if (!any(usefractions %in% c("LandT","UandT","both"))){stop("usefractions need to be 'LandT', 'UandT' or 'both' !")}
 	if (!any(ratiomethod %in% c("tls","lm","bias"))){stop("ratiomethod need to be 'bias', 'tls' or 'lm' !")}
-	if (is.null(LtoTratio)){print("If you do not specify ratio of L to T (LtoTratio), it is estimated from the data !")}
+	if (is.null(LtoTratio)){cat("If you do not specify ratio of L to T (LtoTratio), it is estimated from the data ! \n")}
 	if (!is.null(LtoTratio)){
 		ratiomethod = "tls"
 		if (length(unique(phenomat[,"time"])) != length(LtoTratio)){stop(paste("The number of specified ratios of L to T (LtoTratio) should correspond to the number of labeling durations:",length(unique(phenomat[,"time"])),"!"))}
@@ -1259,7 +1626,7 @@ DTA.estimate = function(phenomat = NULL,# phenotype matrix, "nr" should be numbe
 		res[[labtime]] = DTA.singleestimate(phenomats[[labtime]],datamats[[labtime]],tnumber,labelingtime = as.numeric(labtimes[labtime]),ccl = ccl,mRNAs = mRNAs,
 				reliable = reliable,mediancenter = mediancenter,usefractions = usefractions,ratiomethod = ratiomethod,resolution = resolution,RStudio = RStudio,
 				largest = largest,weighted = weighted,ratio = ratios[[labtime]],relevant = relevants[[labtime]],check = check,totaloverwt = totaloverwt,
-				error = error,bicor = bicor,condition = condition,timepoint = labtime,upper = upper,lower = lower,save.plots = save.plots,notinR = notinR,folder = folder,
+				error = error,samplesize = samplesize,confidence.range = confidence.range,bicor = bicor,condition = condition,timepoint = labtime,upper = upper,lower = lower,save.plots = save.plots,notinR = notinR,folder = folder,
 				fileformat = fileformat,simulation = simulation,truemus = truemus,truelambdas = truelambdas,truehalflives = truehalflives,trueplabel=trueplabels[[labtime]],
 				trueLasymptote=trueLasymptotes[[labtime]],trueUasymptote=trueUasymptotes[[labtime]],truecrbyar=truecrbyars[[labtime]],
 				truecrbybr=truecrbybrs[[labtime]],truebrbyar=truebrbyars[[labtime]])

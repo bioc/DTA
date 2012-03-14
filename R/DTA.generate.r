@@ -18,14 +18,15 @@ DTA.singlegenerate = function(timepoint,		# the timepoint at which the samples a
 		unspec.UtoL.weighted = FALSE,			# do unspecific proportion of unlabeled to labeled depend linearly on the length of the RNA
 		truehalflives = NULL,					# if the data should be generated using a given half life distribution, this vector must contain the respective values for each gene
 		truecomplete = NULL,					# if the data should be generated using a given expression distribution, this vector must contain the respective values for each gene
-		genenames = NULL						# an optional list of gene names
+		genenames = NULL,						# an optional list of gene names
+		cDTA = FALSE							# does not rescale L and U
 )
 {
 	
 	### PRELIMINARIES ###	
 	
 	timepoint = timepoint-delaytime
-	alpha = log(2)/ccl
+	if (is.null(ccl)) {alpha = 0} else {alpha = log(2)/ccl}
 	truelambdas = log(2)/truehalflives
 	
 	### THE "TRUE" AMOUNT OF TOTAL RNA (Cgrt) ###
@@ -67,7 +68,7 @@ DTA.singlegenerate = function(timepoint,		# the timepoint at which the samples a
 	Lbetween = Agrt * labeleff + unspecU
 	
 	Lg = rnorm(length(Lbetween),mean=Lbetween,sd= Lbetween*sdnoise)
-	Lg = Lg/median(Lg)*median(Tg)
+	if (cDTA) {Lg = Lg} else {Lg = Lg/median(Lg)*median(Tg)}
 	names(Lg) = genenames
 	
 	truear = median(Lg)/median(Lbetween)
@@ -76,7 +77,7 @@ DTA.singlegenerate = function(timepoint,		# the timepoint at which the samples a
 	
 	Utrue = Cgrt + unspecL - Lbetween
 	Ug = rnorm(length(Utrue),mean=Utrue,sd=Utrue*sdnoise)
-	Ug = Ug/median(Ug)*median(Tg)
+	if (cDTA) {Ug = Ug} else {Ug = Ug/median(Ug)*median(Tg)}
 	names(Ug) = genenames
 	
 	truebr = median(Ug)/median(Utrue)
@@ -128,7 +129,8 @@ DTA.generate = function(timepoints, 	# the timepoints at which the samples are t
 		unspec.UtoL.weighted = FALSE,	# do unspecific proportion of unlabeled to labeled depend linearly on the length of the RNA
 		truehalflives = NULL,			# if the data should be generated using a given half life distribution, this vector must contain the respective values for each gene
 		truecomplete = NULL,			# if the data should be generated using a given expression distribution, this vector must contain the respective values for each gene
-		genenames = NULL				# an optional list of gene names
+		genenames = NULL,				# an optional list of gene names
+		cDTA = FALSE					# does not rescale L and U
 )
 {
 	### PLABEL ###
@@ -177,7 +179,8 @@ DTA.generate = function(timepoints, 	# the timepoints at which the samples are t
 	
 	### SYNTHESIS RATES ###
 	
-	truemus = truecomplete*(log(2)/ccl + truelambdas)
+	if (is.null(ccl)) {alpha = 0} else {alpha = log(2)/ccl}
+	truemus = truecomplete*(alpha + truelambdas)
 	
 	### PRELIMINARIES ###
 	
@@ -208,7 +211,7 @@ DTA.generate = function(timepoints, 	# the timepoints at which the samples are t
 		res = DTA.singlegenerate(timepoint=timepoints[nr],tnumber=tnumber,plabel=plabel[nr],nrgenes=nrgenes,mediantime=mediantime,ccl=ccl,
 				delaytime=delaytime,sdnoise=sdnoise,nobias=nobias,unspecific.LtoU=unspecific.LtoU,unspec.LtoU.weighted=unspec.LtoU.weighted,
 				unspecific.UtoL=unspecific.UtoL,unspec.UtoL.weighted=unspec.UtoL.weighted,
-				truehalflives=truehalflives,truecomplete=truecomplete,genenames=genenames)		
+				truehalflives=truehalflives,truecomplete=truecomplete,genenames=genenames,cDTA=cDTA)		
 		datamat[,nr] = res$total
 		datamat[,nr+nrexperiments] = res$labeled
 		datamat[,nr+2*nrexperiments] = res$unlabeled
@@ -244,5 +247,6 @@ DTA.generate = function(timepoints, 	# the timepoints at which the samples are t
 	results[["trueUasymptote"]] = trueUasymptote
 	return(results)
 }
+
 
 

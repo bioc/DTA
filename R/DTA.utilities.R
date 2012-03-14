@@ -18,6 +18,19 @@ biasdev = function(p,x)
 }
 
 
+### categorize vector to quantiles ###
+
+
+toquantiles = function(t,k = 10){
+	q = quantile(t,seq(0,1,1/k),na.rm = TRUE)
+	dt = t
+	dt[which(t <= q[2])] = 1
+	for (i in 2:(k-1)){dt[which(t > q[i] & t <= q[i+1])] = i}
+	dt[which(t > q[k])] = k
+	return(dt)
+}
+
+
 ### vlength function ###
 
 
@@ -110,77 +123,24 @@ quantnorm = function(mat)
 }
 
 
-### LT.error.progression function ###
+### gamma.variance ###
 
 
-LT.error.progression = function(
-		Tmean,Tsd,Lmean,Lsd,Imean = NULL,Isd = NULL,
-		timepoint,alpha,
-		samplesize = 10000
-)
-{
-	TE = rnorm(samplesize,mean=Tmean,sd=Tsd)
-	LE = rnorm(samplesize,mean=Lmean,sd=Lsd)
-	if (!is.null(Imean) & !is.null(Isd)){TI = rnorm(samplesize,mean=Imean,sd=Isd)}
-	options(warn = -1)
-	if (!is.null(Imean) & !is.null(Isd)){dr = - alpha - ((1/timepoint)*log((exp(TE) - exp(LE))/exp(TI)))} else {dr = - alpha - ((1/timepoint)*log(1 - exp(LE)/exp(TE)))}
-	options(warn = 0)
-	dr[which(dr <= 0)] = NA
-	hl = log(2)/dr
-	sr = LE*(alpha + dr)/(exp(alpha*timepoint)-exp(-dr*timepoint))	
-	sds = c(sd(dr,na.rm = TRUE),sd(hl,na.rm = TRUE),sd(sr,na.rm = TRUE))
-	cvs = c(sd(dr,na.rm = TRUE)/mean(dr,na.rm = TRUE),sd(hl,na.rm = TRUE)/mean(hl,na.rm = TRUE),sd(sr,na.rm = TRUE)/mean(sr,na.rm = TRUE))
-	return(list(sds = sds,cvs = cvs))
+gamma.variance = function(residuals){
+	m.1 = sum(residuals)/length(residuals)
+	m.2 = sum(residuals^2)/length(residuals)
+	k = m.1^2/(m.2 - m.1^2)
+	theta = (m.2 - m.1^2)/m.1
+	v = k*theta^2
+	return(c(v,k,theta))
 }
 
 
-### UT.error.progression function ###
+### likelihood ###
 
 
-UT.error.progression = function(
-		Tmean,Tsd,Lmean,Lsd,Umean,Usd,Imean = NULL,Isd = NULL,
-		timepoint,alpha,
-		samplesize = 10000
-)
-{
-	TE = rnorm(samplesize,mean=Tmean,sd=Tsd)
-	LE = rnorm(samplesize,mean=Lmean,sd=Lsd)
-	UE = rnorm(samplesize,mean=Umean,sd=Usd)
-	if (!is.null(Imean) & !is.null(Isd)){TI = rnorm(samplesize,mean=Imean,sd=Isd)}
-	options(warn = -1)
-	if (!is.null(Imean) & !is.null(Isd)){dr = - alpha - ((1/timepoint)*log(exp(UE)/exp(TI)))} else {dr = - alpha - ((1/timepoint)*log(exp(UE)/exp(TE)))}
-	options(warn = 0)
-	dr[which(dr <= 0)] = NA
-	hl = log(2)/dr
-	sr = LE*(alpha + dr)/(exp(alpha*timepoint)-exp(-dr*timepoint))	
-	sds = c(sd(dr,na.rm = TRUE),sd(hl,na.rm = TRUE),sd(sr,na.rm = TRUE))
-	cvs = c(sd(dr,na.rm = TRUE)/mean(dr,na.rm = TRUE),sd(hl,na.rm = TRUE)/mean(hl,na.rm = TRUE),sd(sr,na.rm = TRUE)/mean(sr,na.rm = TRUE))
-	return(list(sds = sds,cvs = cvs))
-}
-
-
-### BOTH.error.progression function ###
-
-
-BOTH.error.progression = function(
-		Tmean,Tsd,Lmean,Lsd,Umean,Usd,Imean = NULL,Isd = NULL,
-		timepoint,alpha,
-		samplesize = 10000
-)
-{
-	TE = rnorm(samplesize,mean=Tmean,sd=Tsd)
-	LE = rnorm(samplesize,mean=Lmean,sd=Lsd)
-	UE = rnorm(samplesize,mean=Umean,sd=Usd)
-	if (!is.null(Imean) & !is.null(Isd)){TI = rnorm(samplesize,mean=Imean,sd=Isd)}
-	options(warn = -1)
-	if (!is.null(Imean) & !is.null(Isd)){dr = - alpha - ((1/timepoint)*log(((exp(TE) - exp(LE))/exp(TI) + exp(UE)/exp(TI))/2))} else {dr = - alpha - ((1/timepoint)*log((1 - exp(LE)/exp(TE) + exp(UE)/exp(TE))/2))}
-	options(warn = 0)
-	dr[which(dr <= 0)] = NA
-	hl = log(2)/dr
-	sr = LE*(alpha + dr)/(exp(alpha*timepoint)-exp(-dr*timepoint))	
-	sds = c(sd(dr,na.rm = TRUE),sd(hl,na.rm = TRUE),sd(sr,na.rm = TRUE))
-	cvs = c(sd(dr,na.rm = TRUE)/mean(dr,na.rm = TRUE),sd(hl,na.rm = TRUE)/mean(hl,na.rm = TRUE),sd(sr,na.rm = TRUE)/mean(sr,na.rm = TRUE))
-	return(list(sds = sds,cvs = cvs))
+likelihood = function(x,mean.x,sd.x,loess.x,gamma.var){
+	prod(dnorm(x = x,mean = mean.x,sd = sd.x))*dgamma(x = sd.x, shape = (loess.x^2)/gamma.var, scale = gamma.var/loess.x)
 }
 
 

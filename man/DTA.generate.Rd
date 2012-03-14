@@ -3,7 +3,7 @@
 \title{Simulation of DTA experiments}
 \description{DTA.generate produces the phenotype matrix and the matrix containing the simulated data according to the given parameters.}
 \usage{
-DTA.generate(timepoints, tnumber = NULL, plabel = NULL, nrgenes = 5000, mediantime = 12, ccl = 150, delaytime = 0, sdnoise = 0.075, nobias = FALSE, unspecific.LtoU = 0, unspec.LtoU.weighted = FALSE, unspecific.UtoL = 0, unspec.UtoL.weighted = FALSE, truehalflives = NULL, truecomplete = NULL, genenames = NULL)
+DTA.generate(timepoints, tnumber = NULL, plabel = NULL, nrgenes = 5000, mediantime = 12, ccl = 150, delaytime = 0, sdnoise = 0.075, nobias = FALSE, unspecific.LtoU = 0, unspec.LtoU.weighted = FALSE, unspecific.UtoL = 0, unspec.UtoL.weighted = FALSE, truehalflives = NULL, truecomplete = NULL, genenames = NULL, cDTA = FALSE)
 }
 \arguments{
   \item{timepoints}{Integer vector containing the labeling times for which the samples should be generated.}
@@ -22,6 +22,7 @@ DTA.generate(timepoints, tnumber = NULL, plabel = NULL, nrgenes = 5000, medianti
   \item{truehalflives}{If the data should be generated using a given half-life distribution, this vector must contain the respective values for each gene.}
   \item{truecomplete}{If the data should be generated using a given expression distribution, this vector must contain the respective values for each gene.}
   \item{genenames}{An optional list of gene names.}
+  \item{cDTA}{cDTA = FALSE does not rescale L and U.}
 }
 \value{
 DTA.generate returns a list, containing the following entries
@@ -45,15 +46,15 @@ DTA.generate returns a list, containing the following entries
 }
 \references{
 C. Miller, B. Schwalb, K. Maier, D. Schulz, S. Duemcke, B. Zacher, A. Mayer, J. Sydow, L. Marcinowski, L. Doelken, D. E. Martin, A. Tresch, and P. Cramer. Dynamic transcriptome analysis measures rates of mRNA synthesis and decay in yeast. Mol Syst Biol, 7:458, 2011.
-M. Sun, B. Schwalb, D. Schulz, N. Pirkl, L. Lariviere, K. Maier, A. Tresch, P. Cramer. Mutual feedback between mRNA synthesis and degradation buffers transcript levels in a eukaryote. Genome Research, in revision.
-B. Schwalb, B. Zacher, S. Duemcke, D. Martin, P. Cramer, A. Tresch. Measurement of genome-wide RNA synthesis and decay rates with Dynamic Transcriptome Analysis (DTA/cDTA). Bioinformatics, in revision.
+M. Sun, B. Schwalb, D. Schulz, N. Pirkl, L. Lariviere, K. Maier, A. Tresch, P. Cramer. Mutual feedback between mRNA synthesis and degradation buffers transcript levels in a eukaryote. Under review.
+B. Schwalb, B. Zacher, S. Duemcke, D. Martin, P. Cramer, A. Tresch. Measurement of genome-wide RNA synthesis and decay rates with Dynamic Transcriptome Analysis (DTA/cDTA). Bioinformatics.
 }
 \author{Bjoern Schwalb \email{schwalb@lmb.uni-muenchen.de}}
 \examples{
 sim.object = DTA.generate(timepoints=rep(c(6,12),2))
 
-res.sim = DTA.estimate(ratiomethod = "bias",simulation = TRUE,sim.object = sim.object,check = FALSE)
+### for control plots set 'check = TRUE' ###
 
-dev.off()
+res.sim = DTA.estimate(ratiomethod = "bias",simulation = TRUE,sim.object = sim.object,check = FALSE)
 }
 \keyword{datagen}

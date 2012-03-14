@@ -10,6 +10,6 @@ The phenotype matrix \code{Pol.phenomat} contains information about the experime
 The phenomat is a matrix comprised of the file name, the type of RNA fraction mesasured (T, U or L, \code{fraction} column), the labeling time (\code{time},\code{timeframe} column) and the replicate number (\code{nr} column). Rows in this matrix represent the individual experiments.
 }
 \source{
-M. Sun, B. Schwalb, D. Schulz, N. Pirkl, L. Lariviere, K. Maier, A. Tresch, P. Cramer. Mutual feedback between mRNA synthesis and degradation buffers transcript levels in a eukaryote. Genome Research, in revision.
+M. Sun, B. Schwalb, D. Schulz, N. Pirkl, L. Lariviere, K. Maier, A. Tresch, P. Cramer. Mutual feedback between mRNA synthesis and degradation buffers transcript levels in a eukaryote. Under review.
 }
 \keyword{datasets}

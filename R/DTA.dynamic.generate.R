@@ -32,37 +32,39 @@ DTA.dynamic.singlegenerate = function(
 	
 	### THE "TRUE" SYNTHESIS RATES (mu) ###
 	
-	mu = function(t){return(mu.values[sum(mu.breaks < t)+1])}
-	mu.vals = apply(as.matrix(sq),1,mu)
+	mu = function(t){return(mu.values[sum(mu.breaks <= t)+1])}
+	mu.vals = sapply(sq,mu)
 	truesynthesisrate = mu.vals[sparsesq[-1]+1]
 	truesynthesisrateaveraged = c()
 	for (i in 1:(duration/lab.duration)){truesynthesisrateaveraged[i] = mean(mu.vals[((i*lab.duration-lab.duration):(i*lab.duration))+1])}
 	
 	### THE "TRUE" DECAY RATES (lambda) ###
 	
-	lambda = function(t){return(lambda.values[sum(lambda.breaks < t)+1])}
-	lambda.vals = apply(as.matrix(sq),1,lambda)
+	lambda = function(t){return(lambda.values[sum(lambda.breaks <= t)+1])}
+	lambda.vals = sapply(sq,lambda)
 	truedecayrate = lambda.vals[sparsesq[-1]+1]
 	truedecayrateaveraged = c()
 	for (i in 1:(duration/lab.duration)){truedecayrateaveraged[i] = mean(lambda.vals[((i*lab.duration-lab.duration):(i*lab.duration))+1])}
-	piecewise.integrated.lambda = function(t){vec = apply(as.matrix(c(lambda.breaks,t)),1,function(x){min(x,t)});vec = vec - c(0,vec)[-(length(vec)+1)];return(sum(vec*lambda.values))}
-	piecewise.integrated.lambda.vals = apply(as.matrix(sq),1,piecewise.integrated.lambda)
+	piecewise.integrated.lambda = function(t){vec = sapply(c(lambda.breaks,t),function(x){min(x,t)});vec = vec - c(0,vec)[-(length(vec)+1)];return(sum(vec*lambda.values))}
+	piecewise.integrated.lambda.vals = sapply(sq,piecewise.integrated.lambda)
+	piecewise.integrated.lambda.vals.list = list()
+	ini = 0
+	for (i in 1:(duration/lab.duration)){piecewise.integrated.lambda.vals.list[[i]] = piecewise.integrated.lambda.vals[((i*lab.duration-lab.duration):(i*lab.duration))+1] - ini;ini = piecewise.integrated.lambda.vals[i*lab.duration+1]}
+	for (i in 1:(duration/lab.duration)){piecewise.integrated.lambda.vals.list[[i]] = exp(-piecewise.integrated.lambda.vals.list[[i]])}
 	
 	### PRELIMINARY FORMULAE ###
+			
+	steady.state = n*mu.vals[1]/(alpha + lambda.vals[1])
+	hg.b = c(sort(unique(c(mu.breaks, lambda.breaks))),duration)
+	hg.a = c(0,hg.b[-length(hg.b)])
+	phi.const = (sapply(hg.a,mu)*exp(sapply(hg.a,piecewise.integrated.lambda))*(exp(alpha*hg.b)-exp(alpha*hg.a + sapply(hg.a,lambda)*(hg.b-hg.a))))/(alpha - sapply(hg.a,lambda))
+	phi.sums = function(t){return(sum(c(0,phi.const)[1:(sum(hg.a <= t))]))}	
+	phi.partial = function(t){a = max(hg.a[hg.a <= t]);return((sapply(a,mu)*exp(sapply(a,piecewise.integrated.lambda))*(exp(alpha*t)-exp(alpha*a + sapply(a,lambda)*(t-a))))/(alpha - sapply(a,lambda)))}
+	phi.vals = sapply(sq,phi.partial) + sapply(sq,phi.sums)
 	
-	first.vals = exp(-piecewise.integrated.lambda.vals)
-	first.vals.list = list()
-	ini = 0
-	for (i in 1:(duration/lab.duration)){first.vals.list[[i]] = piecewise.integrated.lambda.vals[((i*lab.duration-lab.duration):(i*lab.duration))+1] - ini;ini = piecewise.integrated.lambda.vals[i*lab.duration+1]}
-	for (i in 1:(duration/lab.duration)){first.vals.list[[i]] = exp(-first.vals.list[[i]])}
-	second.vals = apply(as.matrix(sq),1,ncells)*mu.vals/(alpha + lambda.vals)
-	unlabeled.vals = first.vals*second.vals[1]
-	forthird = function(t){return(ncells(t)*mu(t)*exp(piecewise.integrated.lambda(t)))}
-	third = function(i,t){return(integrate(Vectorize(forthird),i,t,subdivisions=10,stop.on.error=FALSE)$value)}
-	third.partial.vals = Vectorize(third)(sq[-length(sq)],sq[-length(sq)]+1)
-	third.vals = c(0,cumsum(third.partial.vals))
-	total.vals = first.vals*(second.vals[1] + third.vals)
-	
+	total.vals = exp(-piecewise.integrated.lambda.vals)*(steady.state + n*phi.vals)
+	unlabeled.vals = exp(-piecewise.integrated.lambda.vals)*steady.state
+			
 	### THE "TRUE" AMOUNT OF TOTAL RNA (Cgrt) ###
 	
 	truetotal = total.vals[sparsesq+1]
@@ -71,7 +73,7 @@ DTA.dynamic.singlegenerate = function(
 	
 	unlabeled.vals.list = list()
 	for (i in 1:(duration/lab.duration)){
-		unlabeled.vals.list[[i]] = first.vals.list[[i]]*total.vals[(i*lab.duration-lab.duration)+1]
+		unlabeled.vals.list[[i]] = piecewise.integrated.lambda.vals.list[[i]]*total.vals[(i*lab.duration-lab.duration)+1]
 	}
 	trueunlabeled = sapply(unlabeled.vals.list,c)[lab.duration+1,]
 	
@@ -82,7 +84,7 @@ DTA.dynamic.singlegenerate = function(
 	for (i in 1:(duration/lab.duration)){
 		labeled.vals.list[[i]] = total.vals[((i*lab.duration-lab.duration):(i*lab.duration))+1] - unlabeled.vals.list[[i]]
 	}
-	truelabeled = truetotal[-1] - trueunlabeled	
+	truelabeled = truetotal[-1] - trueunlabeled
 	
 	### PLOT TIME COURSE (if plots = TRUE) ###
 	
@@ -218,11 +220,11 @@ DTA.dynamic.generate = function(
 		}
 	} else {truesynthesisrates = rf(nrgenes,5,5)*mediantime.synthesisrates}
 	names(truesynthesisrates) = genenames
-		
+	
 	### CREATE PHENOMAT ###
 	
 	phenomat = DTA.phenomat(timepoints,timecourse = 1:nrtimepoints)
-
+	
 	### CREATE MATRICES ###
 	
 	valsmat = matrix(0,ncol=nrexperiments,nrow=nrgenes)
@@ -237,7 +239,7 @@ DTA.dynamic.generate = function(
 	truedecayrateaveragedmat = valsmat
 	
 	### MU AND LAMBDA BREAKS AND CHANGES ###
-
+	
 	if (is.null(mu.values.mat)){mu.values.mat = cbind(truesynthesisrates)}
 	if (is.null(lambda.values.mat)){lambda.values.mat = cbind(truelambdas)}
 	
@@ -265,7 +267,7 @@ DTA.dynamic.generate = function(
 	truebrbyar = numeric(nrexperiments)
 	trueLasymptote = numeric(nrexperiments)
 	trueUasymptote = numeric(nrexperiments)
-		
+	
 	### LABELED RNA THAT UNSPECIFICALLY ENDS UP IN UNLABELED ### 
 	
 	if (unspec.LtoU.weighted){weights.LtoU = tnumber/max(tnumber) - median(tnumber/max(tnumber)) + 1} else {weights.LtoU = 1}
@@ -277,7 +279,7 @@ DTA.dynamic.generate = function(
 	unspecU = Bgrtmat * unspecific.UtoL * weights.UtoL
 	
 	### THE AMOUNT OF MEASURED TOTAL RNA (Tg) ###
-			
+	
 	Tgmat = apply(Cgrtmat,2,function(x){rnorm(length(x),mean=x,sd=x*sdnoise)})
 	rownames(Tgmat) = genenames
 	
@@ -310,10 +312,10 @@ DTA.dynamic.generate = function(
 	truebrbyar = apply(Agrtmat,2,median)/apply(Bgrtmat,2,median)
 	trueLasymptote = log(truecrbyar*apply(Agrtmat/Cgrtmat,2,median))
 	trueUasymptote = log(truecrbybr*apply(Bgrtmat/Cgrtmat,2,median))
-
+	
 	datamat = cbind(Tgmat,Lgmat,Ugmat)
 	colnames(datamat) = rownames(phenomat)
-
+	
 	### RETURN RESULTS IN A LIST ###
 	
 	results = list()
@@ -338,5 +340,6 @@ DTA.dynamic.generate = function(
 	results[["trueUasymptote"]] = trueUasymptote
 	return(results)
 }
+
 
 

@@ -17,8 +17,8 @@ DTA.map.it(mat,map = NULL,check = TRUE)
 ### Measurement of genome-wide RNA synthesis and decay rates with Dynamic Transcriptome Analysis (DTA/cDTA). Bioinformatics, in revision.
 }
 \references{
-M. Sun, B. Schwalb, D. Schulz, N. Pirkl, L. Lariviere, K. Maier, A. Tresch, P. Cramer. Mutual feedback between mRNA synthesis and degradation buffers transcript levels in a eukaryote. Genome Research, in revision.
-B. Schwalb, B. Zacher, S. Duemcke, D. Martin, P. Cramer, A. Tresch. Measurement of genome-wide RNA synthesis and decay rates with Dynamic Transcriptome Analysis (DTA/cDTA). Bioinformatics, in revision. 
+M. Sun, B. Schwalb, D. Schulz, N. Pirkl, L. Lariviere, K. Maier, A. Tresch, P. Cramer. Mutual feedback between mRNA synthesis and degradation buffers transcript levels in a eukaryote. Under review.
+B. Schwalb, B. Zacher, S. Duemcke, D. Martin, P. Cramer, A. Tresch. Measurement of genome-wide RNA synthesis and decay rates with Dynamic Transcriptome Analysis (DTA/cDTA). Bioinformatics. 
 }
 \keyword{utilities}
 

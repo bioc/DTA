@@ -3,7 +3,7 @@
 \title{Estimation of synthesis and decay rates}
 \description{DTA.estimate uses an experiment, given by a phenotype matrix, data matrix and the number of uridines for each gene to estimate synthesis and decay rate of the genes.}
 \usage{
-DTA.estimate(phenomat = NULL,datamat = NULL,tnumber = NULL,reliable = NULL,ccl = NULL,mRNAs = NULL,mediancenter = TRUE,usefractions = "LandT",LtoTratio = NULL,ratiomethod = "tls",largest = 5,weighted = TRUE,relevant = NULL,upper = 700,lower = 500,error = FALSE,bicor = TRUE,check = TRUE,condition = "",save.plots = FALSE,resolution = 1,notinR = FALSE,RStudio = FALSE,folder = NULL,fileformat = "jpeg",totaloverwt = 1,simulation = FALSE,sim.object = NULL)
+DTA.estimate(phenomat = NULL,datamat = NULL,tnumber = NULL,reliable = NULL,ccl = NULL,mRNAs = NULL,mediancenter = TRUE,usefractions = "LandT",LtoTratio = NULL,ratiomethod = "tls",largest = 5,weighted = TRUE,relevant = NULL,upper = 700,lower = 500,error = TRUE,samplesize = 1000,confidence.range = c(0.025,0.975),bicor = TRUE,check = TRUE,condition = "",save.plots = FALSE,resolution = 1,notinR = FALSE,RStudio = FALSE,folder = NULL,fileformat = "jpeg",totaloverwt = 1,simulation = FALSE,sim.object = NULL)
 }
 \arguments{
   \item{phenomat}{A phenotype matrix, containing the design of the experiment as produced by \code{DTA.phenomat}. Columns are name, fraction (U=unlabebeld, L=labeled, T=total), time and nr (=replicate number). Rows represent individual experiments.}
@@ -20,7 +20,9 @@ DTA.estimate(phenomat = NULL,datamat = NULL,tnumber = NULL,reliable = NULL,ccl =
   \item{weighted}{Should the regression be weighted with 1/(Total^2 + median(Total))?}
   \item{relevant}{Choose the arrays to be used for halflives calculation, vector due to nr (=replicate number) in phenomat. If not set, all arrays are used.}
   \item{check}{If check = TRUE, control messages and plots will be generated.}
-  \item{error}{Should the standard deviations and coefficients of variation be calculated?}
+  \item{error}{If TRUE, the measurement error is assessed by means of an error model and resampling to gain confidence regions.}
+  \item{samplesize}{Error model samplesize for resampling.}
+  \item{confidence.range}{Confidence region for error model as quantiles. Interval should be between 0 and 1.}
   \item{bicor}{Should the labeling bias be corrected?}
   \item{condition}{String, to be added to the plotnames if saved.}
   \item{upper}{Upper bound for labeling bias estimation. For details, see supplemental material of Sun et al. (see references).}
@@ -44,31 +46,26 @@ DTA.estimate(phenomat = NULL,datamat = NULL,tnumber = NULL,reliable = NULL,ccl =
   \item{LtoUratio}{Estimated ratio of labeled to unlabeled fraction.}
   \item{correcteddatamat}{Labeling bias corrected data matrix.}
   \item{drmat}{Decay rates for each replicate. The last column gives the median decay rates.}
-  \item{hlmat}{Half-lives for each replicate. The last column gives the median half-lifes.}
   \item{dr}{Median decay rates. The last column of drmat.}
+  \item{dr.confidence}{Confidence regions of decay rates.}
+  \item{hlmat}{Half-lives for each replicate. The last column gives the median half-lifes.}
   \item{hl}{Median half-lives. The last column of hlmat.}
-  \item{dr.sd}{Standard deviations of decay rates.}
-  \item{dr.cv}{Coefficients of variation of decay rates.}
-  \item{hl.sd}{Standard deviations of half-lives.}
-  \item{hl.cv}{Coefficients of variation of half-lives.}
+  \item{hl.confidence}{Confidence regions of half-lives.}
   \item{TEmat}{Total expression for each replicate. The last column gives the median total expression values.}
   \item{TE}{Median total expression values. The last column of TEmat.}
-  \item{TE.sd}{Standard deviations of total expression values.}
-  \item{TE.cv}{Coefficients of variation of total expression values.}
+  \item{TE.confidence}{Confidence regions of total expression values.}
   \item{LEmat}{Labeled expression for each replicate. The last column gives the median labeled expression values.}
   \item{LE}{Median labeled expression values. The last column of LEmat.}
-  \item{LE.sd}{Standard deviations of labeled expression values.}
-  \item{LE.cv}{Coefficients of variation of labeled expression values.}
+  \item{LE.confidence}{Confidence regions of labeled expression values.}
   \item{UEmat}{Unlabeled expression for each replicate. The last column gives the median unlabeled expression values. (Only if unlabeled values exist in the experiment)}
   \item{UE}{Median unlabeled expression values. The last column of UEmat. (Only if unlabeled values exist in the experiment)}
-  \item{UE.sd}{Standard deviations of unlabeled expression values.}
-  \item{UE.cv}{Coefficients of variation of unlabeled expression values.}
+  \item{UE.confidence}{Confidence regions of unlabeled expression values.}
   \item{srmat}{Synthesis rates for each replicate. The last column gives the median synthesis rates.}
   \item{sr}{Median synthesis rates. The last column of srmat.}
-  \item{sr.sd}{Standard deviations of synthesis rates.}
-  \item{sr.cv}{Coefficients of variation of synthesis rates.}
+  \item{sr.confidence}{Confidence regions of synthesis rates.}
   \item{LTmat}{Labeled to total ratio for each replicate. The last column gives the median labeled to total ratios.}
   \item{LT}{Median labeled to total ratios. The last column of LTmat.}
+  \item{LT.confidence}{Confidence regions of labeled to total ratios.}
   \item{UTmat}{Unlabeled to total ratio for each replicate. The last column gives the median unlabeled to total ratios.}
   \item{UT}{Median unlabeled to total ratios. The last column of UTmat.}
   \item{Rsrmat}{Rescaled synthesis rates for each replicate, if parameter \code{mRNAs} is specified. The last column gives the median synthesis rates.}
@@ -79,8 +76,8 @@ DTA.estimate(phenomat = NULL,datamat = NULL,tnumber = NULL,reliable = NULL,ccl =
 }
 \references{
 C. Miller, B. Schwalb, K. Maier, D. Schulz, S. Duemcke, B. Zacher, A. Mayer, J. Sydow, L. Marcinowski, L. Doelken, D. E. Martin, A. Tresch, and P. Cramer. Dynamic transcriptome analysis measures rates of mRNA synthesis and decay in yeast. Mol Syst Biol, 7:458, 2011.
-M. Sun, B. Schwalb, D. Schulz, N. Pirkl, L. Lariviere, K. Maier, A. Tresch, P. Cramer. Mutual feedback between mRNA synthesis and degradation buffers transcript levels in a eukaryote. Genome Research, in revision.
-B. Schwalb, B. Zacher, S. Duemcke, D. Martin, P. Cramer, A. Tresch. Measurement of genome-wide RNA synthesis and decay rates with Dynamic Transcriptome Analysis (DTA/cDTA). Bioinformatics, in revision. 
+M. Sun, B. Schwalb, D. Schulz, N. Pirkl, L. Lariviere, K. Maier, A. Tresch, P. Cramer. Mutual feedback between mRNA synthesis and degradation buffers transcript levels in a eukaryote. Under review.
+B. Schwalb, B. Zacher, S. Duemcke, D. Martin, P. Cramer, A. Tresch. Measurement of genome-wide RNA synthesis and decay rates with Dynamic Transcriptome Analysis (DTA/cDTA). Bioinformatics. 
 }
 \author{Bjoern Schwalb \email{schwalb@lmb.uni-muenchen.de}}
 \seealso{
@@ -90,9 +87,9 @@ B. Schwalb, B. Zacher, S. Duemcke, D. Martin, P. Cramer, A. Tresch. Measurement 
 dataPath = system.file("data", package="DTA")
 load(file.path(dataPath, "Miller2011.RData"))
 
-res = DTA.estimate(Sc.phenomat,Sc.datamat,Sc.tnumber,ccl = 150,mRNAs = 60000,reliable = Sc.reliable)
+### for control plots set 'check = TRUE' ###
 
-dev.off()
+res = DTA.estimate(Sc.phenomat,Sc.datamat,Sc.tnumber,ccl = 150,mRNAs = 60000,reliable = Sc.reliable,check = FALSE)
 }
 \keyword{methods}
 

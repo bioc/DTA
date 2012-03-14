@@ -10,6 +10,6 @@ Ensembl gene IDs, that passed certain criteria among the Saccharomyces Cerevisia
 Vector of Ensembl gene IDs that can be passed to \code{DTA.estimate} for parameter estimation.
 }
 \source{
-M. Sun, B. Schwalb, D. Schulz, N. Pirkl, L. Lariviere, K. Maier, A. Tresch, P. Cramer. Mutual feedback between mRNA synthesis and degradation buffers transcript levels in a eukaryote. Genome Research, in revision.
+M. Sun, B. Schwalb, D. Schulz, N. Pirkl, L. Lariviere, K. Maier, A. Tresch, P. Cramer. Mutual feedback between mRNA synthesis and degradation buffers transcript levels in a eukaryote. Under review.
 }
 \keyword{datasets}

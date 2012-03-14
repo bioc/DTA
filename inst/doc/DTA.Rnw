@@ -27,7 +27,7 @@
 Total RNA levels in a cell are the consequence of two opposing mechanisms, namely RNA synthesis and RNA degradation. DTA allows monitoring these contributions in a non-perturbing manner. It is provided with a kinetic modeling approach capable of the precise determination of synthesis- and decay rates, which is implemented in this package (see supplementary methods in \cite{miller:2011}).
 DTA can be applied to reveal rate changes for all kinds of perturbations, e.g. in knock-out or point mutation strains, as responses to stress stimuli or in small molecule interfering assays like treatments through miRNA or siRNA inhibitors.\\
 The experimental setup for DTA requires culturing cells in the presence of a labeling substrate (e.g. 4 thiouridine (4sU) or 4 thiouracil (4tU)) for a certain amount of time. Until the extraction of the RNA samples, the analogous (labeling) substrate will be incorporated into newly transcribed RNA. This setup yields three types of RNA fractions: total cellular RNA, newly transcribed labeled RNA and pre-existing unlabeled RNA. All three fractions can subsequently be quantified through gene expression profiling on microarrays or next generation sequencing (RNAseq).\\
-The \Rpackage{DTA} package implements methods to process a given DTA experiment (total (T), labeled (L) and unlabeled (U) RNA measurements) and derive RNA synthesis and decay rate estimates. The package \Rpackage{DTA} is broadly applicable to virtually every organism. This manual is a hands-on tutorial and describes all functions and R commands that are required. The method is applied to real and synthetic data. Important quality control plots to prove the reliability of the data and the estimation are discussed throughout this manual. For details on the theoretical background and a thorough description of the experimental design, we refer the reader to \cite{miller:2011} (supplementary methods).
+The \Rpackage{DTA} package implements methods to process a given DTA experiment (total (T), labeled (L) and unlabeled (U) RNA measurements) and derive RNA synthesis and decay rate estimates. The package \Rpackage{DTA} is broadly applicable to virtually every organism. This manual is a hands-on tutorial and describes all functions and R commands that are required. The method is applied to real and synthetic data. Important quality control plots and error assessment to prove the reliability of the data and the estimation are discussed throughout this manual. For details on the theoretical background and a thorough description of the experimental design, we refer the reader to \cite{miller:2011} (supplementary methods).
 
 \section{Estimation of synthesis and decay rates in steady state (\Rfunction{DTA.estimate})}
 This section illustrates the function \Rfunction{DTA.estimate}, which calculates steady state mRNA synthesis and decay rates from measurements of individual labeling durations using a first order exponential decay model, which is described in \cite{miller:2011}. Before starting, the package library must be loaded by typing:
@@ -84,7 +84,8 @@ xlab="gene-wise median of total samples")
 hist(Total[Total >= 5],breaks = seq(0,ceiling(max(Total)),1/4),
 col = "#08306B",add = TRUE)
 }
-DTA.plot.it(filename = "histogram_cut_off",plotsfkt = plotsfkt,saveit = TRUE,notinR = TRUE)
+DTA.plot.it(filename = "histogram_cut_off",plotsfkt = plotsfkt,
+saveit = TRUE,notinR = TRUE)
 @
 
 \begin{figure}[htp]
@@ -165,6 +166,15 @@ By default, \Rfunction{DTA.estimate} also generates pairwise scatterplots of 1-c
 \label{figure:corscatter}
 \end{figure}
 
+By default, \Rfunction{DTA.estimate} also assesses the measurement errors of all available replicates (see Figure \ref{figure:errorassessment}). The empirical standard deviation can be regularized if the number of replicate measurements is low. This regularized standard deviation can subsequently be used to calculate confidence regions of the extracted rates via resampling.
+
+\begin{figure}[htp]
+  \centering
+\includegraphics[width=15cm]{error_assessment_TE_real_data_6.jpeg}
+\caption{Left: Figure shows the gene-wise mean log(expression value) (x-axis) versus its standard deviation (y-axis), and the corresponding loess curve (black line). The red density (resp. histogram) shows the gamma distributed residuals (loess). Based on the variance of the red distribution the gene-wise standard deviation can be regularized if the number of replicate measurements is low. Right: The empirical versus the regularized standard deviation.}
+\label{figure:errorassessment}
+\end{figure}
+
 The object \Robject{res} - created by \Rfunction{DTA.estimate} - is a list, where each entry contains the estimation results for one of the labeling durations. 
 
 <<Entries of res, echo=TRUE, eval=TRUE>>=
@@ -193,11 +203,13 @@ par(mai = c(1.1,1.1,1.3,0.7))
 x=res[["6"]][["hl"]][c(Sc.reliable,Sc.rpg.ensg)]
 y=res[["6"]][["Rsr"]][c(Sc.reliable,Sc.rpg.ensg)]
 ellipsescatter(x,y,
-groups=list("Stress"=Sc.stress.ensg,"RiBi-genes"=Sc.ribig.ensg,"Rp-genes"=Sc.rpg.ensg,"TF"=Sc.tf.ensg),
-colors=c("darkred","darkgreen","darkblue","grey20"),
+groups = list("Stress"=Sc.stress.ensg,"RiBi-genes"=Sc.ribig.ensg,
+"Rp-genes"=Sc.rpg.ensg,"TF"=Sc.tf.ensg),
+colors = c("darkred","darkgreen","darkblue","grey20"),
 xlim=c(0,150),ylim=c(0,600),xlab="half-lives",ylab="synthesis rates",
 cex.main=1.5,cex.lab=1.25,cex.axis=1.125,main="Ellipsescatter")}
-DTA.plot.it(filename = "ellipse_scatter",plotsfkt = plotsfkt,saveit = TRUE,notinR = TRUE)
+DTA.plot.it(filename = "ellipse_scatter",plotsfkt = plotsfkt,
+saveit = TRUE,notinR = TRUE)
 @
 
 \begin{figure}[htp]
@@ -292,9 +304,10 @@ data(Miller2011dynamic)
 For the actual analysis use the following command. There are some additional parameters opposed to the steady state case. For a more detailed explanation of the function output, see the \Rfunction{DTA.dynamic.estimate} help page.
 
 <<Estimation procedure, echo=TRUE, eval=TRUE, results=hide>>=
-timecourse.res = DTA.dynamic.estimate(Sc.phenomat.dynamic,Sc.datamat.dynamic,Sc.tnumber,
-ccl = 150,mRNAs = 60000,reliable = Sc.reliable.dynamic,LtoTratio = rep(0.1,7),
-save.plots = TRUE,notinR = TRUE,folder = ".",condition = "timecourse")
+timecourse.res = DTA.dynamic.estimate(Sc.phenomat.dynamic,Sc.datamat.dynamic,
+Sc.tnumber,ccl = 150,mRNAs = 60000,reliable = Sc.reliable.dynamic,
+LtoTratio = rep(0.1,7),save.plots = TRUE,notinR = TRUE,folder = ".",
+condition = "timecourse")
 @
 
 Figure \ref{figure:drfcvssrfc} shows the dynamics of synthesis and decay rates in the osmotic stress time series. Each point corresponds to one gene, which is colored according to its affiliation with one of 5 clusters chosen according to the rankgain given for the timepoint defined by \Robject{ranktime} (last timepoint by default) compared to the first timepoint.
@@ -344,7 +357,6 @@ lambda.breaks.mat = cbind(rep(12,nrgenes),rep(18,nrgenes),rep(27,nrgenes))
 timecourse.sim.object = DTA.dynamic.generate(duration = 36,lab.duration = 6,
 nrgenes = nrgenes,mu.values.mat = mu.values.mat,mu.breaks.mat = mu.breaks.mat,
 lambda.values.mat = lambda.values.mat,lambda.breaks.mat = lambda.breaks.mat)
-
 @
 
 The output of the function is a list, containing a \Robject{phenomat} and \Robject{datamat} object. These are formatted as described in the previous chapter. Furthermore, all parameters used for the simulation are exported into the result \Rclass{list}.
@@ -404,7 +416,7 @@ bicor = FALSE)
 @
 
 \section{Concluding Remarks}
-The package \Rpackage{DTA} implements methods for Dynamic Transcriptome Analysis (DTA). RNA synthesis and decay rate estimates can be inferred from pre-processed microarray or RNAseq experiments. The procedures generate a series of valuable quality control plots to assess the reliability of the data and the quality of the resulting DR/SR estimates. Functions for data simulation enable the user to test the methods on synthetic data sets. \\
+The package \Rpackage{DTA} implements methods for Dynamic Transcriptome Analysis (DTA). RNA synthesis and decay rate estimates can be inferred from pre-processed microarray or RNAseq experiments. The procedures generate a series of valuable quality control plots to assess the reliability and the error of the data and the quality and confidence of the resulting DR/SR estimates. Functions for data simulation enable the user to test the methods on synthetic data sets. \\
 \Rpackage{DTA} builds upon the R package \Rpackage{LSD} \cite{schwalb:2011} which provides the ability to depict it's outcome in a superior manner. Data can be illustrated in a plethora of variations to unveil it's underlying structure.\\
 
 This vignette was generated using the following package versions:

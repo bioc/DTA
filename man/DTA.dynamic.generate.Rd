@@ -64,12 +64,12 @@ DTA.dynamic.generate returns a list, containing the following entries
 }
 \references{
 C. Miller, B. Schwalb, K. Maier, D. Schulz, S. Duemcke, B. Zacher, A. Mayer, J. Sydow, L. Marcinowski, L. Dolken, D. E. Martin, A. Tresch, and P. Cramer. Dynamic transcriptome analysis measures rates of mRNA synthesis and decay in yeast. Mol Syst Biol, 7:458, 2011.
-M. Sun, B. Schwalb, D. Schulz, N. Pirkl, L. Lariviere, K. Maier, A. Tresch, P. Cramer. Mutual feedback between mRNA synthesis and degradation buffers transcript levels in a eukaryote. Genome Research, in revision.
-B. Schwalb, B. Zacher, S. Duemcke, D. Martin, P. Cramer, A. Tresch. Measurement of genome-wide RNA synthesis and decay rates with Dynamic Transcriptome Analysis (DTA/cDTA). Bioinformatics, in revision.
+M. Sun, B. Schwalb, D. Schulz, N. Pirkl, L. Lariviere, K. Maier, A. Tresch, P. Cramer. Mutual feedback between mRNA synthesis and degradation buffers transcript levels in a eukaryote. Under review.
+B. Schwalb, B. Zacher, S. Duemcke, D. Martin, P. Cramer, A. Tresch. Measurement of genome-wide RNA synthesis and decay rates with Dynamic Transcriptome Analysis (DTA/cDTA). Bioinformatics.
 }
 \author{Bjoern Schwalb \email{schwalb@lmb.uni-muenchen.de}}
 \examples{
-nrgenes = 1000
+nrgenes = 5000
 truesynthesisrates = rf(nrgenes,5,5)*18
 steady = rep(1,nrgenes)
 shock = 1/pmax(rnorm(nrgenes,mean = 8,sd = 4),1)
@@ -83,12 +83,12 @@ changes.mat = cbind(steady,shock,shock*induction,steady)
 lambda.values.mat = changes.mat*truelambdas
 lambda.breaks.mat = cbind(rep(12,nrgenes),rep(18,nrgenes),rep(27,nrgenes))
 
-# it takes 2 min to build sim.object
+### it takes several min to build sim.object (depends on the number of genes 'nrgenes') ###
 
 sim.object = DTA.dynamic.generate(duration = 36,lab.duration = 6,nrgenes = nrgenes,mu.values.mat = mu.values.mat,mu.breaks.mat = mu.breaks.mat,lambda.values.mat = lambda.values.mat,lambda.breaks.mat = lambda.breaks.mat)
 
-res = DTA.dynamic.estimate(simulation = TRUE,sim.object = sim.object,check = FALSE)
+### for control plots set 'check = TRUE' ###
 
-dev.off()
+res = DTA.dynamic.estimate(simulation = TRUE,sim.object = sim.object,check = FALSE)
 }
 \keyword{datagen}
