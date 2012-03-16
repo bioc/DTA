@@ -575,19 +575,39 @@ DTA.singleestimate = function(phenomat, 	# phenotype matrix, "nr" should be numb
 	
 	### L/T ###
 	
+	LtoTmat = as.matrix(calcdatamat[,phenomat[which(phenomat[,"fraction"] == "L"),"name"]])
+	if (ncol(as.matrix(LtoTmat)) == ncol(as.matrix(initials))) {LtoTmat = as.matrix(LtoTmat/initials)} else {LtoTmat = as.matrix(LtoTmat/apply(initials,1,median))}
+	colnames(LtoTmat) = phenomat[which(phenomat[,"fraction"] == "T"),"name"]
+	LtoTmat = cbind(LtoTmat,median = apply(as.matrix(LtoTmat[,phenomatrelevant[which(phenomatrelevant[,"fraction"] == "T"),"name"]]),1,median))
+	if (mediancenter){LtoTmat = medctr(LtoTmat,reliable,logscale = FALSE,protocol = FALSE)}
+	nrexp = ncol(LtoTmat)
+	results[["LtoTmat"]] = LtoTmat
+	LtoT = LtoTmat[,nrexp]
+	results[["LtoT"]] = LtoT
+	
 	LTmat = as.matrix(calcdatamat[,phenomat[which(phenomat[,"fraction"] == "T"),"name"]]-calcdatamat[,phenomat[which(phenomat[,"fraction"] == "L"),"name"]])
 	if (ncol(as.matrix(LTmat)) == ncol(as.matrix(initials))) {LTmat = as.matrix(LTmat/initials)} else {LTmat = as.matrix(LTmat/apply(initials,1,median))}
 	colnames(LTmat) = phenomat[which(phenomat[,"fraction"] == "T"),"name"]
-	LTmat = cbind(LTmat,median = apply(as.matrix(LTmat),1,median))
+	LTmat = cbind(LTmat,median = apply(as.matrix(LTmat[,phenomatrelevant[which(phenomatrelevant[,"fraction"] == "T"),"name"]]),1,median))
 	if (mediancenter){LTmat = medctr(LTmat,reliable,logscale = FALSE,protocol = FALSE)}
 	
 	### U/T ###
 	
 	if (unlabeledfraction){
+		UtoTmat = as.matrix(calcdatamat[,phenomat[which(phenomat[,"fraction"] == "U"),"name"]])
+		if (ncol(as.matrix(UtoTmat)) == ncol(as.matrix(initials))) {UtoTmat = as.matrix(UtoTmat/initials)} else {UtoTmat = as.matrix(UtoTmat/apply(initials,1,median))}
+		colnames(UtoTmat) = phenomat[which(phenomat[,"fraction"] == "T"),"name"]
+		UtoTmat = cbind(UtoTmat,median = apply(as.matrix(UtoTmat[,phenomatrelevant[which(phenomatrelevant[,"fraction"] == "T"),"name"]]),1,median))
+		if (mediancenter){UtoTmat = medctr(UtoTmat,reliable,logscale = FALSE,protocol = FALSE)}
+		nrexp = ncol(UtoTmat)
+		results[["UtoTmat"]] = UtoTmat
+		UtoT = UtoTmat[,nrexp]
+		results[["UtoT"]] = UtoT
+		
 		UTmat = as.matrix(calcdatamat[,phenomat[which(phenomat[,"fraction"] == "U"),"name"]])
 		if (ncol(as.matrix(UTmat)) == ncol(as.matrix(initials))) {UTmat = as.matrix(UTmat/initials)} else {UTmat = as.matrix(UTmat/apply(initials,1,median))}
 		colnames(UTmat) = phenomat[which(phenomat[,"fraction"] == "T"),"name"]
-		UTmat = cbind(UTmat,median = apply(as.matrix(UTmat),1,median))
+		UTmat = cbind(UTmat,median = apply(as.matrix(UTmat[,phenomatrelevant[which(phenomatrelevant[,"fraction"] == "T"),"name"]]),1,median))
 		if (mediancenter){UTmat = medctr(UTmat,reliable,logscale = FALSE,protocol = FALSE)}
 	}
 	
@@ -1268,11 +1288,12 @@ DTA.singleestimate = function(phenomat, 	# phenotype matrix, "nr" should be numb
 					cat("Calculating confidence intervals ... \n")
 					possible = names(dr[!is.na(dr)])
 					possible.mat = cbind(TEmat.norm.mean[possible],TEmat.norm.sd[possible],LEmat.norm.mean[possible],LEmat.norm.sd[possible],TImat.norm.mean[possible],TImat.norm.sd[possible])
-					conf.ints = t(apply(possible.mat,1,function(x){TE = rnorm(samplesize,mean=x[1],sd=x[2]);LE = rnorm(samplesize,mean=x[3],sd=x[4]);TI = rnorm(samplesize,mean=x[5],sd=x[6]);options(warn = -1);dr = - alpha - ((1/labelingtime)*log((exp(TE) - exp(LE))/exp(TI)));options(warn = 0);dr[which(dr <= 0)] = NA;hl = log(2)/dr;sr = LE*(alpha + dr)/(exp(alpha*labelingtime)-exp(-dr*labelingtime));TE.quantiles = quantile(exp(TE),confidence.range,na.rm = TRUE);LE.quantiles = quantile(exp(LE),confidence.range,na.rm = TRUE);TI.quantiles = quantile(exp(TI),confidence.range,na.rm = TRUE);LT.quantiles = quantile((exp(TE) - exp(LE))/exp(TI),confidence.range,na.rm = TRUE);dr.quantiles = quantile(dr,confidence.range,na.rm = TRUE);hl.quantiles = quantile(hl,confidence.range,na.rm = TRUE);sr.quantiles = quantile(sr,confidence.range,na.rm = TRUE);c("TE" = paste(signif(TE.quantiles[1],3),"-",signif(TE.quantiles[2],3)),"LE" = paste(signif(LE.quantiles[1],3),"-",signif(LE.quantiles[2],3)),"TI" = paste(signif(TI.quantiles[1],3),"-",signif(TI.quantiles[2],3)),"LT" = paste(signif(LT.quantiles[1],3),"-",signif(LT.quantiles[2],3)),"dr" = paste(signif(dr.quantiles[1],3),"-",signif(dr.quantiles[2],3)),"hl" = paste(signif(hl.quantiles[1],3),"-",signif(hl.quantiles[2],3)),"sr" = paste(signif(sr.quantiles[1],3),"-",signif(sr.quantiles[2],3)))}))
+					conf.ints = t(apply(possible.mat,1,function(x){TE = rnorm(samplesize,mean=x[1],sd=x[2]);LE = rnorm(samplesize,mean=x[3],sd=x[4]);TI = rnorm(samplesize,mean=x[5],sd=x[6]);options(warn = -1);dr = - alpha - ((1/labelingtime)*log((exp(TE) - exp(LE))/exp(TI)));options(warn = 0);dr[which(dr <= 0)] = NA;hl = log(2)/dr;sr = LE*(alpha + dr)/(exp(alpha*labelingtime)-exp(-dr*labelingtime));TE.quantiles = quantile(exp(TE),confidence.range,na.rm = TRUE);LE.quantiles = quantile(exp(LE),confidence.range,na.rm = TRUE);TI.quantiles = quantile(exp(TI),confidence.range,na.rm = TRUE);LT.quantiles = quantile((exp(TE) - exp(LE))/exp(TI),confidence.range,na.rm = TRUE);LtoT.quantiles = quantile(exp(LE)/exp(TI),confidence.range,na.rm = TRUE);dr.quantiles = quantile(dr,confidence.range,na.rm = TRUE);hl.quantiles = quantile(hl,confidence.range,na.rm = TRUE);sr.quantiles = quantile(sr,confidence.range,na.rm = TRUE);c("TE" = paste(signif(TE.quantiles[1],3),"-",signif(TE.quantiles[2],3)),"LE" = paste(signif(LE.quantiles[1],3),"-",signif(LE.quantiles[2],3)),"TI" = paste(signif(TI.quantiles[1],3),"-",signif(TI.quantiles[2],3)),"LT" = paste(signif(LT.quantiles[1],3),"-",signif(LT.quantiles[2],3)),"LtoT" = paste(signif(LtoT.quantiles[1],3),"-",signif(LtoT.quantiles[2],3)),"dr" = paste(signif(dr.quantiles[1],3),"-",signif(dr.quantiles[2],3)),"hl" = paste(signif(hl.quantiles[1],3),"-",signif(hl.quantiles[2],3)),"sr" = paste(signif(sr.quantiles[1],3),"-",signif(sr.quantiles[2],3)))}))
 					results[["TE.confidence"]] = conf.ints[,"TE"]
 					results[["LE.confidence"]] = conf.ints[,"LE"]
 					results[["TI.confidence"]] = conf.ints[,"TI"]
 					results[["LT.confidence"]] = conf.ints[,"LT"]
+					results[["LtoT.confidence"]] = conf.ints[,"LtoT"]
 					results[["dr.confidence"]] = conf.ints[,"dr"]
 					results[["hl.confidence"]] = conf.ints[,"hl"]
 					results[["sr.confidence"]] = conf.ints[,"sr"]
@@ -1280,10 +1301,11 @@ DTA.singleestimate = function(phenomat, 	# phenotype matrix, "nr" should be numb
 					cat("Calculating confidence intervals ... \n")
 					possible = names(dr[!is.na(dr)])
 					possible.mat = cbind(TEmat.norm.mean[possible],TEmat.norm.sd[possible],LEmat.norm.mean[possible],LEmat.norm.sd[possible])
-					conf.ints = t(apply(possible.mat,1,function(x){TE = rnorm(samplesize,mean=x[1],sd=x[2]);LE = rnorm(samplesize,mean=x[3],sd=x[4]);options(warn = -1);dr = - alpha - ((1/labelingtime)*log(1 - exp(LE)/exp(TE)));options(warn = 0);dr[which(dr <= 0)] = NA;hl = log(2)/dr;sr = LE*(alpha + dr)/(exp(alpha*labelingtime)-exp(-dr*labelingtime));TE.quantiles = quantile(exp(TE),confidence.range,na.rm = TRUE);LE.quantiles = quantile(exp(LE),confidence.range,na.rm = TRUE);LT.quantiles = quantile(1 - exp(LE)/exp(TE),confidence.range,na.rm = TRUE);dr.quantiles = quantile(dr,confidence.range,na.rm = TRUE);hl.quantiles = quantile(hl,confidence.range,na.rm = TRUE);sr.quantiles = quantile(sr,confidence.range,na.rm = TRUE);c("TE" = paste(signif(TE.quantiles[1],3),"-",signif(TE.quantiles[2],3)),"LE" = paste(signif(LE.quantiles[1],3),"-",signif(LE.quantiles[2],3)),"LT" = paste(signif(LT.quantiles[1],3),"-",signif(LT.quantiles[2],3)),"dr" = paste(signif(dr.quantiles[1],3),"-",signif(dr.quantiles[2],3)),"hl" = paste(signif(hl.quantiles[1],3),"-",signif(hl.quantiles[2],3)),"sr" = paste(signif(sr.quantiles[1],3),"-",signif(sr.quantiles[2],3)))}))
+					conf.ints = t(apply(possible.mat,1,function(x){TE = rnorm(samplesize,mean=x[1],sd=x[2]);LE = rnorm(samplesize,mean=x[3],sd=x[4]);options(warn = -1);dr = - alpha - ((1/labelingtime)*log(1 - exp(LE)/exp(TE)));options(warn = 0);dr[which(dr <= 0)] = NA;hl = log(2)/dr;sr = LE*(alpha + dr)/(exp(alpha*labelingtime)-exp(-dr*labelingtime));TE.quantiles = quantile(exp(TE),confidence.range,na.rm = TRUE);LE.quantiles = quantile(exp(LE),confidence.range,na.rm = TRUE);LT.quantiles = quantile(1 - exp(LE)/exp(TE),confidence.range,na.rm = TRUE);LtoT.quantiles = quantile(exp(LE)/exp(TE),confidence.range,na.rm = TRUE);dr.quantiles = quantile(dr,confidence.range,na.rm = TRUE);hl.quantiles = quantile(hl,confidence.range,na.rm = TRUE);sr.quantiles = quantile(sr,confidence.range,na.rm = TRUE);c("TE" = paste(signif(TE.quantiles[1],3),"-",signif(TE.quantiles[2],3)),"LE" = paste(signif(LE.quantiles[1],3),"-",signif(LE.quantiles[2],3)),"LT" = paste(signif(LT.quantiles[1],3),"-",signif(LT.quantiles[2],3)),"LtoT" = paste(signif(LtoT.quantiles[1],3),"-",signif(LtoT.quantiles[2],3)),"dr" = paste(signif(dr.quantiles[1],3),"-",signif(dr.quantiles[2],3)),"hl" = paste(signif(hl.quantiles[1],3),"-",signif(hl.quantiles[2],3)),"sr" = paste(signif(sr.quantiles[1],3),"-",signif(sr.quantiles[2],3)))}))
 					results[["TE.confidence"]] = conf.ints[,"TE"]
 					results[["LE.confidence"]] = conf.ints[,"LE"]
 					results[["LT.confidence"]] = conf.ints[,"LT"]
+					results[["LtoT.confidence"]] = conf.ints[,"LtoT"]
 					results[["dr.confidence"]] = conf.ints[,"dr"]
 					results[["hl.confidence"]] = conf.ints[,"hl"]
 					results[["sr.confidence"]] = conf.ints[,"sr"]				
@@ -1294,12 +1316,13 @@ DTA.singleestimate = function(phenomat, 	# phenotype matrix, "nr" should be numb
 					cat("Calculating confidence intervals ... \n")
 					possible = names(dr[!is.na(dr)])
 					possible.mat = cbind(TEmat.norm.mean[possible],TEmat.norm.sd[possible],LEmat.norm.mean[possible],LEmat.norm.sd[possible],UEmat.norm.mean[possible],UEmat.norm.sd[possible],TImat.norm.mean[possible],TImat.norm.sd[possible])
-					conf.ints = t(apply(possible.mat,1,function(x){TE = rnorm(samplesize,mean=x[1],sd=x[2]);LE = rnorm(samplesize,mean=x[3],sd=x[4]);UE = rnorm(samplesize,mean=x[5],sd=x[6]);TI = rnorm(samplesize,mean=x[7],sd=x[8]);options(warn = -1);dr = - alpha - ((1/labelingtime)*log(exp(UE)/exp(TI)));options(warn = 0);dr[which(dr <= 0)] = NA;hl = log(2)/dr;sr = LE*(alpha + dr)/(exp(alpha*labelingtime)-exp(-dr*labelingtime));TE.quantiles = quantile(exp(TE),confidence.range,na.rm = TRUE);LE.quantiles = quantile(exp(LE),confidence.range,na.rm = TRUE);UE.quantiles = quantile(exp(UE),confidence.range,na.rm = TRUE);TI.quantiles = quantile(exp(TI),confidence.range,na.rm = TRUE);LT.quantiles = quantile(exp(UE)/exp(TI),confidence.range,na.rm = TRUE);dr.quantiles = quantile(dr,confidence.range,na.rm = TRUE);hl.quantiles = quantile(hl,confidence.range,na.rm = TRUE);sr.quantiles = quantile(sr,confidence.range,na.rm = TRUE);c("TE" = paste(signif(TE.quantiles[1],3),"-",signif(TE.quantiles[2],3)),"LE" = paste(signif(LE.quantiles[1],3),"-",signif(LE.quantiles[2],3)),"UE" = paste(signif(UE.quantiles[1],3),"-",signif(UE.quantiles[2],3)),"TI" = paste(signif(TI.quantiles[1],3),"-",signif(TI.quantiles[2],3)),"LT" = paste(signif(LT.quantiles[1],3),"-",signif(LT.quantiles[2],3)),"dr" = paste(signif(dr.quantiles[1],3),"-",signif(dr.quantiles[2],3)),"hl" = paste(signif(hl.quantiles[1],3),"-",signif(hl.quantiles[2],3)),"sr" = paste(signif(sr.quantiles[1],3),"-",signif(sr.quantiles[2],3)))}))
+					conf.ints = t(apply(possible.mat,1,function(x){TE = rnorm(samplesize,mean=x[1],sd=x[2]);LE = rnorm(samplesize,mean=x[3],sd=x[4]);UE = rnorm(samplesize,mean=x[5],sd=x[6]);TI = rnorm(samplesize,mean=x[7],sd=x[8]);options(warn = -1);dr = - alpha - ((1/labelingtime)*log(exp(UE)/exp(TI)));options(warn = 0);dr[which(dr <= 0)] = NA;hl = log(2)/dr;sr = LE*(alpha + dr)/(exp(alpha*labelingtime)-exp(-dr*labelingtime));TE.quantiles = quantile(exp(TE),confidence.range,na.rm = TRUE);LE.quantiles = quantile(exp(LE),confidence.range,na.rm = TRUE);UE.quantiles = quantile(exp(UE),confidence.range,na.rm = TRUE);TI.quantiles = quantile(exp(TI),confidence.range,na.rm = TRUE);UT.quantiles = quantile(exp(UE)/exp(TI),confidence.range,na.rm = TRUE);UtoT.quantiles = quantile(exp(UE)/exp(TI),confidence.range,na.rm = TRUE);dr.quantiles = quantile(dr,confidence.range,na.rm = TRUE);hl.quantiles = quantile(hl,confidence.range,na.rm = TRUE);sr.quantiles = quantile(sr,confidence.range,na.rm = TRUE);c("TE" = paste(signif(TE.quantiles[1],3),"-",signif(TE.quantiles[2],3)),"LE" = paste(signif(LE.quantiles[1],3),"-",signif(LE.quantiles[2],3)),"UE" = paste(signif(UE.quantiles[1],3),"-",signif(UE.quantiles[2],3)),"TI" = paste(signif(TI.quantiles[1],3),"-",signif(TI.quantiles[2],3)),"UT" = paste(signif(UT.quantiles[1],3),"-",signif(UT.quantiles[2],3)),"UtoT" = paste(signif(UtoT.quantiles[1],3),"-",signif(UtoT.quantiles[2],3)),"dr" = paste(signif(dr.quantiles[1],3),"-",signif(dr.quantiles[2],3)),"hl" = paste(signif(hl.quantiles[1],3),"-",signif(hl.quantiles[2],3)),"sr" = paste(signif(sr.quantiles[1],3),"-",signif(sr.quantiles[2],3)))}))
 					results[["TE.confidence"]] = conf.ints[,"TE"]
 					results[["LE.confidence"]] = conf.ints[,"LE"]
 					results[["UE.confidence"]] = conf.ints[,"UE"]
 					results[["TI.confidence"]] = conf.ints[,"TI"]
-					results[["LT.confidence"]] = conf.ints[,"LT"]
+					results[["UT.confidence"]] = conf.ints[,"UT"]
+					results[["UtoT.confidence"]] = conf.ints[,"UtoT"]
 					results[["dr.confidence"]] = conf.ints[,"dr"]
 					results[["hl.confidence"]] = conf.ints[,"hl"]
 					results[["sr.confidence"]] = conf.ints[,"sr"]				
@@ -1307,11 +1330,12 @@ DTA.singleestimate = function(phenomat, 	# phenotype matrix, "nr" should be numb
 					cat("Calculating confidence intervals ... \n")
 					possible = names(dr[!is.na(dr)])
 					possible.mat = cbind(TEmat.norm.mean[possible],TEmat.norm.sd[possible],LEmat.norm.mean[possible],LEmat.norm.sd[possible],UEmat.norm.mean[possible],UEmat.norm.sd[possible])
-					conf.ints = t(apply(possible.mat,1,function(x){TE = rnorm(samplesize,mean=x[1],sd=x[2]);LE = rnorm(samplesize,mean=x[3],sd=x[4]);UE = rnorm(samplesize,mean=x[5],sd=x[6]);options(warn = -1);dr = - alpha - ((1/labelingtime)*log(exp(UE)/exp(TE)));options(warn = 0);dr[which(dr <= 0)] = NA;hl = log(2)/dr;sr = LE*(alpha + dr)/(exp(alpha*labelingtime)-exp(-dr*labelingtime));TE.quantiles = quantile(exp(TE),confidence.range,na.rm = TRUE);LE.quantiles = quantile(exp(LE),confidence.range,na.rm = TRUE);UE.quantiles = quantile(exp(UE),confidence.range,na.rm = TRUE);LT.quantiles = quantile(exp(UE)/exp(TE),confidence.range,na.rm = TRUE);dr.quantiles = quantile(dr,confidence.range,na.rm = TRUE);hl.quantiles = quantile(hl,confidence.range,na.rm = TRUE);sr.quantiles = quantile(sr,confidence.range,na.rm = TRUE);c("TE" = paste(signif(TE.quantiles[1],3),"-",signif(TE.quantiles[2],3)),"LE" = paste(signif(LE.quantiles[1],3),"-",signif(LE.quantiles[2],3)),"UE" = paste(signif(UE.quantiles[1],3),"-",signif(UE.quantiles[2],3)),"LT" = paste(signif(LT.quantiles[1],3),"-",signif(LT.quantiles[2],3)),"dr" = paste(signif(dr.quantiles[1],3),"-",signif(dr.quantiles[2],3)),"hl" = paste(signif(hl.quantiles[1],3),"-",signif(hl.quantiles[2],3)),"sr" = paste(signif(sr.quantiles[1],3),"-",signif(sr.quantiles[2],3)))}))
+					conf.ints = t(apply(possible.mat,1,function(x){TE = rnorm(samplesize,mean=x[1],sd=x[2]);LE = rnorm(samplesize,mean=x[3],sd=x[4]);UE = rnorm(samplesize,mean=x[5],sd=x[6]);options(warn = -1);dr = - alpha - ((1/labelingtime)*log(exp(UE)/exp(TE)));options(warn = 0);dr[which(dr <= 0)] = NA;hl = log(2)/dr;sr = LE*(alpha + dr)/(exp(alpha*labelingtime)-exp(-dr*labelingtime));TE.quantiles = quantile(exp(TE),confidence.range,na.rm = TRUE);LE.quantiles = quantile(exp(LE),confidence.range,na.rm = TRUE);UE.quantiles = quantile(exp(UE),confidence.range,na.rm = TRUE);UT.quantiles = quantile(exp(UE)/exp(TE),confidence.range,na.rm = TRUE);UtoT.quantiles = quantile(exp(UE)/exp(TE),confidence.range,na.rm = TRUE);dr.quantiles = quantile(dr,confidence.range,na.rm = TRUE);hl.quantiles = quantile(hl,confidence.range,na.rm = TRUE);sr.quantiles = quantile(sr,confidence.range,na.rm = TRUE);c("TE" = paste(signif(TE.quantiles[1],3),"-",signif(TE.quantiles[2],3)),"LE" = paste(signif(LE.quantiles[1],3),"-",signif(LE.quantiles[2],3)),"UE" = paste(signif(UE.quantiles[1],3),"-",signif(UE.quantiles[2],3)),"UT" = paste(signif(UT.quantiles[1],3),"-",signif(UT.quantiles[2],3)),"UtoT" = paste(signif(UtoT.quantiles[1],3),"-",signif(UtoT.quantiles[2],3)),"dr" = paste(signif(dr.quantiles[1],3),"-",signif(dr.quantiles[2],3)),"hl" = paste(signif(hl.quantiles[1],3),"-",signif(hl.quantiles[2],3)),"sr" = paste(signif(sr.quantiles[1],3),"-",signif(sr.quantiles[2],3)))}))
 					results[["TE.confidence"]] = conf.ints[,"TE"]
 					results[["LE.confidence"]] = conf.ints[,"LE"]
 					results[["UE.confidence"]] = conf.ints[,"UE"]
-					results[["LT.confidence"]] = conf.ints[,"LT"]
+					results[["UT.confidence"]] = conf.ints[,"UT"]
+					results[["UtoT.confidence"]] = conf.ints[,"UtoT"]
 					results[["dr.confidence"]] = conf.ints[,"dr"]
 					results[["hl.confidence"]] = conf.ints[,"hl"]
 					results[["sr.confidence"]] = conf.ints[,"sr"]				
@@ -1322,12 +1346,13 @@ DTA.singleestimate = function(phenomat, 	# phenotype matrix, "nr" should be numb
 					cat("Calculating confidence intervals ... \n")
 					possible = names(dr[!is.na(dr)])
 					possible.mat = cbind(TEmat.norm.mean[possible],TEmat.norm.sd[possible],LEmat.norm.mean[possible],LEmat.norm.sd[possible],UEmat.norm.mean[possible],UEmat.norm.sd[possible],TImat.norm.mean[possible],TImat.norm.sd[possible])
-					conf.ints = t(apply(possible.mat,1,function(x){TE = rnorm(samplesize,mean=x[1],sd=x[2]);LE = rnorm(samplesize,mean=x[3],sd=x[4]);UE = rnorm(samplesize,mean=x[5],sd=x[6]);TI = rnorm(samplesize,mean=x[7],sd=x[8]);options(warn = -1);dr = - alpha - ((1/labelingtime)*log(((exp(TE) - exp(LE))/exp(TI) + exp(UE)/exp(TI))/2));options(warn = 0);dr[which(dr <= 0)] = NA;hl = log(2)/dr;sr = LE*(alpha + dr)/(exp(alpha*labelingtime)-exp(-dr*labelingtime));TE.quantiles = quantile(exp(TE),confidence.range,na.rm = TRUE);LE.quantiles = quantile(exp(LE),confidence.range,na.rm = TRUE);UE.quantiles = quantile(exp(UE),confidence.range,na.rm = TRUE);TI.quantiles = quantile(exp(TI),confidence.range,na.rm = TRUE);LT.quantiles = quantile(((exp(TE) - exp(LE))/exp(TI) + exp(UE)/exp(TI))/2,confidence.range,na.rm = TRUE);dr.quantiles = quantile(dr,confidence.range,na.rm = TRUE);hl.quantiles = quantile(hl,confidence.range,na.rm = TRUE);sr.quantiles = quantile(sr,confidence.range,na.rm = TRUE);c("TE" = paste(signif(TE.quantiles[1],3),"-",signif(TE.quantiles[2],3)),"LE" = paste(signif(LE.quantiles[1],3),"-",signif(LE.quantiles[2],3)),"UE" = paste(signif(UE.quantiles[1],3),"-",signif(UE.quantiles[2],3)),"TI" = paste(signif(TI.quantiles[1],3),"-",signif(TI.quantiles[2],3)),"LT" = paste(signif(LT.quantiles[1],3),"-",signif(LT.quantiles[2],3)),"dr" = paste(signif(dr.quantiles[1],3),"-",signif(dr.quantiles[2],3)),"hl" = paste(signif(hl.quantiles[1],3),"-",signif(hl.quantiles[2],3)),"sr" = paste(signif(sr.quantiles[1],3),"-",signif(sr.quantiles[2],3)))}))
+					conf.ints = t(apply(possible.mat,1,function(x){TE = rnorm(samplesize,mean=x[1],sd=x[2]);LE = rnorm(samplesize,mean=x[3],sd=x[4]);UE = rnorm(samplesize,mean=x[5],sd=x[6]);TI = rnorm(samplesize,mean=x[7],sd=x[8]);options(warn = -1);dr = - alpha - ((1/labelingtime)*log(((exp(TE) - exp(LE))/exp(TI) + exp(UE)/exp(TI))/2));options(warn = 0);dr[which(dr <= 0)] = NA;hl = log(2)/dr;sr = LE*(alpha + dr)/(exp(alpha*labelingtime)-exp(-dr*labelingtime));TE.quantiles = quantile(exp(TE),confidence.range,na.rm = TRUE);LE.quantiles = quantile(exp(LE),confidence.range,na.rm = TRUE);UE.quantiles = quantile(exp(UE),confidence.range,na.rm = TRUE);TI.quantiles = quantile(exp(TI),confidence.range,na.rm = TRUE);LUT.quantiles = quantile(((exp(TE) - exp(LE))/exp(TI) + exp(UE)/exp(TI))/2,confidence.range,na.rm = TRUE);LandUtoT.quantiles = quantile((exp(LE)/exp(TI) + exp(UE)/exp(TI))/2,confidence.range,na.rm = TRUE);dr.quantiles = quantile(dr,confidence.range,na.rm = TRUE);hl.quantiles = quantile(hl,confidence.range,na.rm = TRUE);sr.quantiles = quantile(sr,confidence.range,na.rm = TRUE);c("TE" = paste(signif(TE.quantiles[1],3),"-",signif(TE.quantiles[2],3)),"LE" = paste(signif(LE.quantiles[1],3),"-",signif(LE.quantiles[2],3)),"UE" = paste(signif(UE.quantiles[1],3),"-",signif(UE.quantiles[2],3)),"TI" = paste(signif(TI.quantiles[1],3),"-",signif(TI.quantiles[2],3)),"LUT" = paste(signif(LUT.quantiles[1],3),"-",signif(LUT.quantiles[2],3)),"LandUtoT" = paste(signif(LandUtoT.quantiles[1],3),"-",signif(LandUtoT.quantiles[2],3)),"dr" = paste(signif(dr.quantiles[1],3),"-",signif(dr.quantiles[2],3)),"hl" = paste(signif(hl.quantiles[1],3),"-",signif(hl.quantiles[2],3)),"sr" = paste(signif(sr.quantiles[1],3),"-",signif(sr.quantiles[2],3)))}))
 					results[["TE.confidence"]] = conf.ints[,"TE"]
 					results[["LE.confidence"]] = conf.ints[,"LE"]
 					results[["UE.confidence"]] = conf.ints[,"UE"]
 					results[["TI.confidence"]] = conf.ints[,"TI"]
-					results[["LT.confidence"]] = conf.ints[,"LT"]
+					results[["LUT.confidence"]] = conf.ints[,"LUT"]
+					results[["LandUtoT.confidence"]] = conf.ints[,"LandUtoT"]
 					results[["dr.confidence"]] = conf.ints[,"dr"]
 					results[["hl.confidence"]] = conf.ints[,"hl"]
 					results[["sr.confidence"]] = conf.ints[,"sr"]
@@ -1335,11 +1360,12 @@ DTA.singleestimate = function(phenomat, 	# phenotype matrix, "nr" should be numb
 					cat("Calculating confidence intervals ... \n")
 					possible = names(dr[!is.na(dr)])
 					possible.mat = cbind(TEmat.norm.mean[possible],TEmat.norm.sd[possible],LEmat.norm.mean[possible],LEmat.norm.sd[possible],UEmat.norm.mean[possible],UEmat.norm.sd[possible])
-					conf.ints = t(apply(possible.mat,1,function(x){TE = rnorm(samplesize,mean=x[1],sd=x[2]);LE = rnorm(samplesize,mean=x[3],sd=x[4]);UE = rnorm(samplesize,mean=x[5],sd=x[6]);options(warn = -1);dr = - alpha - ((1/labelingtime)*log((1 - exp(LE)/exp(TE) + exp(UE)/exp(TE))/2));options(warn = 0);dr[which(dr <= 0)] = NA;hl = log(2)/dr;sr = LE*(alpha + dr)/(exp(alpha*labelingtime)-exp(-dr*labelingtime));TE.quantiles = quantile(exp(TE),confidence.range,na.rm = TRUE);LE.quantiles = quantile(exp(LE),confidence.range,na.rm = TRUE);UE.quantiles = quantile(exp(UE),confidence.range,na.rm = TRUE);LT.quantiles = quantile((1 - exp(LE)/exp(TE) + exp(UE)/exp(TE))/2,confidence.range,na.rm = TRUE);dr.quantiles = quantile(dr,confidence.range,na.rm = TRUE);hl.quantiles = quantile(hl,confidence.range,na.rm = TRUE);sr.quantiles = quantile(sr,confidence.range,na.rm = TRUE);c("TE" = paste(signif(TE.quantiles[1],3),"-",signif(TE.quantiles[2],3)),"LE" = paste(signif(LE.quantiles[1],3),"-",signif(LE.quantiles[2],3)),"UE" = paste(signif(UE.quantiles[1],3),"-",signif(UE.quantiles[2],3)),"LT" = paste(signif(LT.quantiles[1],3),"-",signif(LT.quantiles[2],3)),"dr" = paste(signif(dr.quantiles[1],3),"-",signif(dr.quantiles[2],3)),"hl" = paste(signif(hl.quantiles[1],3),"-",signif(hl.quantiles[2],3)),"sr" = paste(signif(sr.quantiles[1],3),"-",signif(sr.quantiles[2],3)))}))
+					conf.ints = t(apply(possible.mat,1,function(x){TE = rnorm(samplesize,mean=x[1],sd=x[2]);LE = rnorm(samplesize,mean=x[3],sd=x[4]);UE = rnorm(samplesize,mean=x[5],sd=x[6]);options(warn = -1);dr = - alpha - ((1/labelingtime)*log((1 - exp(LE)/exp(TE) + exp(UE)/exp(TE))/2));options(warn = 0);dr[which(dr <= 0)] = NA;hl = log(2)/dr;sr = LE*(alpha + dr)/(exp(alpha*labelingtime)-exp(-dr*labelingtime));TE.quantiles = quantile(exp(TE),confidence.range,na.rm = TRUE);LE.quantiles = quantile(exp(LE),confidence.range,na.rm = TRUE);UE.quantiles = quantile(exp(UE),confidence.range,na.rm = TRUE);LUT.quantiles = quantile((1 - exp(LE)/exp(TE) + exp(UE)/exp(TE))/2,confidence.range,na.rm = TRUE);LandUtoT.quantiles = quantile((exp(LE)/exp(TE) + exp(UE)/exp(TE))/2,confidence.range,na.rm = TRUE);dr.quantiles = quantile(dr,confidence.range,na.rm = TRUE);hl.quantiles = quantile(hl,confidence.range,na.rm = TRUE);sr.quantiles = quantile(sr,confidence.range,na.rm = TRUE);c("TE" = paste(signif(TE.quantiles[1],3),"-",signif(TE.quantiles[2],3)),"LE" = paste(signif(LE.quantiles[1],3),"-",signif(LE.quantiles[2],3)),"UE" = paste(signif(UE.quantiles[1],3),"-",signif(UE.quantiles[2],3)),"LUT" = paste(signif(LUT.quantiles[1],3),"-",signif(LUT.quantiles[2],3)),"LandUtoT" = paste(signif(LandUtoT.quantiles[1],3),"-",signif(LandUtoT.quantiles[2],3)),"dr" = paste(signif(dr.quantiles[1],3),"-",signif(dr.quantiles[2],3)),"hl" = paste(signif(hl.quantiles[1],3),"-",signif(hl.quantiles[2],3)),"sr" = paste(signif(sr.quantiles[1],3),"-",signif(sr.quantiles[2],3)))}))
 					results[["TE.confidence"]] = conf.ints[,"TE"]
 					results[["LE.confidence"]] = conf.ints[,"LE"]
 					results[["UE.confidence"]] = conf.ints[,"UE"]
-					results[["LT.confidence"]] = conf.ints[,"LT"]
+					results[["LUT.confidence"]] = conf.ints[,"LUT"]
+					results[["LandUtoT.confidence"]] = conf.ints[,"LandUtoT"]
 					results[["dr.confidence"]] = conf.ints[,"dr"]
 					results[["hl.confidence"]] = conf.ints[,"hl"]
 					results[["sr.confidence"]] = conf.ints[,"sr"]

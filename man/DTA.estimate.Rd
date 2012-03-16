@@ -63,16 +63,16 @@ DTA.estimate(phenomat = NULL,datamat = NULL,tnumber = NULL,reliable = NULL,ccl =
   \item{srmat}{Synthesis rates for each replicate. The last column gives the median synthesis rates.}
   \item{sr}{Median synthesis rates. The last column of srmat.}
   \item{sr.confidence}{Confidence regions of synthesis rates.}
-  \item{LTmat}{Labeled to total ratio for each replicate. The last column gives the median labeled to total ratios.}
-  \item{LT}{Median labeled to total ratios. The last column of LTmat.}
-  \item{LT.confidence}{Confidence regions of labeled to total ratios.}
-  \item{UTmat}{Unlabeled to total ratio for each replicate. The last column gives the median unlabeled to total ratios.}
-  \item{UT}{Median unlabeled to total ratios. The last column of UTmat.}
+  \item{LtoTmat}{Labeled to total ratio for each replicate. The last column gives the median labeled to total ratios.}
+  \item{LtoT}{Median labeled to total ratios. The last column of LtoTmat.}
+  \item{LtoT.confidence}{Confidence regions of labeled to total ratios.}
+  \item{UtoTmat}{Unlabeled to total ratio for each replicate. The last column gives the median unlabeled to total ratios.}
+  \item{UtoT}{Median unlabeled to total ratios. The last column of UtoTmat.}
+  \item{UtoT.confidence}{Confidence regions of unlabeled to total ratios.}
   \item{Rsrmat}{Rescaled synthesis rates for each replicate, if parameter \code{mRNAs} is specified. The last column gives the median synthesis rates.}
   \item{Rsr}{Rescaled median synthesis rates. The last column of Rsrmat.}
   \item{globaldrmat}{Decay rate for each replicate. Reciprocally weighted by the total expression. Last element contains (weighted) median decay rate.}
-  \item{globaldr}{(Weighted) median decay rate.}        
-
+  \item{globaldr}{(Weighted) median decay rate.}
 }
 \references{
 C. Miller, B. Schwalb, K. Maier, D. Schulz, S. Duemcke, B. Zacher, A. Mayer, J. Sydow, L. Marcinowski, L. Doelken, D. E. Martin, A. Tresch, and P. Cramer. Dynamic transcriptome analysis measures rates of mRNA synthesis and decay in yeast. Mol Syst Biol, 7:458, 2011.
