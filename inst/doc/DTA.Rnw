@@ -338,7 +338,7 @@ For a more detailed explanation of the functionality of \Rfunction{DTA.dynamic.g
 For this example, 6 timepoints of 6 min labeling (respectively) are generated.
 
 <<Creating timecourse simulation, echo=TRUE, eval=TRUE, results=hide>>=
-nrgenes = 1000
+nrgenes = 5000
 truesynthesisrates = rf(nrgenes,5,5)*18
 steady = rep(1,nrgenes)
 shock = 1/pmax(rnorm(nrgenes,mean = 8,sd = 4),1)
