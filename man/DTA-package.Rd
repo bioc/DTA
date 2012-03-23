@@ -10,8 +10,8 @@ The \code{DTA} package implements all methods of the quantitative kinetic modeli
 \tabular{ll}{
 Package: \tab DTA\cr
 Type: \tab Package\cr
-Version: \tab 2.0.0\cr
-Date: \tab 2012-03-14\cr
+Version: \tab 2.0.1\cr
+Date: \tab 2012-03-22\cr
 License: \tab Artistic-2.0\cr
 LazyLoad: \tab yes\cr
 }
