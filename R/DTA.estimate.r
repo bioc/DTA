@@ -115,7 +115,7 @@ DTA.singleestimate = function(phenomat, 	# phenotype matrix, "nr" should be numb
 		smallT = which(tnumberreliable<lower)
 		
 		lossfct = function(q){hilf = abs(log(calcdatamatreliable[smallT,Lname]/calcdatamatreliable[smallT,Tname]) - asymptote - log(bias(q,tnumberreliable[smallT])))
-			result = median( hilf[is.real(hilf)] )
+			result = median( hilf[is.double(hilf)] )
 			return(result)
 		}
 		
@@ -143,7 +143,7 @@ DTA.singleestimate = function(phenomat, 	# phenotype matrix, "nr" should be numb
 			smallT = which(tnumberreliable<lower)
 			
 			lossfct = function(q){hilf = abs(log(calcdatamatreliable[smallT,Uname]/calcdatamatreliable[smallT,Tname]) - asymptote - log(1 + q*biasdev(plabel[expnr],tnumberreliable[smallT])))
-				result = median(hilf[is.real(hilf)])
+				result = median(hilf[is.double(hilf)])
 				return(result)
 			}
 			
@@ -171,7 +171,7 @@ DTA.singleestimate = function(phenomat, 	# phenotype matrix, "nr" should be numb
 				smallT = which(tnumberreliable<lower)
 				
 				lossfct = function(q){hilf = abs(log(calcdatamatreliable[smallT,Uname]/calcdatamatreliable[smallT,Tname]) - asymptote - log(1 + q*biasdev(plabel[expnr],tnumberreliable[smallT])))
-					result = median(hilf[is.real(hilf)])
+					result = median(hilf[is.double(hilf)])
 					return(result)
 				}
 				
