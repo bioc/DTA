@@ -215,6 +215,14 @@ DTA.dynamic.estimate = function(
 	
 	### HALF-LIFE FOLDS VS. SYNTHESIS RATE FOLDS ###
 	
+    ellipse.coordinates = function(r,scale = c(1,1),centre = c(0,0),level = 0.95,t = sqrt(qchisq(level,2)))
+    {
+        r = min(max(r,-1),1)
+        d = acos(r)
+        a = seq(0,2*pi,len = 100)
+        matrix(c(t*scale[1]*cos(a + d/2) + centre[1],t*scale[2]*cos(a - d/2) + centre[2]),100,2,dimnames = list(NULL,c("x","y")))
+    }
+    
 	if (check){
 			if (robust) {
 				srmat = LEmat
@@ -318,19 +326,19 @@ DTA.dynamic.estimate = function(
 						points(i$x[intersect(plotable,genecluster[["up"]])],i$y[intersect(plotable,genecluster[["up"]])],col=upcol,pch=20)
 						x = i$x[intersect(plotable,genecluster[["even"]])]
 						y = i$y[intersect(plotable,genecluster[["even"]])]
-						points(ellipse(scor(x,y,use="na.or.complete"),scale=c(sd(x,na.rm=TRUE)*scalesd,sd(y,na.rm=TRUE)*scalesd),centre=c(mean(x,na.rm=TRUE),mean(y,na.rm=TRUE)),level=level),type = 'l',col=evencol,lwd=3)
+						points(ellipse.coordinates(scor(x,y,use="na.or.complete"),scale=c(sd(x,na.rm=TRUE)*scalesd,sd(y,na.rm=TRUE)*scalesd),centre=c(mean(x,na.rm=TRUE),mean(y,na.rm=TRUE)),level=level),type = 'l',col=evencol,lwd=3)
 						x = i$x[intersect(plotable,genecluster[["downeven"]])]
 						y = i$y[intersect(plotable,genecluster[["downeven"]])]
-						points(ellipse(scor(x,y,use="na.or.complete"),scale=c(sd(x,na.rm=TRUE)*scalesd,sd(y,na.rm=TRUE)*scalesd),centre=c(mean(x,na.rm=TRUE),mean(y,na.rm=TRUE)),level=level),type = 'l',col=downevencol,lwd=3)
+						points(ellipse.coordinates(scor(x,y,use="na.or.complete"),scale=c(sd(x,na.rm=TRUE)*scalesd,sd(y,na.rm=TRUE)*scalesd),centre=c(mean(x,na.rm=TRUE),mean(y,na.rm=TRUE)),level=level),type = 'l',col=downevencol,lwd=3)
 						x = i$x[intersect(plotable,genecluster[["upeven"]])]
 						y = i$y[intersect(plotable,genecluster[["upeven"]])]
-						points(ellipse(scor(x,y,use="na.or.complete"),scale=c(sd(x,na.rm=TRUE)*scalesd,sd(y,na.rm=TRUE)*scalesd),centre=c(mean(x,na.rm=TRUE),mean(y,na.rm=TRUE)),level=level),type = 'l',col=upevencol,lwd=3)
+						points(ellipse.coordinates(scor(x,y,use="na.or.complete"),scale=c(sd(x,na.rm=TRUE)*scalesd,sd(y,na.rm=TRUE)*scalesd),centre=c(mean(x,na.rm=TRUE),mean(y,na.rm=TRUE)),level=level),type = 'l',col=upevencol,lwd=3)
 						x = i$x[intersect(plotable,genecluster[["down"]])]
 						y = i$y[intersect(plotable,genecluster[["down"]])]
-						points(ellipse(scor(x,y,use="na.or.complete"),scale=c(sd(x,na.rm=TRUE)*scalesd,sd(y,na.rm=TRUE)*scalesd),centre=c(mean(x,na.rm=TRUE),mean(y,na.rm=TRUE)),level=level),type = 'l',col=downcol,lwd=3)
+						points(ellipse.coordinates(scor(x,y,use="na.or.complete"),scale=c(sd(x,na.rm=TRUE)*scalesd,sd(y,na.rm=TRUE)*scalesd),centre=c(mean(x,na.rm=TRUE),mean(y,na.rm=TRUE)),level=level),type = 'l',col=downcol,lwd=3)
 						x = i$x[intersect(plotable,genecluster[["up"]])]
 						y = i$y[intersect(plotable,genecluster[["up"]])]
-						points(ellipse(scor(x,y,use="na.or.complete"),scale=c(sd(x,na.rm=TRUE)*scalesd,sd(y,na.rm=TRUE)*scalesd),centre=c(mean(x,na.rm=TRUE),mean(y,na.rm=TRUE)),level=level),type = 'l',col=upcol,lwd=3)
+						points(ellipse.coordinates(scor(x,y,use="na.or.complete"),scale=c(sd(x,na.rm=TRUE)*scalesd,sd(y,na.rm=TRUE)*scalesd),centre=c(mean(x,na.rm=TRUE),mean(y,na.rm=TRUE)),level=level),type = 'l',col=upcol,lwd=3)
 						if (j == 1){legend("topleft",rev(c(paste("down (",length(intersect(plotable,genecluster[["down"]])),")",sep = ""),paste("downeven (",length(intersect(plotable,genecluster[["downeven"]])),")",sep = ""),paste("even (",length(intersect(plotable,genecluster[["even"]])),")",sep = ""),paste("upeven (",length(intersect(plotable,genecluster[["upeven"]])),")",sep = ""),paste("up (",length(intersect(plotable,genecluster[["up"]])),")",sep = ""))),pt.bg=rev(c(downcol,downevencol,evencol,upevencol,upcol)),col=c("black","black","black","black","black"),bg="white",pch=21,cex=1.25,inset=0.02)}
 					}
 				}
@@ -357,19 +365,19 @@ DTA.dynamic.estimate = function(
 						points(i$x[intersect(plotable,genecluster[["up"]])],i$y[intersect(plotable,genecluster[["up"]])],col=upcol,pch=20)
 						x = i$x[intersect(plotable,genecluster[["even"]])]
 						y = i$y[intersect(plotable,genecluster[["even"]])]
-						points(ellipse(scor(x,y,use="na.or.complete"),scale=c(sd(x,na.rm=TRUE)*scalesd,sd(y,na.rm=TRUE)*scalesd),centre=c(mean(x,na.rm=TRUE),mean(y,na.rm=TRUE)),level=level),type = 'l',col=evencol,lwd=3)
+						points(ellipse.coordinates(scor(x,y,use="na.or.complete"),scale=c(sd(x,na.rm=TRUE)*scalesd,sd(y,na.rm=TRUE)*scalesd),centre=c(mean(x,na.rm=TRUE),mean(y,na.rm=TRUE)),level=level),type = 'l',col=evencol,lwd=3)
 						x = i$x[intersect(plotable,genecluster[["downeven"]])]
 						y = i$y[intersect(plotable,genecluster[["downeven"]])]
-						points(ellipse(scor(x,y,use="na.or.complete"),scale=c(sd(x,na.rm=TRUE)*scalesd,sd(y,na.rm=TRUE)*scalesd),centre=c(mean(x,na.rm=TRUE),mean(y,na.rm=TRUE)),level=level),type = 'l',col=downevencol,lwd=3)
+						points(ellipse.coordinates(scor(x,y,use="na.or.complete"),scale=c(sd(x,na.rm=TRUE)*scalesd,sd(y,na.rm=TRUE)*scalesd),centre=c(mean(x,na.rm=TRUE),mean(y,na.rm=TRUE)),level=level),type = 'l',col=downevencol,lwd=3)
 						x = i$x[intersect(plotable,genecluster[["upeven"]])]
 						y = i$y[intersect(plotable,genecluster[["upeven"]])]
-						points(ellipse(scor(x,y,use="na.or.complete"),scale=c(sd(x,na.rm=TRUE)*scalesd,sd(y,na.rm=TRUE)*scalesd),centre=c(mean(x,na.rm=TRUE),mean(y,na.rm=TRUE)),level=level),type = 'l',col=upevencol,lwd=3)
+						points(ellipse.coordinates(scor(x,y,use="na.or.complete"),scale=c(sd(x,na.rm=TRUE)*scalesd,sd(y,na.rm=TRUE)*scalesd),centre=c(mean(x,na.rm=TRUE),mean(y,na.rm=TRUE)),level=level),type = 'l',col=upevencol,lwd=3)
 						x = i$x[intersect(plotable,genecluster[["down"]])]
 						y = i$y[intersect(plotable,genecluster[["down"]])]
-						points(ellipse(scor(x,y,use="na.or.complete"),scale=c(sd(x,na.rm=TRUE)*scalesd,sd(y,na.rm=TRUE)*scalesd),centre=c(mean(x,na.rm=TRUE),mean(y,na.rm=TRUE)),level=level),type = 'l',col=downcol,lwd=3)
+						points(ellipse.coordinates(scor(x,y,use="na.or.complete"),scale=c(sd(x,na.rm=TRUE)*scalesd,sd(y,na.rm=TRUE)*scalesd),centre=c(mean(x,na.rm=TRUE),mean(y,na.rm=TRUE)),level=level),type = 'l',col=downcol,lwd=3)
 						x = i$x[intersect(plotable,genecluster[["up"]])]
 						y = i$y[intersect(plotable,genecluster[["up"]])]
-						points(ellipse(scor(x,y,use="na.or.complete"),scale=c(sd(x,na.rm=TRUE)*scalesd,sd(y,na.rm=TRUE)*scalesd),centre=c(mean(x,na.rm=TRUE),mean(y,na.rm=TRUE)),level=level),type = 'l',col=upcol,lwd=3)
+						points(ellipse.coordinates(scor(x,y,use="na.or.complete"),scale=c(sd(x,na.rm=TRUE)*scalesd,sd(y,na.rm=TRUE)*scalesd),centre=c(mean(x,na.rm=TRUE),mean(y,na.rm=TRUE)),level=level),type = 'l',col=upcol,lwd=3)
 						if (j == 1){legend("topleft",rev(c(paste("down (",length(intersect(plotable,genecluster[["down"]])),")",sep = ""),paste("downeven (",length(intersect(plotable,genecluster[["downeven"]])),")",sep = ""),paste("even (",length(intersect(plotable,genecluster[["even"]])),")",sep = ""),paste("upeven (",length(intersect(plotable,genecluster[["upeven"]])),")",sep = ""),paste("up (",length(intersect(plotable,genecluster[["up"]])),")",sep = ""))),pt.bg=rev(c(downcol,downevencol,evencol,upevencol,upcol)),col=c("black","black","black","black","black"),bg="white",pch=21,cex=1.25,inset=0.02)}
 					}
 				}
