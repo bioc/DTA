@@ -1,7 +1,7 @@
 Package: DTA
 Type: Package
 Title: Dynamic Transcriptome Analysis 
-Version: 2.41.0
+Version: 2.42.0
 Date: 2012-03-22
 Author: Bjoern Schwalb, Benedikt Zacher, Sebastian Duemcke, Achim Tresch
 Maintainer: Bjoern Schwalb <schwalb@lmb.uni-muenchen.de>
